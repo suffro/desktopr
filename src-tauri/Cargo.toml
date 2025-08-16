@@ -1,0 +1,32 @@
+[package]
+name = "bubbledesk-wrapper"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2", features = ["rustls-tls"] }
+
+
+# Optional plugins (enable via Cargo features)
+tauri-plugin-notification = { version = "2", optional = true }
+tauri-plugin-autostart    = { version = "2", optional = true }
+tauri-plugin-global-shortcut = { version = "2", optional = true }
+tauri-plugin-updater      = { version = "2", optional = true }
+tauri-plugin-persisted-scope = { version = "2", optional = true }
+
+[features]
+default = []
+notification = ["tauri-plugin-notification"]
+autostart    = ["tauri-plugin-autostart"]
+global-shortcut = ["tauri-plugin-global-shortcut"]
+updater      = ["tauri-plugin-updater"]
+persisted-scope = ["tauri-plugin-persisted-scope"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }

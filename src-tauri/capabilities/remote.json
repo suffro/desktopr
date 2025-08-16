@@ -1,0 +1,6 @@
+{
+  "identifier": "remote",
+  "windows": ["main"],
+  "remote": { "urls": ["https://dashboard.bubbledesk.app"] },
+  "permissions": ["core:event:default","core:window:default"]
+}

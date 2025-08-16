@@ -1,0 +1,10 @@
+{
+  "identifier": "core",
+  "windows": ["*"],
+  "permissions": [
+    "core:event:default",
+    "core:window:default",
+    "core:app:default",
+    "core:resources:default"
+  ]
+}

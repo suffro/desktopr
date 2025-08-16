@@ -1,0 +1,7 @@
+{
+  "identifier": "plugins",
+  "windows": ["main"],
+  "permissions": [
+    "notification:default"
+  ]
+}
