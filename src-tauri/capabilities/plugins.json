@@ -1,6 +1,6 @@
 {
   "identifier": "plugins",
-  "windows": ["main"],
+  "windows": ["*"],
   "permissions": [
     "notification:default"
   ]

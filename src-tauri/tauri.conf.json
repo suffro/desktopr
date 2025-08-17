@@ -5,7 +5,8 @@
   "identifier": "builder.bubbledesk.dev",
   "build": { "removeUnusedCommands": true },
   "app": {
-    "security": { "capabilities": ["core", "remote", "plugins"] },
+    "withGlobalTauri": true,
+    "security": { "capabilities": ["core", "remote", "plugins"], "csp": null},
     "windows": [
       {
         "label": "main",
