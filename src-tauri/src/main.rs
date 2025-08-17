@@ -6,6 +6,7 @@ use plugin_bubbledesk::bubbledesk_plugin;
 fn main() {
   tauri::Builder::default()
   .plugin(plugin_bubbledesk::bubbledesk_plugin())
+  .plugin(tauri_plugin_notification::init())
   .invoke_handler(tauri::generate_handler![
     commands::bd_notify,
     commands::bd_clipboard_write,

@@ -179,7 +179,7 @@
         {
           "description": "Allow Bubbledesk app commands.",
           "type": "string",
-          "const": "bubbledesk:default",
+          "const": "bd:default",
           "markdownDescription": "Allow Bubbledesk app commands."
         },
         {

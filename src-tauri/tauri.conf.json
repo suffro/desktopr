@@ -6,7 +6,7 @@
   "build": { "removeUnusedCommands": true },
   "app": {
     "withGlobalTauri": true,
-    "security": { "capabilities": ["core", "remote", "plugins"], "csp": null},
+    "security": { "capabilities": ["remote"], "csp": null},
     "windows": [
       {
         "label": "main",

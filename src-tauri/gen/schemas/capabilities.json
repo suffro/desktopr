@@ -1,1 +1,1 @@
-{"core":{"identifier":"core","description":"","local":true,"windows":["*"],"permissions":["core:default"]},"plugins":{"identifier":"plugins","description":"","local":true,"windows":["main"],"permissions":["notification:default"]},"remote":{"identifier":"remote","description":"","remote":{"urls":["https://dashboard.bubbledesk.app"]},"local":true,"windows":["main"],"permissions":["core:default"]}}
+{"remote":{"identifier":"remote","description":"","remote":{"urls":["https://dashboard.bubbledesk.app"]},"local":true,"windows":["*"],"permissions":["core:default"]}}

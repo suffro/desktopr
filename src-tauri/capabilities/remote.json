@@ -1,14 +1,6 @@
 {
   "identifier": "remote",
   "windows": ["*"],
-  "remote": {
-    "urls": [
-      "https://dashboard.bubbledesk.app"
-    ],
-    "ipc": true
-  },
-  "permissions": [
-    "core:default",
-    "bubbledesk:default"
-  ]
+  "remote": { "urls": ["https://dashboard.bubbledesk.app"], "ipc": true },
+  "permissions": ["core:default","bd:default"]
 }
