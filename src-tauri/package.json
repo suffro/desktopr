@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "clean": "rm -rf src-tauri/target && rm -rf target && cargo clean"
+    }
+}

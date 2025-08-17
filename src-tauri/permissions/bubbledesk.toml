@@ -1,7 +1,4 @@
 [[permission]]
 identifier = "bubbledesk:default"
 description = "Allow Bubbledesk app commands."
-commands.allow = [
-  "bd_notify",
-  "bd_clipboard_write"
-]
+commands.allow = ["bd_notify", "bd_clipboard_write"]
