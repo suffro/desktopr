@@ -1,34 +1,41 @@
+// src-tauri/src/bubbledesk_init.js
 (() => {
-    // Guard if already defined (avoid double-define on SPA navigations)
     if (window.Bubbledesk) return;
   
-    // Minimal, sync-available bridge
+    const waitForInvoke = () =>
+      new Promise((resolve, reject) => {
+        const start = Date.now();
+        const max = 5000; // 5s timeout
+        const tick = () => {
+          const g = /** @type {any} */ (window);
+          const core = g.__TAURI__?.core || g.__TAURI__;
+          if (core?.invoke) return resolve();
+          if (Date.now() - start > max) return reject(new Error("Tauri core.invoke not available"));
+          queueMicrotask(tick);
+        };
+        tick();
+      });
+  
     const api = {
       isAvailable: true,
       version: "0.1.0",
-      // Resolve immediately: native script runs at document start
-      ready: Promise.resolve(),
-  
-      // Optional: proxy to native commands if disponibili
-      // Nota: lascio il check sul global Tauri, così non dipendiamo da import esterni.
+      ready: waitForInvoke(),
       invoke: async (cmd, payload) => {
         const g = /** @type {any} */ (window);
         const core = g.__TAURI__?.core || g.__TAURI__;
-        if (!core?.invoke) {
-          throw new Error("Tauri invoke not available in this context.");
-        }
+        if (!core?.invoke) throw new Error("Tauri invoke not available in this context.");
         return core.invoke(cmd, payload);
+      },
+      on: async (event, handler) => {
+        const g = /** @type {any} */ (window);
+        const ev = g.__TAURI__?.event || g.__TAURI__;
+        if (!ev?.listen) throw new Error("Tauri event API unavailable.");
+        return ev.listen(event, handler);
       }
     };
   
     Object.defineProperty(window, "Bubbledesk", {
-      value: api,
-      enumerable: false, // non sporca enumerazioni
-      configurable: false,
-      writable: false
+      value: api, enumerable: false, configurable: false, writable: false
     });
-  
-    // Per debug: commenta in prod
-    // console.debug("[Bubbledesk] bridge injected", api);
   })();
   
