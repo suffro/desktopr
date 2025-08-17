@@ -5,7 +5,7 @@
   "identifier": "builder.bubbledesk.dev",
   "build": { "removeUnusedCommands": true },
   "app": {
-    "security": { "capabilities": ["core","remote","plugins"] },
+    "security": { "capabilities": ["core", "remote", "plugins"] },
     "windows": [
       {
         "label": "main",
@@ -21,7 +21,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg","msi","appimage"],
+    "targets": ["dmg"],
     "icon": ["icons/icon.png"]
   }
 }

@@ -1,33 +1,40 @@
 (function (global) {
-    // Available only if this page is loaded inside the Bubbledesk wrapper and the origin is allowed by capabilities
-    const hasTauri = !!global.__TAURI__ && !!global.__TAURI__.core && typeof global.__TAURI__.core.invoke === "function";
-  
-    function requireTauri() {
-      if (!hasTauri) throw new Error("Bubbledesk SDK not available in this context");
-      return global.__TAURI__;
+  function hasTauri() {
+    return !!global.__TAURI__ && !!global.__TAURI__.core && typeof global.__TAURI__.core.invoke === "function";
+  }
+
+  // getter reattivo: legge __TAURI__ al momento dell’accesso
+  let _version = "0.1.0"; // oppure sostituisci via build con env!("CARGO_PKG_VERSION")
+  const Bubbledesk = {
+    get isAvailable() { return hasTauri(); },
+    get version() { return _version; },
+
+    on(event, handler) {
+      if (!hasTauri()) throw new Error("Bubbledesk SDK not available");
+      return global.__TAURI__.event.listen(event, ({ payload }) => handler(payload));
+    },
+
+    async notify(title, body) {
+      if (!hasTauri()) throw new Error("Bubbledesk SDK not available");
+      return global.__TAURI__.core.invoke("plugin:notification|send", { title, body });
+    },
+
+    window: {
+      show() { if (!hasTauri()) throw new Error("Bubbledesk SDK not available"); return global.__TAURI__.window.getCurrent().show(); },
+      hide() { if (!hasTauri()) throw new Error("Bubbledesk SDK not available"); return global.__TAURI__.window.getCurrent().hide(); },
+      setFullscreen(v) { if (!hasTauri()) throw new Error("Bubbledesk SDK not available"); return global.__TAURI__.window.getCurrent().setFullscreen(v); }
     }
-  
-    const Bubbledesk = {
-      version: "{{APP_VERSION}}",
-      isAvailable: hasTauri,
-  
-      // Simple wrappers (extend as needed)
-      async notify(title, body) {
-        const api = requireTauri();
-        // uses notification plugin routing
-        return api.core.invoke("plugin:notification|send", { title, body });
-      },
-  
-      on(event, handler) {
-        return requireTauri().event.listen(event, ({ payload }) => handler(payload));
-      },
-  
-      window: {
-        show() { return requireTauri().window.getCurrent().show(); },
-        hide() { return requireTauri().window.getCurrent().hide(); },
-        setFullscreen(v) { return requireTauri().window.getCurrent().setFullscreen(v); }
+  };
+
+  // piccolo poll per “annunciare” quando diventa disponibile
+  if (!hasTauri()) {
+    const iv = setInterval(() => {
+      if (hasTauri()) {
+        clearInterval(iv);
+        try { global.__TAURI__.event.emit("bubbledesk:ready", { sdk: _version }); } catch {}
       }
-    };
-  
-    global.Bubbledesk = Bubbledesk;
-  })(globalThis);
+    }, 200);
+  }
+
+  global.Bubbledesk = Bubbledesk;
+})(globalThis);
