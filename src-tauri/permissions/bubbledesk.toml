@@ -1,4 +1,0 @@
-[[permission]]
-identifier = "bd:default"
-description = "Allow Bubbledesk app commands."
-commands.allow = ["bd_notify", "bd_clipboard_write"]

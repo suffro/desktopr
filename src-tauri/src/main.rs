@@ -1,11 +1,11 @@
 mod plugin_bubbledesk;
 mod commands;
 
-use plugin_bubbledesk::bubbledesk_plugin;
+use plugin_bubbledesk::init;
 
 fn main() {
   tauri::Builder::default()
-  .plugin(plugin_bubbledesk::bubbledesk_plugin())
+  .plugin(plugin_bubbledesk::init())
   .plugin(tauri_plugin_notification::init())
   .invoke_handler(tauri::generate_handler![
     commands::bd_notify,

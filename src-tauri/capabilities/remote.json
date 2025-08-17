@@ -2,5 +2,12 @@
   "identifier": "remote",
   "windows": ["*"],
   "remote": { "urls": ["https://dashboard.bubbledesk.app"], "ipc": true },
-  "permissions": ["core:default","bd:default"]
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "notification:allow-request-permission",
+    "notification:allow-permission-state",
+    "notification:allow-is-permission-granted",
+    "notification:allow-notify"
+  ]
 }
