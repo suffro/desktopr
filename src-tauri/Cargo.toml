@@ -12,14 +12,20 @@ tauri-plugin-autostart    = { version = "2", optional = true }
 tauri-plugin-global-shortcut = { version = "2", optional = true }
 tauri-plugin-updater      = { version = "2", optional = true }
 tauri-plugin-persisted-scope = { version = "2", optional = true }
+tauri-plugin-clipboard = { version = "2", optional = true }
+tauri-plugin-dialog = { version = "2", optional = true}
 
 [features]
-default = []
-notification = ["tauri-plugin-notification"]
-autostart    = ["tauri-plugin-autostart"]
-global-shortcut = ["tauri-plugin-global-shortcut"]
-updater      = ["tauri-plugin-updater"]
-persisted-scope = ["tauri-plugin-persisted-scope"]
+default = [
+    "tauri-plugin-notification",
+    "tauri-plugin-autostart",
+    "tauri-plugin-global-shortcut",
+    "tauri-plugin-updater",
+    "tauri-plugin-persisted-scope",
+    "tauri-plugin-clipboard",
+    "tauri-plugin-dialog"
+]
+with-plugins = []
 
 [profile.release]
 opt-level = "z"

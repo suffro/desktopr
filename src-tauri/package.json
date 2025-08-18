@@ -1,9 +1,9 @@
 {
     "scripts": {
         "clean": "rm -rf src-tauri/target && rm -rf target && cargo clean",
-        "build": "cargo tauri build --features notification",
-        "build:log": "RUST_LOG=tauri_build=trace cargo tauri build --features notification",
-        "dev:log": "RUST_LOG=tauri_build=trace cargo tauri dev --features notification",
-        "dev": "cargo tauri dev --features notification"
+        "build": "cargo tauri build",
+        "build:log": "RUST_LOG=tauri_build=trace cargo tauri build",
+        "dev:log": "RUST_LOG=tauri_build=trace cargo tauri dev",
+        "dev": "cargo tauri dev"
     }
 }
