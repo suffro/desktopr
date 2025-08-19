@@ -8,8 +8,5 @@ pub fn bd_clipboard_write(app: AppHandle, text: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn bd_clipboard_read(app: AppHandle) -> Result<String, String> {
-  app.clipboard()
-    .read_text()
-    .map_err(|e| e.to_string())
-    .map(|opt| opt.unwrap_or_default())
+  app.clipboard().read_text().map_err(|e| e.to_string())
 }

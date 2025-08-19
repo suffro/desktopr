@@ -28,7 +28,7 @@
       writeText: (text) => api.invoke("bd_clipboard_write", { text }),
     },
     files: {
-      open: (multi=false) => api.invoke("bd_file_open", { multi }),
+      open: (option={multi:false}) => api.invoke("bd_file_open", { multi: option.multi }),
       save: (default_name=null) => api.invoke("bd_file_save", { default_name }),
     },
     app: { info: () => api.invoke("bd_app_info") },
