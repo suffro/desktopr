@@ -1,27 +1,35 @@
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 use serde::Serialize;
+use std::path::PathBuf;
 
 #[derive(Serialize)]
 pub struct OpenResult { pub paths: Vec<String> }
 
 #[tauri::command]
-pub async fn bd_file_open(app: AppHandle, multi: bool) -> Result<OpenResult, String> {
+pub fn bd_file_open(app: AppHandle, multi: bool) -> Result<OpenResult, String> {
   let builder = app.dialog().file().set_title("Select file(s)");
-  let paths = if multi {
-    builder.pick_files().await.unwrap_or_default().unwrap_or_default()
+
+  let paths: Vec<PathBuf> = if multi {
+    // Option<Vec<PathBuf>>
+    builder.blocking_pick_files().unwrap_or_default()
   } else {
-    builder.pick_file().await.unwrap_or_default().map(|p| vec![p]).unwrap_or_default()
-  };
-  Ok(OpenResult { paths: paths.into_iter().map(|p| p.to_string_lossy().to_string()).collect() })
+    // Option<PathBuf> -> Vec<PathBuf>
+    builder.blocking_pick_file().map(|p| vec![p]).unwrap_or_default()
+  }.unwrap_or_default();
+
+  Ok(OpenResult {
+    paths: paths.into_iter().map(|p| p.to_string_lossy().to_string()).collect()
+  })
 }
 
 #[tauri::command]
-pub async fn bd_file_save(app: AppHandle, default_name: Option<String>) -> Result<String, String> {
+pub fn bd_file_save(app: AppHandle, default_name: Option<String>) -> Result<String, String> {
   let mut builder = app.dialog().file().set_title("Save As");
   if let Some(name) = default_name {
     builder = builder.set_file_name(&name);
   }
-  let path = builder.save_file().await.unwrap_or_default();
-  Ok(path.map(|p| p.to_string_lossy().to_string()).unwrap_or_default())
+  // Option<PathBuf>
+  let saved = builder.blocking_save_file().unwrap_or_default();
+  Ok(saved.map(|p| p.to_string_lossy().to_string()).unwrap_or_default())
 }

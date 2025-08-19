@@ -1,4 +1,4 @@
-use tauri::{AppHandle, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
   app.get_webview_window("main").ok_or_else(|| "main window not found".into())

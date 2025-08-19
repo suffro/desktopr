@@ -9,7 +9,7 @@ fn main() {
   tauri::Builder::default()
     .plugin(bubbledesk_plugin())
     .plugin(tauri_plugin_notification::init())
-    .plugin(tauri_plugin_clipboard::init())
+    .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())
     .invoke_handler(tauri::generate_handler![
       // notifications

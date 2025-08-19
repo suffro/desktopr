@@ -12,9 +12,9 @@
     "notification:allow-notify",
     "notification:allow-show",
 
-    "clipboard:default",
-    "clipboard:allow-read-text",
-    "clipboard:allow-write-text",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
 
     "dialog:default",
     "dialog:allow-open",
