@@ -14,6 +14,7 @@ tauri-plugin-updater      = { version = "2", optional = true }
 tauri-plugin-persisted-scope = { version = "2", optional = true }
 tauri-plugin-clipboard = { version = "2", optional = true }
 tauri-plugin-dialog = { version = "2", optional = true}
+serde = "1.0.219"
 
 [features]
 default = [
@@ -25,7 +26,6 @@ default = [
     "tauri-plugin-clipboard",
     "tauri-plugin-dialog"
 ]
-with-plugins = []
 
 [profile.release]
 opt-level = "z"

@@ -1,4 +1,3 @@
-
 use tauri::AppHandle;
 use tauri_plugin_notification::{NotificationExt, PermissionState};
 use serde::Serialize;
@@ -6,7 +5,7 @@ use serde::Serialize;
 #[tauri::command]
 pub fn bd_notification_state(app: AppHandle) -> Result<String, String> {
   let s = app.notification().permission_state().map_err(|e| e.to_string())?;
-  Ok(s.to_string()) // "granted" | "denied" | "default"
+  Ok(s.to_string())
 }
 
 #[tauri::command]
