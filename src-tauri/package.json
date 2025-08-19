@@ -1,9 +1,13 @@
 {
     "scripts": {
+        "ts:compile": "npx tsc",
         "clean": "rm -rf src-tauri/target && rm -rf target && cargo clean",
-        "build": "cargo tauri build",
-        "build:log": "RUST_LOG=tauri_build=trace cargo tauri build",
-        "dev:log": "RUST_LOG=tauri_build=trace cargo tauri dev",
-        "dev": "cargo tauri dev"
+        "build": "npm run ts:compile && cargo tauri build",
+        "build:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri build",
+        "dev:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri dev",
+        "dev": "npm run ts:compile && cargo tauri dev"
+    },
+    "dependencies": {
+        "typescript": "^5.9.2"
     }
 }

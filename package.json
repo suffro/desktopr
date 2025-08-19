@@ -1,0 +1,12 @@
+{
+    "scripts": {
+        "clean": "cd src-tauri && npm run clean && cd ..",
+        "build": "cd src-tauri && npm run build && cd ..",
+        "dev": "cd src-tauri && npm run dev && cd ..",
+        "build:log": "cd src-tauri && npm run build:log && cd ..",
+        "dev:log": "cd src-tauri && npm run dev:log && cd .."
+    },
+    "dependencies": {
+        "typescript": "^5.9.2"
+    }
+}
