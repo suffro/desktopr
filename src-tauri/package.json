@@ -6,8 +6,5 @@
         "build:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri build",
         "dev:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri dev",
         "dev": "npm run ts:compile && cargo tauri dev"
-    },
-    "dependencies": {
-        "typescript": "^5.9.2"
     }
 }
