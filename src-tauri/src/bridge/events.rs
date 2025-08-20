@@ -1,0 +1,26 @@
+// src/bridge/events.rs
+use tauri::{AppHandle, Emitter}; // <- porta in scope il trait giusto
+use serde_json::Value;
+
+#[tauri::command]
+pub fn bd_event_emit(
+  app: AppHandle,
+  event: String,
+  payload: Option<Value>,
+) -> Result<(), String> {
+  app
+    .emit(event.as_str(), payload) // <- &str esplicito
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn bd_event_emit_to(
+  app: AppHandle,
+  window_label: String,
+  event: String,
+  payload: Option<Value>,
+) -> Result<(), String> {
+  app
+    .emit_to(window_label.as_str(), event.as_str(), payload) // <- &str espliciti
+    .map_err(|e| e.to_string())
+}

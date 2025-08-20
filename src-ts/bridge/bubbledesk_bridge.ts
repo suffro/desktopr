@@ -49,12 +49,24 @@ type BubbledeskAPI = {
     maximizeToggle: () => Promise<void>;
     fullscreen: (enable: boolean) => Promise<void>;
   };
+  events: {
+    emit: (event: string, payload?: unknown) => Promise<unknown>;
+    emitTo: (
+      window_label: string,
+      event: string,
+      payload?: unknown
+    ) => Promise<unknown>;
+    listen: (
+      event: string,
+      handler: (payload: any) => void
+    ) => Promise<() => any>;
+  };
 };
 
-  interface Window {
-    __TAURI__?: TauriGlobal;
-    Bubbledesk?: BubbledeskAPI;
-  }
+interface Window {
+  __TAURI__?: TauriGlobal;
+  Bubbledesk?: BubbledeskAPI;
+}
 
 /** Safely extract the Tauri core from window.__TAURI__ */
 function extractCore(source: unknown): TauriCore | null {
@@ -95,7 +107,7 @@ const ensureCore = (): Promise<TauriCore> =>
 
 /** Idempotent bootstrap */
 (() => {
-if (typeof window === "undefined" || window.Bubbledesk) return;
+  if (typeof window === "undefined" || window.Bubbledesk) return;
 
   const api: BubbledeskAPI = {
     get isAvailable() {
@@ -144,6 +156,23 @@ if (typeof window === "undefined" || window.Bubbledesk) return;
       maximizeToggle: () => api.invoke("bd_win_maximize"),
       fullscreen: (enable: boolean) =>
         api.invoke("bd_win_fullscreen", { enable }),
+    },
+    events: {
+      emit: (event: string, payload?: unknown) =>
+        api.invoke("bd_event_emit", { event, payload }),
+
+      emitTo: (window_label: string, event: string, payload?: unknown) =>
+        api.invoke("bd_event_emit_to", { window_label, event, payload }),
+
+      listen: async (event: string, handler: (payload: any) => void) => {
+        await api.ready;
+        const evt = (window as any).__TAURI__?.event;
+        if (!evt?.listen) throw new Error("Tauri event API not available");
+        const unlisten = await evt.listen(event, (e: any) =>
+          handler(e?.payload)
+        );
+        return () => unlisten();
+      },
     },
   };
 

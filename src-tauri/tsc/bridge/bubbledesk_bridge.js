@@ -80,6 +80,18 @@ const ensureCore = () => new Promise((resolve, reject) => {
             maximizeToggle: () => api.invoke("bd_win_maximize"),
             fullscreen: (enable) => api.invoke("bd_win_fullscreen", { enable }),
         },
+        events: {
+            emit: (event, payload) => api.invoke("bd_event_emit", { event, payload }),
+            emitTo: (window_label, event, payload) => api.invoke("bd_event_emit_to", { window_label, event, payload }),
+            listen: async (event, handler) => {
+                await api.ready;
+                const evt = window.__TAURI__?.event;
+                if (!evt?.listen)
+                    throw new Error("Tauri event API not available");
+                const unlisten = await evt.listen(event, (e) => handler(e?.payload));
+                return () => unlisten();
+            },
+        },
     };
     Object.defineProperty(window, "Bubbledesk", {
         value: api,

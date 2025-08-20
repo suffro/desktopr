@@ -21,7 +21,9 @@ fn main() {
       // app info
       bd_app_info,
       // window
-      bd_win_minimize, bd_win_maximize, bd_win_fullscreen
+      bd_win_minimize, bd_win_maximize, bd_win_fullscreen,
+      // events
+      bd_event_emit, bd_event_emit_to,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
