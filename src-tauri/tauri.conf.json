@@ -16,7 +16,7 @@
         "backgroundColor": "#171717",
         "resizable": true,
         "fullscreen": false,
-        "url": "https://dashboard.bubbledesk.app"
+        "url": "./blank.html"
       }
     ]
   },
