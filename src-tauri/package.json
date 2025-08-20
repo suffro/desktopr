@@ -1,7 +1,7 @@
 {
     "scripts": {
         "ts:compile": "npx tsc",
-        "clean": "rm -rf src-tauri/target && rm -rf target && cargo clean",
+        "clean": "rm -rf target && cargo clean",
         "build": "npm run ts:compile && cargo tauri build",
         "build:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri build",
         "dev:log": "npm run ts:compile && RUST_LOG=tauri_build=trace cargo tauri dev",
