@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tauri = { version = "2", features = ["rustls-tls"] }
+tauri = { version = "2", features = ["rustls-tls", "tray-icon"] }
 
 # Optional plugins (enable via Cargo features)
 tauri-plugin-notification = { version = "2", optional = true }
@@ -25,7 +25,7 @@ default = [
     "tauri-plugin-updater",
     "tauri-plugin-persisted-scope",
     "tauri-plugin-clipboard-manager",
-    "tauri-plugin-dialog"
+    "tauri-plugin-dialog",
 ]
 
 [profile.release]

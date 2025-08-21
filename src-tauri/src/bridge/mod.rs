@@ -1,3 +1,5 @@
+pub mod tray;
+
 pub mod notifications;
 pub mod clipboard;
 pub mod files;
