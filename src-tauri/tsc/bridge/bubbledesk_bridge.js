@@ -5,6 +5,12 @@
  * - Safe to import multiple times (idempotent)
  * NOTE: keep comments in English as per project convention
  */
+const _gs = () => {
+    const g = window.__TAURI__?.globalShortcut;
+    if (!g)
+        throw new Error("Global Shortcut plugin not available");
+    return g;
+};
 /** Safely extract the Tauri core from window.__TAURI__ */
 function extractCore(source) {
     if (!source)
@@ -92,23 +98,6 @@ const ensureCore = () => new Promise((resolve, reject) => {
             maximizeToggle: () => api.invoke("bd_win_maximize"),
             fullscreen: (enable) => api.invoke("bd_win_fullscreen", { enable }),
         },
-        dragDrop: {
-            /**
-             * Listen to drag & drop events on the current window.
-             * Handler receives { type: "hover" | "drop" | "cancel", paths?: string[], position?: { x: number; y: number } }
-             * Returns an unlisten() function.
-             */
-            listen: async (handler) => {
-                const win = getCurrentWebviewWindow();
-                if (!win?.onDragDropEvent)
-                    throw new Error("Drag&Drop not available (Tauri v2 required).");
-                const unlisten = await win.onDragDropEvent((e) => {
-                    // e.payload has shape: { type, paths?, position? } in v2
-                    handler(e?.payload ?? e);
-                });
-                return () => unlisten();
-            },
-        },
         events: {
             emit: (event, payload) => api.invoke("bd_event_emit", { event, payload }),
             emitTo: (window_label, event, payload) => api.invoke("bd_event_emit_to", { window_label, event, payload }),
@@ -123,6 +112,47 @@ const ensureCore = () => new Promise((resolve, reject) => {
                 const offs = await Promise.all(events.map((name) => listenForEvent(name, (p) => handler(name, p))));
                 return () => offs.forEach((off) => off());
             },
+            onShortcut: async (handler) => await listenForEvent("shortcut:event", handler),
+            onDragDrop: async (handler, options) => {
+                const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
+                if (options?.includeHover)
+                    evs.push("dragdrop:hover");
+                const offs = await Promise.all(evs.map((name) => listenForEvent(name, (p) => handler(name, p))));
+                return () => offs.forEach((off) => off());
+            },
+        },
+        globalShortcut: {
+            /** eg: "CommandOrControl+Alt+T" */
+            register: async (accelerator, cb, options) => {
+                const gs = _gs();
+                await gs.register(accelerator, async (e) => {
+                    const _playload = { accelerator, ...e };
+                    if (options?.emitEvent)
+                        await api.events.emit("shortcut:event", _playload);
+                    cb(_playload);
+                });
+            },
+            unregister: async (accelerator) => {
+                const gs = _gs();
+                const reg = await gs.isRegistered(accelerator);
+                if (reg)
+                    await gs.unregister(accelerator);
+            },
+            unregisterAll: async () => {
+                const gs = _gs();
+                await gs.unregisterAll();
+            },
+            isRegistered: async (accelerator) => {
+                const gs = _gs();
+                return gs.isRegistered(accelerator);
+            },
+        },
+        fs: {
+            listDir: (rel) => api.invoke("fs_list_dir", { rel }),
+            mkdir: (rel) => api.invoke("fs_mkdir", { rel }),
+            rm: (rel, recursive = false) => api.invoke("fs_rm", { rel, recursive }),
+            stat: (rel) => api.invoke("fs_stat", { rel }),
+            base: ".cache", // convenzione: tutto è relativo a base_dir lato Rust
         },
     };
     Object.defineProperty(window, "Bubbledesk", {

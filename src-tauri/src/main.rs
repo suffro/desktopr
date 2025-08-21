@@ -7,6 +7,9 @@ use bridge::tray::init_tray;
 use plugin_bubbledesk::bubbledesk_plugin;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize}; // <-- IMPORTA Emitter
 use crate::bridge::dragdrop;
+use tauri_plugin_global_shortcut as gsc;
+use crate::gsc::Builder;
+use crate::gsc::ShortcutState;
 
 fn main() {
   tauri::Builder::default()
@@ -14,7 +17,18 @@ fn main() {
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())
-    .setup(|app| { init_tray(app)?; Ok(()) })
+    .setup(|app| {
+      // 1) Global Shortcut plugin (stile v2: Builder)
+      app.handle().plugin(
+        gsc::Builder::new()
+          .build(),
+      )?;
+
+      // 2) Tray
+      init_tray(app)?;
+
+      Ok(())
+    })
     .on_window_event(|window, event| {
       match event {
         WindowEvent::Focused(true)  => { let _ = window.emit("window:focus",  ()); }
@@ -61,6 +75,8 @@ fn main() {
       bd_win_minimize, bd_win_maximize, bd_win_fullscreen,
       // events
       bd_event_emit, bd_event_emit_to,
+      // fs
+      fs_list_dir, fs_mkdir, fs_rm, fs_stat
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

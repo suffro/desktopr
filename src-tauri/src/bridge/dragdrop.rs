@@ -19,7 +19,7 @@ fn paths_to_strings(paths: &[PathBuf]) -> Vec<String> {
 }
 
 pub fn emit_enter(window: &Window, paths: &[PathBuf], x: f64, y: f64) {
-  let _ = window.emit("dragdrop:hover", DragDropPayload {
+  let _ = window.emit("dragdrop:enter", DragDropPayload {
     kind: "enter",
     paths: paths_to_strings(paths),
     position: Some(Position { x, y }),

@@ -5,6 +5,12 @@
  * NOTE: keep comments in English as per project convention
  */
 
+const _gs = () => {
+  const g = (window as any).__TAURI__?.globalShortcut;
+  if (!g) throw new Error("Global Shortcut plugin not available");
+  return g;
+};
+
 type TauriCore = {
   invoke<T = unknown>(cmd: string, args?: Record<string, unknown>): Promise<T>;
 };
@@ -62,6 +68,27 @@ type BubbledeskAPI = {
       events: string[],
       handler: (name: string, payload: any) => void
     ) => Promise<() => any>;
+    onShortcut: (
+      handler: (payload: any) => void,
+      options?: { emitEvent?: boolean }
+    ) => Promise<() => any>;
+    onDragDrop: (
+      handler: (name: string, payload: any) => void,
+      options?: { includeHover?: boolean }
+    ) => Promise<() => void>;
+  };
+  globalShortcut: {
+    register: (accelerator: any, cb: any) => Promise<void>;
+    unregister: (accelerator: any) => Promise<void>;
+    unregisterAll: () => Promise<void>;
+    isRegistered: (accelerator: any) => Promise<any>;
+  };
+  fs: {
+    listDir: (rel: string) => Promise<unknown>;
+    mkdir: (rel: string) => Promise<unknown>;
+    rm: (rel: string, recursive?: boolean) => Promise<unknown>;
+    stat: (rel: string) => Promise<unknown>;
+    base: string;
   };
 };
 
@@ -91,13 +118,18 @@ function extractCore(source: unknown): TauriCore | null {
   return null;
 }
 
-const listenForEvent = async (event: string, handler: (payload: any) => void) => {
+const listenForEvent = async (
+  event: string,
+  handler: (payload: any) => void
+) => {
   const tauri = (window as any).__TAURI__;
   const eventApi = tauri?.event;
   if (!eventApi?.listen) throw new Error("Tauri event API not available");
-  const unlisten = await eventApi.listen(event, (e: any) => handler(e?.payload));
+  const unlisten = await eventApi.listen(event, (e: any) =>
+    handler(e?.payload)
+  );
   return () => unlisten();
-}
+};
 
 const getCurrentWebviewWindow = () => {
   const tauri = (window as any).__TAURI__;
@@ -197,6 +229,71 @@ const ensureCore = (): Promise<TauriCore> =>
         );
         return () => offs.forEach((off) => off());
       },
+      onShortcut: async (handler: (payload: any) => void) =>
+        await listenForEvent("shortcut:event", handler),
+
+      onDragDrop: async (
+        handler: (
+          name: string,
+          payload: {
+            kind: "enter" | "drop" | "cancel" | "hover" | string;
+            path: string[];
+            position: { x: number; y: number };
+            [key: string]: any;
+          }
+        ) => void,
+        options?: { includeHover?: boolean }
+      ) => {
+        const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
+        if (options?.includeHover) evs.push("dragdrop:hover");
+        const offs = await Promise.all(
+          evs.map((name) => listenForEvent(name, (p) => handler(name, p)))
+        );
+        return () => offs.forEach((off) => off());
+      },
+    },
+    globalShortcut: {
+      /** eg: "CommandOrControl+Alt+T" */
+      register: async (
+        accelerator: any,
+        cb: Function,
+        options?: { emitEvent?: boolean }
+      ) => {
+        const gs = _gs();
+        await gs.register(accelerator, async (e: any) => {
+          const _playload: {
+            accelerator: any;
+            shortcut: string;
+            id: number;
+            state: "Pressed" | "Released" | string;
+            [key: string]: any;
+          } = { accelerator, ...e };
+          if (options?.emitEvent)
+            await api.events.emit("shortcut:event", _playload);
+          cb(_playload);
+        });
+      },
+      unregister: async (accelerator: any) => {
+        const gs = _gs();
+        const reg = await gs.isRegistered(accelerator);
+        if (reg) await gs.unregister(accelerator);
+      },
+      unregisterAll: async () => {
+        const gs = _gs();
+        await gs.unregisterAll();
+      },
+      isRegistered: async (accelerator: any) => {
+        const gs = _gs();
+        return gs.isRegistered(accelerator);
+      },
+    },
+    fs: {
+      listDir: (rel: string) => api.invoke("fs_list_dir", { rel }),
+      mkdir: (rel: string) => api.invoke("fs_mkdir", { rel }),
+      rm: (rel: string, recursive = false) =>
+        api.invoke("fs_rm", { rel, recursive }),
+      stat: (rel: string) => api.invoke("fs_stat", { rel }),
+      base: ".cache", // convenzione: tutto è relativo a base_dir lato Rust
     },
   };
 
