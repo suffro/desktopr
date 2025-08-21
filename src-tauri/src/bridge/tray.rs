@@ -73,6 +73,11 @@ TrayIconBuilder::new()
         "type": "click", "button": "right", "state": "down"
       })));
     }
+    TrayIconEvent::Click { button: MouseButton::Middle, button_state: MouseButtonState::Down, .. } => {
+        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
+          "type": "click", "button": "middle", "state": "down"
+        })));
+      }
     _ => {}
   }
 })
