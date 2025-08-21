@@ -5,7 +5,8 @@ mod plugin_bubbledesk;
 use bridge::*;
 use bridge::tray::init_tray;
 use plugin_bubbledesk::bubbledesk_plugin;
-use tauri::{WindowEvent, Emitter, PhysicalSize}; // <-- IMPORTA Emitter
+use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize}; // <-- IMPORTA Emitter
+use crate::bridge::dragdrop;
 
 fn main() {
   tauri::Builder::default()
@@ -25,6 +26,24 @@ fn main() {
             "width": size.width,
             "height": size.height
           })));
+        }
+        // --- Drag & Drop ---
+        WindowEvent::DragDrop(e) => {
+          match e {
+            DragDropEvent::Enter { paths, position } => {
+              dragdrop::emit_enter(window, &paths, position.x, position.y);
+            }
+            DragDropEvent::Over { position } => {
+              dragdrop::emit_over(window, position.x, position.y);
+            }
+            DragDropEvent::Drop { paths, position } => {
+              dragdrop::emit_drop(window, &paths, position.x, position.y);
+            }
+            DragDropEvent::Leave => {
+              dragdrop::emit_cancel(window);
+            }
+            _ => {}
+          }
         }
         _ => {}
       }

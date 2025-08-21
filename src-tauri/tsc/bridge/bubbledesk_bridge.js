@@ -24,6 +24,18 @@ function extractCore(source) {
     }
     return null;
 }
+const listenForEvent = async (event, handler) => {
+    const tauri = window.__TAURI__;
+    const eventApi = tauri?.event;
+    if (!eventApi?.listen)
+        throw new Error("Tauri event API not available");
+    const unlisten = await eventApi.listen(event, (e) => handler(e?.payload));
+    return () => unlisten();
+};
+const getCurrentWebviewWindow = () => {
+    const tauri = window.__TAURI__;
+    return tauri?.window?.getCurrent?.();
+};
 /** Promise that resolves when Tauri core is available (with a timeout) */
 const ensureCore = () => new Promise((resolve, reject) => {
     const deadline = Date.now() + 10000;
@@ -80,16 +92,36 @@ const ensureCore = () => new Promise((resolve, reject) => {
             maximizeToggle: () => api.invoke("bd_win_maximize"),
             fullscreen: (enable) => api.invoke("bd_win_fullscreen", { enable }),
         },
+        dragDrop: {
+            /**
+             * Listen to drag & drop events on the current window.
+             * Handler receives { type: "hover" | "drop" | "cancel", paths?: string[], position?: { x: number; y: number } }
+             * Returns an unlisten() function.
+             */
+            listen: async (handler) => {
+                const win = getCurrentWebviewWindow();
+                if (!win?.onDragDropEvent)
+                    throw new Error("Drag&Drop not available (Tauri v2 required).");
+                const unlisten = await win.onDragDropEvent((e) => {
+                    // e.payload has shape: { type, paths?, position? } in v2
+                    handler(e?.payload ?? e);
+                });
+                return () => unlisten();
+            },
+        },
         events: {
             emit: (event, payload) => api.invoke("bd_event_emit", { event, payload }),
             emitTo: (window_label, event, payload) => api.invoke("bd_event_emit_to", { window_label, event, payload }),
-            listen: async (event, handler) => {
-                await api.ready;
-                const evt = window.__TAURI__?.event;
-                if (!evt?.listen)
-                    throw new Error("Tauri event API not available");
-                const unlisten = await evt.listen(event, (e) => handler(e?.payload));
-                return () => unlisten();
+            on: async (event, handler) => await listenForEvent(event, handler),
+            once: (event) => new Promise(async (resolve) => {
+                const off = await listenForEvent(event, (p) => {
+                    off();
+                    resolve(p);
+                });
+            }),
+            onMany: async (events, handler) => {
+                const offs = await Promise.all(events.map((name) => listenForEvent(name, (p) => handler(name, p))));
+                return () => offs.forEach((off) => off());
             },
         },
     };

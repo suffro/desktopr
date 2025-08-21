@@ -5,6 +5,22 @@ use tauri::{
     Emitter, // <-- IMPORTA Emitter
     Manager,
 };
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+// in cima al file (o in uno scope statico)
+static LAST_CLICK_MS: AtomicU64 = AtomicU64::new(0);
+
+fn debounce(ms: u64) -> bool {
+  let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
+  let last = LAST_CLICK_MS.load(Ordering::Relaxed);
+  if now.saturating_sub(last) < ms {
+    return true; // skip
+  }
+  LAST_CLICK_MS.store(now, Ordering::Relaxed);
+  false
+}
+
 
 pub fn init_tray(app: &tauri::App) -> tauri::Result<()> {
     let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -50,7 +66,8 @@ TrayIconBuilder::new()
   match ev {
     // ora questo arriva anche su macOS
     TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Down, .. } => {
-      let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
+        if debounce(120) { return; }
+        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
         "type": "click", "button": "left", "state": "down"
       })));
 
@@ -69,11 +86,13 @@ TrayIconBuilder::new()
       }
     }
     TrayIconEvent::Click { button: MouseButton::Right, button_state: MouseButtonState::Down, .. } => {
-      let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
+        if debounce(120) { return; }
+        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
         "type": "click", "button": "right", "state": "down"
       })));
     }
     TrayIconEvent::Click { button: MouseButton::Middle, button_state: MouseButtonState::Down, .. } => {
+        if debounce(120) { return; }
         let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
           "type": "click", "button": "middle", "state": "down"
         })));

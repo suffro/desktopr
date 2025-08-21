@@ -56,9 +56,11 @@ type BubbledeskAPI = {
       event: string,
       payload?: unknown
     ) => Promise<unknown>;
-    listen: (
-      event: string,
-      handler: (payload: any) => void
+    on: (event: string, handler: (payload: any) => void) => Promise<any>;
+    once: (event: string) => Promise<any>;
+    onMany: (
+      events: string[],
+      handler: (name: string, payload: any) => void
     ) => Promise<() => any>;
   };
 };
@@ -89,6 +91,18 @@ function extractCore(source: unknown): TauriCore | null {
   return null;
 }
 
+const listenForEvent = async (event: string, handler: (payload: any) => void) => {
+  const tauri = (window as any).__TAURI__;
+  const eventApi = tauri?.event;
+  if (!eventApi?.listen) throw new Error("Tauri event API not available");
+  const unlisten = await eventApi.listen(event, (e: any) => handler(e?.payload));
+  return () => unlisten();
+}
+
+const getCurrentWebviewWindow = () => {
+  const tauri = (window as any).__TAURI__;
+  return tauri?.window?.getCurrent?.();
+};
 /** Promise that resolves when Tauri core is available (with a timeout) */
 const ensureCore = (): Promise<TauriCore> =>
   new Promise((resolve, reject) => {
@@ -160,18 +174,28 @@ const ensureCore = (): Promise<TauriCore> =>
     events: {
       emit: (event: string, payload?: unknown) =>
         api.invoke("bd_event_emit", { event, payload }),
-
       emitTo: (window_label: string, event: string, payload?: unknown) =>
         api.invoke("bd_event_emit_to", { window_label, event, payload }),
 
-      listen: async (event: string, handler: (payload: any) => void) => {
-        await api.ready;
-        const evt = (window as any).__TAURI__?.event;
-        if (!evt?.listen) throw new Error("Tauri event API not available");
-        const unlisten = await evt.listen(event, (e: any) =>
-          handler(e?.payload)
+      on: async (event: string, handler: (payload: any) => void) =>
+        await listenForEvent(event, handler),
+
+      once: (event: string) =>
+        new Promise<any>(async (resolve) => {
+          const off = await listenForEvent(event, (p) => {
+            off();
+            resolve(p);
+          });
+        }),
+
+      onMany: async (
+        events: string[],
+        handler: (name: string, payload: any) => void
+      ) => {
+        const offs = await Promise.all(
+          events.map((name) => listenForEvent(name, (p) => handler(name, p)))
         );
-        return () => unlisten();
+        return () => offs.forEach((off) => off());
       },
     },
   };
