@@ -2,14 +2,19 @@
     "compilerOptions": {
       "target": "ES2021",
       "lib": ["DOM", "ES2021"],
-      "module": "none", // important
-      "moduleResolution": "classic",
+      "module": "NodeNext", // important
+      "moduleResolution": "nodenext",
       "strict": true,
       "skipLibCheck": true,
       "declaration": false,
       "sourceMap": false,
-      "outDir": "src-tauri/tsc",
-      "rootDir": "src-ts"
+      "baseUrl": "./src-ts",
+      "paths": {
+        "@types": ["_types.ts"],
+        "@helpers": ["_helpers.ts"],
+        "@main": ["_main.ts"],
+        "@constants": ["_constants.ts"],
+      },
     },
 	"include": ["src-ts"],
 	"exclude": ["node_modules", "src-tauri/tsc", "**/*.test.ts"]

@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod bridge;
-mod plugin_bubbledesk;
+mod Bubbledesk;
 
 use bridge::*;
 use bridge::tray::init_tray;
-use plugin_bubbledesk::bubbledesk_plugin;
+use Bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize}; // <-- IMPORTA Emitter
 use crate::bridge::dragdrop;
 use tauri_plugin_global_shortcut as gsc;
@@ -13,7 +13,7 @@ use crate::gsc::ShortcutState;
 
 fn main() {
   tauri::Builder::default()
-    .plugin(bubbledesk_plugin())
+    .plugin(bridge())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())

@@ -1,5 +1,6 @@
 {
     "scripts": {
+        "ts:compile": "cd src-tauri && npm run ts:compile && cd ..",
         "clean": "cd src-tauri && npm run clean && cd ..",
         "build": "cd src-tauri && npm run build && cd ..",
         "dev": "cd src-tauri && npm run dev && cd ..",
