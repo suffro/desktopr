@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Bubbledesk dev",
+    "identifier": "app.bubbledesk.dashboard",
+    "plugins": {
+      "updater": {
+        "active": false
+      },
+      "deep-link": {
+        "desktop": {
+          "schemes": ["bubbledesk"]
+        }
+      }
+    },
+    "build": { "removeUnusedCommands": true },
+    "app": {
+      "withGlobalTauri": true,
+      "security": { "capabilities": ["remote"], "csp": null },
+      "windows": [
+        {
+          "label": "main",
+          "title": "Bubbledesk Dev",
+          "width": 1200,
+          "height": 800,
+          "backgroundColor": "#171717",
+          "resizable": true,
+          "fullscreen": false,
+          "url": "./blank.html"
+        }
+      ]
+    },
+    "bundle": {
+      "active": true,
+      "targets": ["dmg"],
+      "icon": ["icons/icon.png"]
+    }
+  }
+  

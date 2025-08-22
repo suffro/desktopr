@@ -1,6 +1,6 @@
 [package]
-name = "bubbledesk-wrapper"
-version = "0.2.1"
+name = "%%CARGO_PACKAGE_NAME%%"
+version = "%%CARGO_PACKAGE_VERSION%%"
 edition = "2021"
 
 [dependencies]

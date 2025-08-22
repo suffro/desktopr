@@ -1,5 +1,0 @@
-{
-  "identifier": "plugins",
-  "windows": ["*"],
-  "permissions": ["notification:default"]
-}

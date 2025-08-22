@@ -5,43 +5,78 @@ mod Bubbledesk;
 use bridge::*;
 use bridge::tray::init_tray;
 use Bubbledesk::bridge;
-use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize}; // <-- IMPORTA Emitter
+use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
+
+// Global Shortcut plugin
 use tauri_plugin_global_shortcut as gsc;
 use crate::gsc::Builder;
 use crate::gsc::ShortcutState;
 
+// Deep-link + single-instance
+use tauri_plugin_deep_link::DeepLinkExt;
+
 fn main() {
-  tauri::Builder::default()
+  let mut builder = tauri::Builder::default();
+
+  // --- 0) Single-instance PRIMO (importante con deep-link) ---
+  builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+    // Quando un deep-link tenta di aprire una seconda istanza,
+    // il plugin deep-link si occuperà di inoltrare l'URL all'istanza esistente.
+    // Qui puoi eventualmente loggare argv (debug).
+    println!("single-instance argv: {argv:?}");
+  }));
+
+  // --- 1) Plugin del tuo bridge + altri già presenti ---
+  builder = builder
     .plugin(bridge())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
-    .plugin(tauri_plugin_dialog::init())
-    .setup(|app| {
-      // 1) Global Shortcut plugin (stile v2: Builder)
-      app.handle().plugin(
-        gsc::Builder::new()
-          .build(),
-      )?;
+    .plugin(tauri_plugin_dialog::init());
 
-      // 2) Tray
-      init_tray(app)?;
+  // --- 2) Plugin Deep Link ---
+  builder = builder.plugin(tauri_plugin_deep_link::init());
 
-      Ok(())
-    })
+  // --- 3) Setup: tray, shortcut e deeplink (boot + runtime) ---
+  builder = builder.setup(|app| {
+    // Global Shortcut (già tuo)
+    app.handle().plugin(
+      gsc::Builder::new().build(),
+    )?;
+
+    // Tray (già tuo)
+    init_tray(app)?;
+
+    // Deep link: URL di avvio (se l'app è stata aperta con deeplink)
+    if let Ok(Some(urls)) = app.deep_link().get_current() {
+      if let Some(u) = urls.first() {
+        bridge_deeplink::emit_parsed(app, u);
+      }
+    }
+
+    // Deep link: URL runtime (quando l'app è già aperta)
+    app.deep_link().on_open_url(|e| {
+      if let Some(u) = e.urls().first() {
+        bridge_deeplink::emit_parsed(e.app_handle(), u);
+      }
+    });
+
+    Ok(())
+  });
+
+  // --- 4) Eventi finestra (come già avevi) + invoke handler ---
+  builder
     .on_window_event(|window, event| {
       match event {
         WindowEvent::Focused(true)  => { let _ = window.emit("window:focus",  ()); }
         WindowEvent::Focused(false) => { let _ = window.emit("window:blur",   ()); }
         WindowEvent::CloseRequested { .. } => { let _ = window.emit("window:close-requested", ()); }
         WindowEvent::Resized(size) => {
-          // qui hai accesso a PhysicalSize
           let _ = window.emit("window:resized", Some(serde_json::json!({
             "width": size.width,
             "height": size.height
           })));
         }
-        // --- Drag & Drop ---
         WindowEvent::DragDrop(e) => {
           match e {
             DragDropEvent::Enter { paths, position } => {
