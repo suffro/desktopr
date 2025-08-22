@@ -148,11 +148,91 @@ const ensureCore = () => new Promise((resolve, reject) => {
             },
         },
         fs: {
-            listDir: (rel) => api.invoke("fs_list_dir", { rel }),
-            mkdir: (rel) => api.invoke("fs_mkdir", { rel }),
-            rm: (rel, recursive = false) => api.invoke("fs_rm", { rel, recursive }),
-            stat: (rel) => api.invoke("fs_stat", { rel }),
-            base: ".cache", // convenzione: tutto è relativo a base_dir lato Rust
+            // ----------- CACHED DATA -----------
+            cache: {
+                listDir: (rel = "") => api.invoke("fs_list_dir", { rel, permanent: false }),
+                mkdir: (rel) => api.invoke("fs_mkdir", { rel, permanent: false }),
+                rm: (rel, recursive = false) => api.invoke("fs_rm", { rel, recursive, permanent: false }),
+                stat: (rel = "") => api.invoke("fs_stat", { rel, permanent: false }),
+                // NEW:
+                writeText: (rel, contents, opts) => api.invoke("fs_write_text", {
+                    rel,
+                    permanent: false,
+                    contents,
+                    createDirs: opts?.createDirs,
+                    append: opts?.append,
+                }),
+                readText: (rel) => api.invoke("fs_read_text", { rel, permanent: false }),
+                writeBytes: (rel, base64, opts) => api.invoke("fs_write_bytes", {
+                    rel,
+                    permanent: false,
+                    dataBase64: base64,
+                    createDirs: opts?.createDirs,
+                }),
+                readBytes: (rel) => api.invoke("fs_read_bytes", { rel, permanent: false }),
+                exists: (rel) => api.invoke("fs_exists", { rel, permanent: false }),
+                move: (src, dest, opts) => api.invoke("fs_move", {
+                    src,
+                    dest,
+                    permanent: false,
+                    createDirs: opts?.createDirs,
+                    overwrite: opts?.overwrite,
+                }),
+                copy: (src, dest, opts) => api.invoke("fs_copy", {
+                    src,
+                    dest,
+                    permanent: false,
+                    recursive: opts?.recursive,
+                    createDirs: opts?.createDirs,
+                    overwrite: opts?.overwrite,
+                }),
+                clear: () => api.invoke("fs_clear_cache", {}),
+                path: async () => (await api.invoke("fs_paths"))?.cache,
+                base: ".cache",
+            },
+            // ----------- PERMANENT DATA -----------
+            data: {
+                listDir: (rel = "") => api.invoke("fs_list_dir", { rel, permanent: true }),
+                mkdir: (rel) => api.invoke("fs_mkdir", { rel, permanent: true }),
+                rm: (rel, recursive = false) => api.invoke("fs_rm", { rel, recursive, permanent: true }),
+                stat: (rel = "") => api.invoke("fs_stat", { rel, permanent: true }),
+                // NEW:
+                writeText: (rel, contents, opts) => api.invoke("fs_write_text", {
+                    rel,
+                    permanent: true,
+                    contents,
+                    createDirs: opts?.createDirs,
+                    append: opts?.append,
+                }),
+                readText: (rel) => api.invoke("fs_read_text", { rel, permanent: true }),
+                writeBytes: (rel, base64, opts) => api.invoke("fs_write_bytes", {
+                    rel,
+                    permanent: true,
+                    dataBase64: base64,
+                    createDirs: opts?.createDirs,
+                }),
+                readBytes: (rel) => api.invoke("fs_read_bytes", { rel, permanent: true }),
+                exists: (rel) => api.invoke("fs_exists", { rel, permanent: true }),
+                move: (src, dest, opts) => api.invoke("fs_move", {
+                    src,
+                    dest,
+                    permanent: true,
+                    createDirs: opts?.createDirs,
+                    overwrite: opts?.overwrite,
+                }),
+                copy: (src, dest, opts) => api.invoke("fs_copy", {
+                    src,
+                    dest,
+                    permanent: true,
+                    recursive: opts?.recursive,
+                    createDirs: opts?.createDirs,
+                    overwrite: opts?.overwrite,
+                }),
+                path: async () => (await api.invoke("fs_paths"))?.data,
+                base: ".data",
+            },
+            paths: () => api.invoke("fs_paths"),
+            base: { cache: ".cache", data: ".data" },
         },
     };
     Object.defineProperty(window, "Bubbledesk", {

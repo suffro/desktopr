@@ -417,6 +417,7 @@ dependencies = [
 name = "bubbledesk-wrapper"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "serde",
  "serde_json",
  "tauri",
@@ -428,6 +429,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-persisted-scope",
  "tauri-plugin-updater",
+ "walkdir",
 ]
 
 [[package]]

@@ -19,6 +19,66 @@ type TauriGlobal = TauriCore | { core: TauriCore };
 
 type OpenResult = { paths: string[] };
 
+type DragDropPayload = {
+  kind: "enter" | "hover" | "drop" | "cancel" | string;
+  paths: string[];
+  position?: { x: number; y: number };
+  [k: string]: any;
+};
+
+type FsEntry = {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size?: number | null;
+};
+
+type FsPaths = { cache: string; data: string };
+
+type FsScopeMethods = {
+  listDir: (rel: string) => Promise<FsEntry[]>;
+  mkdir: (rel: string) => Promise<void>;
+  rm: (rel: string, recursive?: boolean) => Promise<void>;
+  stat: (rel: string) => Promise<FsEntry>;
+  writeText: (
+    rel: string,
+    contents: string,
+    opts?: {
+      createDirs?: boolean;
+      append?: boolean;
+    }
+  ) => Promise<void>;
+  readText: (rel: string) => Promise<string>;
+  writeBytes: (
+    rel: string,
+    base64: string,
+    opts?: {
+      createDirs?: boolean;
+    }
+  ) => Promise<void>;
+  readBytes: (rel: string) => Promise<string>;
+  exists: (rel: string) => Promise<boolean>;
+  move: (
+    src: string,
+    dest: string,
+    opts?: {
+      createDirs?: boolean;
+      overwrite?: boolean;
+    }
+  ) => Promise<void>;
+  copy: (
+    src: string,
+    dest: string,
+    opts?: {
+      recursive?: boolean;
+      createDirs?: boolean;
+      overwrite?: boolean;
+    }
+  ) => Promise<void>;
+  path: () => Promise<string>;
+  base: string;
+};
+
 type BubbledeskAPI = {
   /** true if the bridge was injected */
   readonly isAvailable: boolean;
@@ -84,11 +144,13 @@ type BubbledeskAPI = {
     isRegistered: (accelerator: any) => Promise<any>;
   };
   fs: {
-    listDir: (rel: string) => Promise<unknown>;
-    mkdir: (rel: string) => Promise<unknown>;
-    rm: (rel: string, recursive?: boolean) => Promise<unknown>;
-    stat: (rel: string) => Promise<unknown>;
-    base: string;
+    cache: FsScopeMethods & { clear: () => Promise<void> };
+    data: FsScopeMethods;
+    paths: () => Promise<FsPaths>;
+    base: {
+      cache: string;
+      data: string;
+    };
   };
 };
 
@@ -233,15 +295,7 @@ const ensureCore = (): Promise<TauriCore> =>
         await listenForEvent("shortcut:event", handler),
 
       onDragDrop: async (
-        handler: (
-          name: string,
-          payload: {
-            kind: "enter" | "drop" | "cancel" | "hover" | string;
-            path: string[];
-            position: { x: number; y: number };
-            [key: string]: any;
-          }
-        ) => void,
+        handler: (name: string, payload: DragDropPayload) => void,
         options?: { includeHover?: boolean }
       ) => {
         const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
@@ -255,14 +309,14 @@ const ensureCore = (): Promise<TauriCore> =>
     globalShortcut: {
       /** eg: "CommandOrControl+Alt+T" */
       register: async (
-        accelerator: any,
+        accelerator: string,
         cb: Function,
         options?: { emitEvent?: boolean }
       ) => {
         const gs = _gs();
         await gs.register(accelerator, async (e: any) => {
           const _playload: {
-            accelerator: any;
+            accelerator: string;
             shortcut: string;
             id: number;
             state: "Pressed" | "Released" | string;
@@ -273,7 +327,7 @@ const ensureCore = (): Promise<TauriCore> =>
           cb(_playload);
         });
       },
-      unregister: async (accelerator: any) => {
+      unregister: async (accelerator: string) => {
         const gs = _gs();
         const reg = await gs.isRegistered(accelerator);
         if (reg) await gs.unregister(accelerator);
@@ -282,18 +336,162 @@ const ensureCore = (): Promise<TauriCore> =>
         const gs = _gs();
         await gs.unregisterAll();
       },
-      isRegistered: async (accelerator: any) => {
+      isRegistered: async (accelerator: string) => {
         const gs = _gs();
         return gs.isRegistered(accelerator);
       },
     },
     fs: {
-      listDir: (rel: string) => api.invoke("fs_list_dir", { rel }),
-      mkdir: (rel: string) => api.invoke("fs_mkdir", { rel }),
-      rm: (rel: string, recursive = false) =>
-        api.invoke("fs_rm", { rel, recursive }),
-      stat: (rel: string) => api.invoke("fs_stat", { rel }),
-      base: ".cache", // convenzione: tutto è relativo a base_dir lato Rust
+      // ----------- CACHED DATA -----------
+      cache: {
+        listDir: (rel: string="") =>
+          api.invoke<FsEntry[]>("fs_list_dir", { rel, permanent: false }),
+        mkdir: (rel: string) =>
+          api.invoke<void>("fs_mkdir", { rel, permanent: false }),
+        rm: (rel: string, recursive = false) =>
+          api.invoke<void>("fs_rm", { rel, recursive, permanent: false }),
+        stat: (rel: string="") =>
+          api.invoke<FsEntry>("fs_stat", { rel, permanent: false }),
+        // NEW:
+        writeText: (
+          rel: string,
+          contents: string,
+          opts?: { createDirs?: boolean; append?: boolean }
+        ) =>
+          api.invoke<void>("fs_write_text", {
+            rel,
+            permanent: false,
+            contents,
+            createDirs: opts?.createDirs,
+            append: opts?.append,
+          }),
+        readText: (rel: string) =>
+          api.invoke<string>("fs_read_text", { rel, permanent: false }),
+        writeBytes: (
+          rel: string,
+          base64: string,
+          opts?: { createDirs?: boolean }
+        ) =>
+          api.invoke<void>("fs_write_bytes", {
+            rel,
+            permanent: false,
+            dataBase64: base64,
+            createDirs: opts?.createDirs,
+          }),
+        readBytes: (rel: string) =>
+          api.invoke<string>("fs_read_bytes", { rel, permanent: false }),
+        exists: (rel: string) =>
+          api.invoke<boolean>("fs_exists", { rel, permanent: false }),
+        move: (
+          src: string,
+          dest: string,
+          opts?: { createDirs?: boolean; overwrite?: boolean }
+        ) =>
+          api.invoke<void>("fs_move", {
+            src,
+            dest,
+            permanent: false,
+            createDirs: opts?.createDirs,
+            overwrite: opts?.overwrite,
+          }),
+        copy: (
+          src: string,
+          dest: string,
+          opts?: {
+            recursive?: boolean;
+            createDirs?: boolean;
+            overwrite?: boolean;
+          }
+        ) =>
+          api.invoke<void>("fs_copy", {
+            src,
+            dest,
+            permanent: false,
+            recursive: opts?.recursive,
+            createDirs: opts?.createDirs,
+            overwrite: opts?.overwrite,
+          }),
+
+        clear: () => api.invoke<void>("fs_clear_cache", {}),
+        path: async () => (await api.invoke<FsPaths>("fs_paths"))?.cache,
+        base: ".cache",
+      },
+      // ----------- PERMANENT DATA -----------
+      data: {
+        listDir: (rel: string="") =>
+          api.invoke<FsEntry[]>("fs_list_dir", { rel, permanent: true }),
+        mkdir: (rel: string) =>
+          api.invoke<void>("fs_mkdir", { rel, permanent: true }),
+        rm: (rel: string, recursive = false) =>
+          api.invoke<void>("fs_rm", { rel, recursive, permanent: true }),
+        stat: (rel: string="") =>
+          api.invoke<FsEntry>("fs_stat", { rel, permanent: true }),
+        // NEW:
+        writeText: (
+          rel: string,
+          contents: string,
+          opts?: { createDirs?: boolean; append?: boolean }
+        ) =>
+          api.invoke<void>("fs_write_text", {
+            rel,
+            permanent: true,
+            contents,
+            createDirs: opts?.createDirs,
+            append: opts?.append,
+          }),
+        readText: (rel: string) =>
+          api.invoke<string>("fs_read_text", { rel, permanent: true }),
+        writeBytes: (
+          rel: string,
+          base64: string,
+          opts?: { createDirs?: boolean }
+        ) =>
+          api.invoke<void>("fs_write_bytes", {
+            rel,
+            permanent: true,
+            dataBase64: base64,
+            createDirs: opts?.createDirs,
+          }),
+        readBytes: (rel: string) =>
+          api.invoke<string>("fs_read_bytes", { rel, permanent: true }),
+
+        exists: (rel: string) =>
+          api.invoke<boolean>("fs_exists", { rel, permanent: true }),
+        move: (
+          src: string,
+          dest: string,
+          opts?: { createDirs?: boolean; overwrite?: boolean }
+        ) =>
+          api.invoke<void>("fs_move", {
+            src,
+            dest,
+            permanent: true,
+            createDirs: opts?.createDirs,
+            overwrite: opts?.overwrite,
+          }),
+        copy: (
+          src: string,
+          dest: string,
+          opts?: {
+            recursive?: boolean;
+            createDirs?: boolean;
+            overwrite?: boolean;
+          }
+        ) =>
+          api.invoke<void>("fs_copy", {
+            src,
+            dest,
+            permanent: true,
+            recursive: opts?.recursive,
+            createDirs: opts?.createDirs,
+            overwrite: opts?.overwrite,
+          }),
+
+        path: async () => (await api.invoke<FsPaths>("fs_paths"))?.data,
+        base: ".data",
+      },
+      paths: () => api.invoke<FsPaths>("fs_paths"),
+      base: { cache: ".cache", data: ".data" },
     },
   };
 

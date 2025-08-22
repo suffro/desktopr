@@ -76,7 +76,7 @@ fn main() {
       // events
       bd_event_emit, bd_event_emit_to,
       // fs
-      fs_list_dir, fs_mkdir, fs_rm, fs_stat
+      fs_list_dir, fs_mkdir, fs_rm, fs_stat, fs_write_text, fs_read_text, fs_write_bytes, fs_read_bytes, fs_exists, fs_move, fs_copy, fs_clear_cache, fs_paths
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
