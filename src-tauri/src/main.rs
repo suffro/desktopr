@@ -20,10 +20,7 @@ fn main() {
   let mut builder = tauri::Builder::default();
 
   // --- 0) Single-instance PRIMO (importante con deep-link) ---
-  builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
-    // Quando un deep-link tenta di aprire una seconda istanza,
-    // il plugin deep-link si occuperà di inoltrare l'URL all'istanza esistente.
-    // Qui puoi eventualmente loggare argv (debug).
+  builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
     println!("single-instance argv: {argv:?}");
   }));
 
@@ -47,24 +44,32 @@ fn main() {
     // Tray (già tuo)
     init_tray(app)?;
 
-    // Deep link: URL di avvio (se l'app è stata aperta con deeplink)
-    if let Ok(Some(urls)) = app.deep_link().get_current() {
+    // Registrazione runtime (solo dev su Win/Linux)
+    #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]
+    {
+      app.deep_link().register_all()?;
+    }
+
+    // Deep link: URL di avvio
+    let start_urls = app.deep_link().get_current()?;
+    if let Some(urls) = start_urls {
       if let Some(u) = urls.first() {
-        bridge_deeplink::emit_parsed(app, u);
+        crate::bridge::deeplink::emit_parsed_deeplink(&app.handle(), u.as_str());
       }
     }
 
-    // Deep link: URL runtime (quando l'app è già aperta)
-    app.deep_link().on_open_url(|e| {
+    // Deep link: URL runtime (quando l’app è già aperta)
+    let handle = app.handle().clone();
+    app.deep_link().on_open_url(move |e| {
       if let Some(u) = e.urls().first() {
-        bridge_deeplink::emit_parsed(e.app_handle(), u);
+        crate::bridge::deeplink::emit_parsed_deeplink(&handle, u.as_str());
       }
     });
 
     Ok(())
   });
 
-  // --- 4) Eventi finestra (come già avevi) + invoke handler ---
+  // --- 4) Eventi finestra + invoke handler ---
   builder
     .on_window_event(|window, event| {
       match event {
@@ -111,7 +116,9 @@ fn main() {
       // events
       bd_event_emit, bd_event_emit_to,
       // fs
-      fs_list_dir, fs_mkdir, fs_rm, fs_stat, fs_write_text, fs_read_text, fs_write_bytes, fs_read_bytes, fs_exists, fs_move, fs_copy, fs_clear_cache, fs_paths
+      fs_list_dir, fs_mkdir, fs_rm, fs_stat, fs_write_text, fs_read_text,
+      fs_write_bytes, fs_read_bytes, fs_exists, fs_move, fs_copy,
+      fs_clear_cache, fs_paths
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

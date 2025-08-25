@@ -31,6 +31,8 @@ default = [
     "tauri-plugin-persisted-scope",
     "tauri-plugin-clipboard-manager",
     "tauri-plugin-dialog",
+    "tauri-plugin-deep-link",
+    "tauri-plugin-single-instance",
 ]
 
 [profile.release]
