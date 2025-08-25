@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod bridge;
-mod Bubbledesk;
+mod bubbledesk;
 
 use bridge::*;
 use bridge::tray::init_tray;
-use Bubbledesk::bridge;
+use bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
 

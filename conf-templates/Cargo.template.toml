@@ -4,7 +4,7 @@ version = "%%CARGO_PACKAGE_VERSION%%"
 edition = "2021"
 
 [dependencies]
-tauri = { version = "2", features = ["rustls-tls", "tray-icon"] }
+tauri = { version = "2", features = ["rustls-tls", "tray-icon", "devtools"] }
 # Optional plugins (enable via Cargo features)
 tauri-plugin-notification = { version = "2", optional = true }
 tauri-plugin-autostart = { version = "2", optional = true }
