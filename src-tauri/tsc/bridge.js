@@ -76,6 +76,7 @@ var Bridge = (() => {
         const offs = await Promise.all(events.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
       },
+      onDeeplink: async (handler) => listenForEvent("deeplink", handler),
       onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
       onDragDrop: async (handler, options) => {
         const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];

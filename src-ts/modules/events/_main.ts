@@ -23,6 +23,8 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
       return () => offs.forEach((off) => off());
     },
 
+    onDeeplink: async (handler: (payload: any) => void) => listenForEvent("deeplink", handler),
+
     onShortcut: async (handler: (payload: any) => void) => listenForEvent("shortcut:event", handler),
 
     onDragDrop: async (
