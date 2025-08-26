@@ -1,7 +1,5 @@
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use url::Url;
-use crate::helpers::constants::BRIDGE_JS;
-use crate::helpers::window_defaults::read_main_defaults;
 
 #[tauri::command]
 pub fn bd_win_minimize(app: AppHandle, label: String) -> Result<(), String> {
@@ -35,36 +33,32 @@ pub fn bd_win_fullscreen(app: AppHandle, label: String, enable: bool) -> Result<
 }
 
 #[tauri::command]
-pub fn bd_win_open(
+pub async fn bd_win_open(
   app: AppHandle,
   label: String,
-  url: Option<String>,
-  _width: f64,
-  _height: f64,
+  fullscreen: bool,
+  //url: String,
 ) -> Result<(), String> {
   if app.get_webview_window(&label).is_some() {
     return Ok(());
   }
+  // let s = url.to_string();
+  // let webview_url = WebviewUrl::External(
+  //     s.parse::<Url>().map_err(|e| e.to_string())?
+  // );
 
-  let u = url.ok_or("Missing URL")?;
-  let parsed = u.parse::<url::Url>().map_err(|e| e.to_string())?;
+  let mut conf = app.config().app.windows.iter().find(|c| c.label == "main").unwrap().clone();
+  // This should be a unique label for all windows. For example, we can use a random suffix:
+  let mut buf = [0u8; 1];
+  assert_eq!(getrandom::fill(&mut buf), Ok(()));
+  conf.label = label;
+  conf.fullscreen = fullscreen;
+  //conf.url = webview_url;
+  let webview_window = tauri::WebviewWindowBuilder::from_config(&app, &conf)
+    .unwrap()
+    .build()
+    .unwrap();
 
-  let d = read_main_defaults(&app);
-
-  let mut b = WebviewWindowBuilder::new(&app, label, WebviewUrl::External(parsed))
-    .title(d.title)
-    .inner_size(d.width, d.height)
-    .resizable(d.resizable)
-    .decorations(d.decorations)
-    .fullscreen(d.fullscreen)
-    .visible(true)
-    .initialization_script(include_str!("../../tsc/bridge.js"));
-
-  if d.always_on_top {
-    b = b.always_on_top(true);
-  }
-
-  b.build().map_err(|e| e.to_string())?;
   Ok(())
 }
 

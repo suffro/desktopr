@@ -6,9 +6,11 @@
         "build": "npm run build --prefix src-tauri/",
         "dev": "npm run dev --prefix src-tauri/",
         "build:log": "npm run build:log --prefix src-tauri/",
-        "dev:log": "npm run dev:log --prefix src-tauri/"
+        "dev:log": "npm run dev:log --prefix src-tauri/",
+        "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
     },
     "dependencies": {
+        "suffro-lib": "git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main",
         "typescript": "^5.9.2"
     }
 }
