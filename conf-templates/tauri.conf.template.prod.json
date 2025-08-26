@@ -1,14 +1,17 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Bubbledesk dev",
-    "identifier": "app.bubbledesk.dashboard",
+    "productName": "%%APP_NAME%%",
+    "identifier": "%%APP_IDENTIFIER%%",
+    "version": "%%APP_VERSION%%",
     "plugins": {
       "updater": {
-        "active": false
+        "active": true,
+        "endpoints": ["%%UPDATE_ENDPOINT%%"],
+        "dialog": false,
+        "pubkey": "%%ED25519_PUBKEY%%"
       },
       "deep-link": {
         "desktop": {
-          "schemes": ["bubbledesk"]
+          "schemes": ["%%DEEPLINK_SCHEME%%"]
         }
       }
     },
@@ -19,13 +22,13 @@
       "windows": [
         {
           "label": "main",
-          "title": "Bubbledesk Dev",
-          "width": 1200,
-          "height": 800,
-          "backgroundColor": "#171717",
+          "title": "%%MAIN_WINDOW_TITLE%%",
+          "width": "%%MAIN_WINDOW_WIDTH%%",
+          "height": "%%MAIN_WINDOW_HEIGHT%%",
+          "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",
           "resizable": true,
           "fullscreen": false,
-          "url": "./blank.html"
+          "url": "%%MAIN_WINDOW_URL%%"
         }
       ]
     },

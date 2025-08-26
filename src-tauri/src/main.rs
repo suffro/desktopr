@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod bridge;
 mod bubbledesk;
+mod helpers;
 
 use bridge::*;
 use bridge::tray::init_tray;
@@ -112,7 +113,7 @@ fn main() {
       // app info
       bd_app_info,
       // window
-      bd_win_minimize, bd_win_maximize, bd_win_fullscreen,
+      bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
       // events
       bd_event_emit, bd_event_emit_to,
       // fs

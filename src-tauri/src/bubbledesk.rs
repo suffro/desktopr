@@ -1,5 +1,6 @@
 use tauri::plugin::{Builder as PluginBuilder, TauriPlugin};
 use tauri::Runtime;
+use crate::helpers::constants::BRIDGE_JS;
 
 pub fn bridge<R: Runtime>() -> TauriPlugin<R> {
   PluginBuilder::new("bubbledesk")

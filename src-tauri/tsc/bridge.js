@@ -194,17 +194,31 @@ var Bridge = (() => {
     };
   }
 
+  // ../src-ts/bridge.constants.json
+  var bridge_constants_default = {
+    appUrl: "http://blank.html",
+    appVersion: "0.2.1"
+  };
+
+  // ../src-ts/_constants.ts
+  var APP_URL = bridge_constants_default.appUrl;
+  var APP_VERSION = bridge_constants_default.appVersion;
+
   // ../src-ts/modules/window/_main.ts
   function buildWindow(core) {
     return {
-      minimize: () => core.invoke("bd_win_minimize"),
-      maximizeToggle: () => core.invoke("bd_win_maximize"),
-      fullscreen: (enable) => core.invoke("bd_win_fullscreen", { enable })
+      minimize: (label) => core.invoke("bd_win_minimize", { label: label ?? "main" }),
+      maximizeToggle: (label) => core.invoke("bd_win_maximize", { label: label ?? "main" }),
+      fullscreen: (enable, label) => core.invoke("bd_win_fullscreen", { enable, label: label ?? "main" }),
+      new: (label, options) => core.invoke("bd_win_open", {
+        label,
+        url: options?.url ?? APP_URL,
+        width: options?.width ?? 1024,
+        height: options?.height ?? 700
+      }),
+      close: (label) => core.invoke("bd_win_close", { label })
     };
   }
-
-  // ../src-ts/_constants.ts
-  var VERSION = "0.2.1";
 
   // ../src-ts/bridge.ts
   (() => {
@@ -214,7 +228,7 @@ var Bridge = (() => {
       get isAvailable() {
         return true;
       },
-      version: VERSION,
+      version: APP_VERSION,
       get ready() {
         return core.ready;
       },

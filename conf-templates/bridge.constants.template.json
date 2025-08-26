@@ -1,0 +1,5 @@
+
+{
+    "appUrl": "%%APP_URL%%",
+    "appVersion": "%%APP_VERSION%%"
+}

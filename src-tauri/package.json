@@ -3,9 +3,9 @@
         "ts:compile": "npx esbuild ../src-ts/bridge.ts --bundle --format=iife --global-name=Bridge --outfile=tsc/bridge.js --sourcemap",
         "devconf": "npm run devconf --prefix ../",
         "clean": "rm -rf target && rm -rf gen && cargo clean",
-        "build": "npm run ts:compile && npm run devconf && cargo tauri build --config ../conf-overlay/overlay.dev.json",
-        "build:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri build --config ../conf-overlay/overlay.dev.json",
-        "dev:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri dev --config ../conf-overlay/overlay.dev.json",
-        "dev": "npm run ts:compile && npm run devconf && cargo tauri dev --config ../conf-overlay/overlay.dev.json"
+        "build": "npm run ts:compile && npm run devconf && cargo tauri build",
+        "build:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri build",
+        "dev:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri dev",
+        "dev": "npm run ts:compile && npm run devconf && cargo tauri dev"
     }
 }

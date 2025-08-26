@@ -10,7 +10,7 @@ import {
     buildShortcuts,
     buildAppInfo
 } from "@main";
-import { VERSION } from "@constants";
+import { APP_VERSION } from "@constants";
 
 (() => {
   // importantissimo: niente export in questo file
@@ -20,7 +20,7 @@ import { VERSION } from "@constants";
 
   const api: BubbledeskAPI = {
     get isAvailable() { return true; },
-    version: VERSION,
+    version: APP_VERSION,
     get ready() { return core.ready; },
     invoke: core.invoke,
 
