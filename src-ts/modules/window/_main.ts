@@ -10,14 +10,14 @@ export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }) {
     new: (options?: {
       label?: string,
       fullscreen?: boolean,
-      // url?:string
+      url?:string
     }): Promise<void> => core.invoke("bd_win_open", {
       label: (options?.label)??getRandomString({
         length: 6,
         prefix: "w_"
       }),
-      fullscreen: (options?.fullscreen) || false
-      // url: (options?.url) ?? APP_URL,
+      fullscreen: (options?.fullscreen) || false,
+      url: (options?.url) ?? "",
     }),
     close: (label: string): Promise<void> => core.invoke("bd_win_close", { label }),
   };

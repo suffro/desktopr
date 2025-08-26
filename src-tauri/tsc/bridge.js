@@ -16834,8 +16834,8 @@ This typically indicates that your device does not have a healthy Internet conne
           length: 6,
           prefix: "w_"
         }),
-        fullscreen: options?.fullscreen || false
-        // url: (options?.url) ?? APP_URL,
+        fullscreen: options?.fullscreen || false,
+        url: options?.url ?? ""
       }),
       close: (label) => core.invoke("bd_win_close", { label })
     };

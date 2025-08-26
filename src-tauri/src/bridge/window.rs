@@ -37,15 +37,12 @@ pub async fn bd_win_open(
   app: AppHandle,
   label: String,
   fullscreen: bool,
-  //url: String,
+  url: String,
 ) -> Result<(), String> {
   if app.get_webview_window(&label).is_some() {
     return Ok(());
   }
-  // let s = url.to_string();
-  // let webview_url = WebviewUrl::External(
-  //     s.parse::<Url>().map_err(|e| e.to_string())?
-  // );
+  let s = url.to_string();
 
   let mut conf = app.config().app.windows.iter().find(|c| c.label == "main").unwrap().clone();
   // This should be a unique label for all windows. For example, we can use a random suffix:
@@ -53,7 +50,12 @@ pub async fn bd_win_open(
   assert_eq!(getrandom::fill(&mut buf), Ok(()));
   conf.label = label;
   conf.fullscreen = fullscreen;
-  //conf.url = webview_url;
+  if !s.is_empty(){
+    let webview_url = WebviewUrl::External(
+        s.parse::<Url>().map_err(|e| e.to_string())?
+    );
+    conf.url = webview_url;
+  }
   let webview_window = tauri::WebviewWindowBuilder::from_config(&app, &conf)
     .unwrap()
     .build()
