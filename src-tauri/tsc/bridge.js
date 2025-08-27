@@ -6785,7 +6785,8 @@ var Bridge = (() => {
         if (options?.includeHover) evs.push("dragdrop:hover");
         const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
-      }
+      },
+      onMenuClick: async (handler) => listenForEvent("menu:click", handler)
     };
   }
 

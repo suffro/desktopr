@@ -8,6 +8,7 @@ use bridge::tray::init_tray;
 use bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
+use crate::bridge::menu;
 
 // Global Shortcut plugin
 use tauri_plugin_global_shortcut as gsc;
@@ -37,13 +38,17 @@ fn main() {
 
   // --- 3) Setup: tray, shortcut e deeplink (boot + runtime) ---
   builder = builder.setup(|app| {
-    // Global Shortcut (già tuo)
+    // Menu nativo
+    menu::init_menu(app)?;
+    
+    // Global Shortcut
     app.handle().plugin(
       gsc::Builder::new().build(),
     )?;
 
-    // Tray (già tuo)
+    // Tray
     init_tray(app)?;
+
 
     // Registrazione runtime (solo dev su Win/Linux)
     #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]
@@ -119,7 +124,9 @@ fn main() {
       // fs
       fs_list_dir, fs_mkdir, fs_rm, fs_stat, fs_write_text, fs_read_text,
       fs_write_bytes, fs_read_bytes, fs_exists, fs_move, fs_copy,
-      fs_clear_cache, fs_paths
+      fs_clear_cache, fs_paths,
+      // menu
+      bd_menu_set_enabled, bd_menu_set_checked
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

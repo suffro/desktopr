@@ -9,3 +9,4 @@ export * from "./modules/notifications/_helpers";
 export * from "./modules/app/_helpers";
 export * from "./modules/window/_helpers";
 export * from "./modules/dragdrop/_helpers";
+export * from "./modules/menu/_helpers";

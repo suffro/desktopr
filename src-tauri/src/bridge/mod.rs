@@ -9,6 +9,7 @@ pub mod events;
 pub mod dragdrop;
 pub mod fs;
 pub mod deeplink;
+pub mod menu;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -19,3 +20,4 @@ pub use events::*;
 pub use dragdrop::*;
 pub use fs::*;
 pub use deeplink::*;
+pub use menu::*;

@@ -55,6 +55,7 @@ export type BubbledeskAPI = {
       handler: (name: string, payload: DragDropPayload) => void,
       options?: { includeHover?: boolean }
     ) => Promise<() => void>;
+    onMenuClick: (handler: (payload: any) => void) => Promise<() => any>;
   };
 
   globalShortcut: {
@@ -69,5 +70,10 @@ export type BubbledeskAPI = {
     data: FsScopeMethods;
     paths: () => Promise<FsPaths>;
     base: { cache: string; data: string };
+  };
+
+  menu: {
+    setEnabled: (id: string, enabled: boolean) => Promise<void>;
+    setChecked: (id: string, checked: boolean) => Promise<void>;
   };
 };

@@ -36,5 +36,8 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
       const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
       return () => offs.forEach((off) => off());
     },
+    
+    onMenuClick: async (handler: (payload: any) => void) => listenForEvent("menu:click", handler),
+
   };
 }
