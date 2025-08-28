@@ -8,7 +8,6 @@ use bridge::tray::init_tray;
 use bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
-use crate::bridge::menu;
 
 // Global Shortcut plugin
 use tauri_plugin_global_shortcut as gsc;
@@ -39,7 +38,7 @@ fn main() {
   // --- 3) Setup: tray, shortcut e deeplink (boot + runtime) ---
   builder = builder.setup(|app| {
     // Menu nativo
-    menu::init_menu(app)?;
+    crate::bridge::menu::init_menu(app)?;
     
     // Global Shortcut
     app.handle().plugin(
@@ -73,7 +72,11 @@ fn main() {
     });
 
     Ok(())
+  })
+  .on_menu_event(|app, ev| {
+    let _ = app.emit("menu:event", ev);
   });
+
 
   // --- 4) Eventi finestra + invoke handler ---
   builder
@@ -119,6 +122,7 @@ fn main() {
       bd_app_info,
       // window
       bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
+      bd_toggle_devtools, bd_open_devtools, bd_close_devtools,
       // events
       bd_event_emit, bd_event_emit_to,
       // fs
@@ -131,3 +135,6 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
+
+
+

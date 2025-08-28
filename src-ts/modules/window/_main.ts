@@ -4,6 +4,11 @@ import { getRandomString } from "suffro-lib";
 
 export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }) {
   return {
+    devTools: {
+      toogle: (label?: string): Promise<void> => core.invoke("bd_toogle_devtools", { label: label??"main" }),
+      open: (label?: string): Promise<void> => core.invoke("bd_open_devtools", { label: label??"main" }),
+      clse: (label?: string): Promise<void> => core.invoke("bd_close_devtools", { label: label??"main" }),
+    },
     minimize: (label?: string): Promise<void> => core.invoke("bd_win_minimize", { label: label??"main" }),
     maximizeToggle: (label?: string): Promise<void> => core.invoke("bd_win_maximize", { label: label??"main" }),
     fullscreen: (enable: boolean, label?: string): Promise<void> => core.invoke("bd_win_fullscreen", { enable, label: label??"main" }),

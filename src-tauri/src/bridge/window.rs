@@ -69,3 +69,31 @@ pub fn bd_win_close(app: AppHandle, label: String) -> Result<(), String> {
   if let Some(w) = app.get_webview_window(&label) { w.close().map_err(|e| e.to_string())?; }
   Ok(())
 }
+
+#[tauri::command]
+pub fn bd_open_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+  if let Some(win) = app.get_webview_window(&label) {
+    win.open_devtools();
+  }
+  Ok(())
+}
+
+#[tauri::command]
+pub fn bd_close_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+  if let Some(win) = app.get_webview_window(&label) {
+    win.close_devtools();
+  }
+  Ok(())
+}
+
+#[tauri::command]
+pub fn bd_toggle_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+  if let Some(win) = app.get_webview_window(&label) {
+    if win.is_devtools_open() {
+      bd_close_devtools(app, label);
+    } else {
+      bd_open_devtools(app, label);
+    }
+  }
+  Ok(())
+}

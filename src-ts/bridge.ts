@@ -8,7 +8,9 @@ import {
     buildWindow,
     buildEvents,
     buildShortcuts,
-    buildAppInfo
+    buildAppInfo,
+    buildMenu,
+    bdInitiators,
 } from "@main";
 import { APP_VERSION } from "@constants";
 
@@ -21,7 +23,10 @@ import { APP_VERSION } from "@constants";
   const api: BubbledeskAPI = {
     get isAvailable() { return true; },
     version: APP_VERSION,
-    get ready() { return core.ready; },
+    get ready() {
+      bdInitiators();
+      return core.ready; 
+    },
     invoke: core.invoke,
 
     notifications: buildNotifications(core),
@@ -32,6 +37,7 @@ import { APP_VERSION } from "@constants";
     events:        buildEvents(core),
     globalShortcut:buildShortcuts(core),
     fs:            buildFs(core),
+    menu:          buildMenu(core),
   };
 
   Object.defineProperty(window, "Bubbledesk", {

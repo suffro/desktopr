@@ -25,6 +25,8 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
 
     onDeeplink: async (handler: (payload: any) => void) => listenForEvent("deeplink", handler),
 
+    onNativeMenuClick: async (handler: (payload: any) => void) => listenForEvent("menu:click", handler),
+
     onShortcut: async (handler: (payload: any) => void) => listenForEvent("shortcut:event", handler),
 
     onDragDrop: async (
@@ -37,7 +39,6 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
       return () => offs.forEach((off) => off());
     },
     
-    onMenuClick: async (handler: (payload: any) => void) => listenForEvent("menu:click", handler),
-
+    onMenuEvent: async (handler: (payload: any) => void) => listenForEvent("menu:event", handler)
   };
 }

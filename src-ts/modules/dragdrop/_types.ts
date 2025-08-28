@@ -4,4 +4,3 @@ export type DragDropPayload = {
     position?: { x: number; y: number };
     [k: string]: any;
   };
-  

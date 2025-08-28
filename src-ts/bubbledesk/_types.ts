@@ -1,13 +1,13 @@
 import type {
-  TauriCore,
-  TauriGlobal,
-  OpenResult,
-  DragDropPayload,
-  FsEntry,
-  FsPaths,
-  FsScopeMethods,
-  NotificationPermission,
-  AppInfo
+  NotificationsInterface,
+  ClipboardInterface,
+  FilesInterface,
+  AppInterface,
+  WindowInterface,
+  EventsInterface,
+  ShortcutsInterface,
+  FsInterface,
+  MenuInterface
 } from "@types";
 
 export type BubbledeskAPI = {
@@ -16,64 +16,26 @@ export type BubbledeskAPI = {
   readonly ready: Promise<true>;
   invoke<T = unknown>(cmd: string, payload?: Record<string, unknown>): Promise<T>;
 
-  notifications: {
-    state: () => Promise<NotificationPermission>;
-    request: () => Promise<Exclude<NotificationPermission, "default"> | string>;
-    show: (title: string, body?: string) => Promise<void>;
-  };
+  notifications: NotificationsInterface;
 
-  clipboard: {
-    readText: () => Promise<string>;
-    writeText: (text: string) => Promise<void>;
-  };
+  clipboard: ClipboardInterface;
 
-  files: {
-    open: (option?: { multi?: boolean }) => Promise<OpenResult>;
-    /** empty string if canceled */
-    save: (default_name?: string | null) => Promise<string>;
-  };
+  files: FilesInterface;
 
-  app: {
-    info: () => Promise<AppInfo>;
-  };
+  app: AppInterface;
 
-  window: {
-    minimize: () => Promise<void>;
-    maximizeToggle: () => Promise<void>;
-    fullscreen: (enable: boolean) => Promise<void>;
-  };
+  window: WindowInterface;
 
-  events: {
-    emit: (event: string, payload?: unknown) => Promise<unknown>;
-    emitTo: (window_label: string, event: string, payload?: unknown) => Promise<unknown>;
-    on: (event: string, handler: (payload: any) => void) => Promise<() => void>;
-    once: (event: string) => Promise<any>;
-    onMany: (events: string[], handler: (name: string, payload: any) => void) => Promise<() => void>;
-    onDeeplink: (handler: (payload: any) => void) => Promise<() => any>
-    onShortcut: (handler: (payload: any) => void) => Promise<() => void>;
-    onDragDrop: (
-      handler: (name: string, payload: DragDropPayload) => void,
-      options?: { includeHover?: boolean }
-    ) => Promise<() => void>;
-    onMenuClick: (handler: (payload: any) => void) => Promise<() => any>;
-  };
+  events: EventsInterface;
 
-  globalShortcut: {
-    register: (accelerator: string, cb: (e: any) => void, options?: { emitEvent?: boolean }) => Promise<void>;
-    unregister: (accelerator: string) => Promise<void>;
-    unregisterAll: () => Promise<void>;
-    isRegistered: (accelerator: string) => Promise<boolean>;
-  };
+  globalShortcut: ShortcutsInterface;
 
-  fs: {
-    cache: FsScopeMethods & { clear: () => Promise<void> };
-    data: FsScopeMethods;
-    paths: () => Promise<FsPaths>;
-    base: { cache: string; data: string };
-  };
+  fs: FsInterface;
 
-  menu: {
-    setEnabled: (id: string, enabled: boolean) => Promise<void>;
-    setChecked: (id: string, checked: boolean) => Promise<void>;
-  };
+  menu: MenuInterface;
 };
+
+export interface BubbledeskInstanceInterface {
+  ready: () => boolean;
+  get: () => BubbledeskAPI;
+}

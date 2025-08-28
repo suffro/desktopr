@@ -39,3 +39,10 @@ export type FsEntry = {
     base: string;
   };
   
+
+  export interface FsInterface {
+      cache: FsScopeMethods & { clear: () => Promise<void> };
+      data: FsScopeMethods;
+      paths: () => Promise<FsPaths>;
+      base: { cache: string; data: string };
+  };

@@ -6754,6 +6754,28 @@ var Bridge = (() => {
     };
   }
 
+  // ../src-ts/bubbledesk/_main.ts
+  var BubbledeskInstance = {
+    ready: () => {
+      if (!window?.Bubbledesk) return false;
+      return true;
+    },
+    get: () => {
+      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
+      return window?.Bubbledesk;
+    }
+  };
+  var bdInitiators = () => {
+    if (!BubbledeskInstance.ready()) return console.error("'window.Bubbledesk' not found");
+    const Bubbledesk = BubbledeskInstance.get();
+    Bubbledesk.events.on("menu:event", (id) => {
+      if (id === "view.devtools") {
+        console.log("DevTools toggled");
+        Bubbledesk.window.devTools.toogle("main");
+      }
+    });
+  };
+
   // ../src-ts/modules/files/_main.ts
   function buildFiles(core) {
     return {
@@ -6779,6 +6801,7 @@ var Bridge = (() => {
         return () => offs.forEach((off) => off());
       },
       onDeeplink: async (handler) => listenForEvent("deeplink", handler),
+      onNativeMenuClick: async (handler) => listenForEvent("menu:click", handler),
       onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
       onDragDrop: async (handler, options) => {
         const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
@@ -6786,7 +6809,7 @@ var Bridge = (() => {
         const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
       },
-      onMenuClick: async (handler) => listenForEvent("menu:click", handler)
+      onMenuEvent: async (handler) => listenForEvent("menu:event", handler)
     };
   }
 
@@ -16827,6 +16850,11 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/window/_main.ts
   function buildWindow(core) {
     return {
+      devTools: {
+        toogle: (label) => core.invoke("bd_toogle_devtools", { label: label ?? "main" }),
+        open: (label) => core.invoke("bd_open_devtools", { label: label ?? "main" }),
+        clse: (label) => core.invoke("bd_close_devtools", { label: label ?? "main" })
+      },
       minimize: (label) => core.invoke("bd_win_minimize", { label: label ?? "main" }),
       maximizeToggle: (label) => core.invoke("bd_win_maximize", { label: label ?? "main" }),
       fullscreen: (enable, label) => core.invoke("bd_win_fullscreen", { enable, label: label ?? "main" }),
@@ -16839,6 +16867,14 @@ This typically indicates that your device does not have a healthy Internet conne
         url: options?.url ?? ""
       }),
       close: (label) => core.invoke("bd_win_close", { label })
+    };
+  }
+
+  // ../src-ts/modules/menu/_main.ts
+  function buildMenu(core) {
+    return {
+      setEnabled: (id, enabled) => core.invoke("bd_menu_set_enabled", { id, enabled }),
+      setChecked: (id, checked) => core.invoke("bd_menu_set_checked", { id, checked })
     };
   }
 
@@ -16862,6 +16898,7 @@ This typically indicates that your device does not have a healthy Internet conne
       },
       version: APP_VERSION,
       get ready() {
+        bdInitiators();
         return core.ready;
       },
       invoke: core.invoke,
@@ -16872,7 +16909,8 @@ This typically indicates that your device does not have a healthy Internet conne
       window: buildWindow(core),
       events: buildEvents(core),
       globalShortcut: buildShortcuts(core),
-      fs: buildFs(core)
+      fs: buildFs(core),
+      menu: buildMenu(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,

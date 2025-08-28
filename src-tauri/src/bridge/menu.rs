@@ -1,113 +1,116 @@
-// src/bridge/menu.rs
 use tauri::{
-  App, AppHandle, Manager,
-  menu::{Menu, MenuItem, Submenu, PredefinedMenuItem, MenuItemKind},
+  App, AppHandle, Manager, Emitter,
+  menu::{Menu, Submenu, MenuItem, CheckMenuItem, PredefinedMenuItem, MenuItemKind},
 };
 
 pub fn init_menu(app: &App) -> tauri::Result<()> {
-  // --- File ---
-  let file_menu = Menu::new(app)?
-    .add_item(MenuItem::new(app, "New Window", true, Some("CmdOrCtrl+N"))?)?
-    .add_item(MenuItem::new(app, "Close Window", true, Some("CmdOrCtrl+W"))?)?
-    .add_item(MenuItem::new(app, "Quit", true, Some("CmdOrCtrl+Q"))?)?;
+  // File
+  let file = Submenu::with_items(app, "File", true, &[
+    &MenuItem::with_id(app, "file.new-window", "New Window", true, Some("CmdOrCtrl+N"))?,
+    &PredefinedMenuItem::close_window(app, Some("Close Window"))?,
+    &PredefinedMenuItem::quit(app, Some("Quit"))?,
+  ])?;
 
-  // --- Edit (predefiniti di sistema) ---
-  let edit_menu = Menu::new(app)?
-    .add_item(PredefinedMenuItem::undo(app, None)?)?
-    .add_item(PredefinedMenuItem::redo(app, None)?)?
-    .add_native_item(PredefinedMenuItem::separator(app)?)?
-    .add_item(PredefinedMenuItem::cut(app, None)?)?
-    .add_item(PredefinedMenuItem::copy(app, None)?)?
-    .add_item(PredefinedMenuItem::paste(app, None)?)?
-    .add_item(PredefinedMenuItem::select_all(app, None)?)?;
+  // Edit (predefiniti)
+  let edit = Submenu::with_items(app, "Edit", true, &[
+    &PredefinedMenuItem::undo(app, None)?,
+    &PredefinedMenuItem::redo(app, None)?,
+    &PredefinedMenuItem::separator(app)?,
+    &PredefinedMenuItem::cut(app, None)?,
+    &PredefinedMenuItem::copy(app, None)?,
+    &PredefinedMenuItem::paste(app, None)?,
+    &PredefinedMenuItem::select_all(app, None)?,
+  ])?;
 
-  // --- View ---
-  let view_menu = Menu::new(app)?
-    .add_item(MenuItem::new(app, "Reload", true, Some("CmdOrCtrl+R"))?)?
-    .add_item(MenuItem::new(app, "Toggle Fullscreen", true, Some("F11"))?)?
-    .add_native_item(PredefinedMenuItem::separator(app)?)?
-    .add_item(MenuItem::new(app, "Toggle DevTools", true, Some("CmdOrCtrl+Alt+I"))?)?;
+  // View
+  let devtools = CheckMenuItem::with_id(
+    app,
+    "view.devtools",
+    "Toggle DevTools",
+    true,   // enabled
+    false,  // checked (manca nel tuo errore: è il 5° argomento bool)
+    Some("CmdOrCtrl+Alt+I"),
+  )?;
+  let view = Submenu::with_items(app, "View", true, &[
+    &MenuItem::with_id(app, "view.reload", "Reload", true, Some("CmdOrCtrl+R"))?,
+    &MenuItem::with_id(app, "view.reload-hard", "Reload (Clear Cache)", true, Some("CmdOrCtrl+Shift+R"))?,
+    &PredefinedMenuItem::separator(app)?,
+    &PredefinedMenuItem::fullscreen(app, Some("Toggle Full Screen"))?, // niente "zoom" in v2.7
+    &devtools,
+  ])?;
 
-  // --- Window ---
-  let window_menu = Menu::new(app)?
-    .add_item(PredefinedMenuItem::minimize(app, None)?)?
-    .add_item(PredefinedMenuItem::zoom(app, None)?)?;
+  // Window
+  let window = Submenu::with_items(app, "Window", true, &[
+    &PredefinedMenuItem::minimize(app, None)?,
+    &PredefinedMenuItem::maximize(app, None)?,
+    &PredefinedMenuItem::close_window(app, None)?,
+  ])?;
 
-  // --- Help ---
-  let help_menu = Menu::new(app)?
-    .add_item(MenuItem::new(app, "Learn More", true, None::<&str>)?)?;
-
-  // --- Root menu ---
-  let mut root = Menu::new(app)?;
-
-  // App submenu (macOS): About/Services/Hide...
+  // Root menu (aggiungi l’App submenu solo su macOS)
   #[cfg(target_os = "macos")]
   {
-    let app_sub = Menu::new(app)?
-      .add_item(PredefinedMenuItem::about(app, None, None)?)?
-      .add_native_item(PredefinedMenuItem::separator(app)?)?
-      .add_item(PredefinedMenuItem::services(app, None)?)?
-      .add_native_item(PredefinedMenuItem::separator(app)?)?
-      .add_item(PredefinedMenuItem::hide(app, None)?)?
-      .add_item(PredefinedMenuItem::hide_others(app, None)?)?
-      .add_item(PredefinedMenuItem::show_all(app, None)?)?
-      .add_native_item(PredefinedMenuItem::separator(app)?)?
-      .add_item(PredefinedMenuItem::quit(app, None)?)?;
+    let app_sub = Submenu::with_items(app, "Bubbledesk", true, &[
+      &PredefinedMenuItem::about(app, Some("About Bubbledesk"), None)?,
+      &PredefinedMenuItem::services(app, None)?,
+      &PredefinedMenuItem::separator(app)?,
+      &PredefinedMenuItem::hide(app, None)?,
+      &PredefinedMenuItem::hide_others(app, None)?,
+      &PredefinedMenuItem::show_all(app, None)?,
+      &PredefinedMenuItem::separator(app)?,
+      &PredefinedMenuItem::quit(app, None)?,
+    ])?;
 
-    root = root.add_submenu(Submenu::new(app, "Bubbledesk", true, app_sub)?)?;
+    let root = Menu::with_items(app, &[&app_sub, &file, &edit, &view, &window])?;
+    app.set_menu(root)?;
   }
 
-  let root = root
-    .add_submenu(Submenu::new(app, "File", true, file_menu)?)?
-    .add_submenu(Submenu::new(app, "Edit", true, edit_menu)?)?
-    .add_submenu(Submenu::new(app, "View", true, view_menu)?)?
-    .add_submenu(Submenu::new(app, "Window", true, window_menu)?)?
-    .add_submenu(Submenu::new(app, "Help", true, help_menu)?)?;
+  #[cfg(not(target_os = "macos"))]
+  {
+    let root = Menu::with_items(app, &[&file, &edit, &view, &window])?;
+    app.set_menu(root)?;
+  }
 
-  app.set_menu(root)?;
-
-  // Forward eventi menu → event bus ("menu:click" con id String)
+  // Forward click → "menu:click" (ID come stringa)
   app.on_menu_event(|app, ev| {
-    let id: String = ev.id().0.clone();
+    let id = ev.id().as_ref().to_string(); // <-- niente to_string su &MenuId
     let _ = app.emit("menu:click", id);
   });
 
   Ok(())
 }
 
-// Utility: abilita/disabilita entry per ID
-fn set_enabled(app: &AppHandle, id: &str, enabled: bool) -> tauri::Result<()> {
-  if let Some(item) = app.menu().as_ref().and_then(|m| m.get(id)) {
-    match item {
-      MenuItemKind::MenuItem(mi) => mi.set_enabled(enabled)?,
-      MenuItemKind::Predefined(mi) => mi.set_enabled(enabled)?,
-      MenuItemKind::Submenu(_) => { /* ignore or handle differently */ }
+// Abilita/disabilita (solo MenuItem/Check/Icon; i Predefined non espongono toggle)
+pub fn set_enabled(app: &AppHandle, id: &str, enabled: bool) -> tauri::Result<()> {
+  if let Some(menu) = app.menu() {
+    if let Some(kind) = menu.get(id) {
+      match kind {
+        MenuItemKind::MenuItem(mi) => mi.set_enabled(enabled)?,
+        MenuItemKind::Check(mi)    => mi.set_enabled(enabled)?,
+        MenuItemKind::Icon(mi)     => mi.set_enabled(enabled)?,
+        _ => { /* Predefined/Submenu: nessuna opzione standard di enable/disable */ }
+      }
     }
   }
   Ok(())
 }
 
-// Utility: set checked (solo se l’item è checkable)
-fn set_checked(app: &AppHandle, id: &str, checked: bool) -> tauri::Result<()> {
-  if let Some(item) = app.menu().as_ref().and_then(|m| m.get(id)) {
-    match item {
-      MenuItemKind::MenuItem(mi) => mi.set_checked(checked)?,
-      MenuItemKind::Predefined(mi) => mi.set_checked(checked)?,
-      MenuItemKind::Submenu(_) => { /* ignore */ }
+// Spunta solo per CheckMenuItem
+pub fn set_checked(app: &AppHandle, id: &str, checked: bool) -> tauri::Result<()> {
+  if let Some(menu) = app.menu() {
+    if let Some(MenuItemKind::Check(mi)) = menu.get(id) {
+      mi.set_checked(checked)?;
     }
   }
   Ok(())
 }
 
-
-  // Comandi di utilità per controllare il menu dal renderer
+// (facoltativo) comandi esponibili al renderer
 #[tauri::command]
-pub fn bd_menu_set_enabled(app: tauri::AppHandle, id: String, enabled: bool) -> Result<(), String> {
+pub fn bd_menu_set_enabled(app: AppHandle, id: String, enabled: bool) -> Result<(), String> {
   set_enabled(&app, &id, enabled).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_menu_set_checked(app: tauri::AppHandle, id: String, checked: bool) -> Result<(), String> {
+pub fn bd_menu_set_checked(app: AppHandle, id: String, checked: bool) -> Result<(), String> {
   set_checked(&app, &id, checked).map_err(|e| e.to_string())
 }
-  
