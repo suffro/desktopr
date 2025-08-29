@@ -1,8 +1,7 @@
-import { APP_URL } from "@constants";
 import type { BubbledeskAPI } from "@types";
-import { getRandomString } from "suffro-lib";
 
 export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }) {
+  const randomWindowLabel: string = `w_${Math.random().toString(36).substring(2, 2 + 8)}`
   return {
     devTools: {
       toogle: (label?: string): Promise<void> => core.invoke("bd_toogle_devtools", { label: label??"main" }),
@@ -17,10 +16,7 @@ export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }) {
       fullscreen?: boolean,
       url?:string
     }): Promise<void> => core.invoke("bd_win_open", {
-      label: (options?.label)??getRandomString({
-        length: 6,
-        prefix: "w_"
-      }),
+      label: (options?.label)??randomWindowLabel,
       fullscreen: (options?.fullscreen) || false,
       url: (options?.url) ?? "",
     }),
