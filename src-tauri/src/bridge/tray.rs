@@ -35,7 +35,7 @@ TrayIconBuilder::new()
 .show_menu_on_left_click(false) // ⟵ importante: lasciamo passare l'evento
 .on_menu_event(|app, ev| {
   let id = ev.id.0.as_str();
-  let _ = app.emit("tray:menu", Some(serde_json::json!({ "id": id })));
+  let _ = app.emit("tray:menu", Some(serde_json::json!({ "context": "menu", "menu_item_id": id })));
   match id {
     "show" => {
       if let Some(win) = app.get_webview_window("main") {
@@ -62,13 +62,22 @@ TrayIconBuilder::new()
 .on_tray_icon_event(|tray, ev| {
   use tauri::{Emitter};
   use tauri::tray::{MouseButton, MouseButtonState, TrayIconEvent};
+  
+  let (id, position, rect) = match &ev {
+    TrayIconEvent::Click       { id, position, rect, .. }
+    | TrayIconEvent::DoubleClick { id, position, rect, .. }
+    | TrayIconEvent::Enter     { id, position, rect, .. }
+    | TrayIconEvent::Move      { id, position, rect, .. }
+    | TrayIconEvent::Leave     { id, position, rect, .. } => (id.clone(), *position, *rect),
+    _ => return, // altre varianti future: esci o gestiscile qui
+  };
 
   match ev {
     // ora questo arriva anche su macOS
     TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Down, .. } => {
         if debounce(120) { return; }
-        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
-        "type": "click", "button": "left", "state": "down"
+        let _ = tray.app_handle().emit("tray:icon", Some(serde_json::json!({
+        "context": "icon", "icon_id": id, "type": "click", "button": "left", "state": "down", "position": position, "rect": rect
       })));
 
       // se vuoi anche mostrare la finestra al click:
@@ -87,16 +96,28 @@ TrayIconBuilder::new()
     }
     TrayIconEvent::Click { button: MouseButton::Right, button_state: MouseButtonState::Down, .. } => {
         if debounce(120) { return; }
-        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
-        "type": "click", "button": "right", "state": "down"
+        let _ = tray.app_handle().emit("tray:icon", Some(serde_json::json!({
+          "context": "icon", "icon_id": id, "type": "click", "button": "right", "state": "down", "position": position, "rect": rect
       })));
     }
     TrayIconEvent::Click { button: MouseButton::Middle, button_state: MouseButtonState::Down, .. } => {
         if debounce(120) { return; }
-        let _ = tray.app_handle().emit("tray:click", Some(serde_json::json!({
-          "type": "click", "button": "middle", "state": "down"
+        let _ = tray.app_handle().emit("tray:icon", Some(serde_json::json!({
+          "context": "icon", "icon_id": id, "type": "click", "button": "middle", "state": "down", "position": position, "rect": rect
         })));
       }
+    TrayIconEvent::Enter { .. } => {
+      if debounce(120) { return; }
+      let _ = tray.app_handle().emit("tray:icon", Some(serde_json::json!({
+        "context": "icon", "icon_id": id, "type": "enter", "position": position, "rect": rect
+      })));
+    }
+    TrayIconEvent::Leave { .. } => {
+      if debounce(120) { return; }
+      let _ = tray.app_handle().emit("tray:icon", Some(serde_json::json!({
+        "context": "icon", "icon_id": id, "type": "leave", "position": position, "rect": rect
+      })));
+    }
     _ => {}
   }
 })

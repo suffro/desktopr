@@ -1,7 +1,6 @@
 import { DragDropPayload } from "@types";
 
 export interface EventsInterface {
-    onNativeMenuClick: (handler: (payload: any) => void) => Promise<() => any>
     emit: (event: string, payload?: unknown) => Promise<unknown>;
     emitTo: (window_label: string, event: string, payload?: unknown) => Promise<unknown>;
     on: (event: string, handler: (payload: any) => void) => Promise<() => void>;
@@ -14,4 +13,8 @@ export interface EventsInterface {
       options?: { includeHover?: boolean }
     ) => Promise<() => void>;
     onMenuEvent: (handler: (payload: any) => void) => Promise<() => any>;
+    tray: {
+      onIconEvent: (handler: (payload: any) => void) => Promise<() => any>;
+      onMenuEvent: (handler: (payload: any) => void) => Promise<() => any>;
+    };
 }

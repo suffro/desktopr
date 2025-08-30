@@ -10,6 +10,7 @@ import type {
   MenuInterface
 } from "@types";
 
+
 export type BubbledeskAPI = {
   readonly isAvailable: boolean;
   readonly version: string;

@@ -13,9 +13,9 @@ import {
     bdInitiators,
 } from "@main";
 import { APP_VERSION } from "@constants";
+import { tauriReadyCheck, waitTauri } from "@helpers";
 
 (() => {
-  // importantissimo: niente export in questo file
   if (typeof window === "undefined" || (window as any).Bubbledesk) return;
 
   const core = buildCore();
@@ -24,7 +24,6 @@ import { APP_VERSION } from "@constants";
     get isAvailable() { return true; },
     version: APP_VERSION,
     get ready() {
-      bdInitiators();
       return core.ready; 
     },
     invoke: core.invoke,
@@ -43,4 +42,11 @@ import { APP_VERSION } from "@constants";
   Object.defineProperty(window, "Bubbledesk", {
     value: api, enumerable: false, configurable: false, writable: false,
   });
+
+})();
+
+
+(async () => {
+  await waitTauri();
+  if(tauriReadyCheck()) bdInitiators();
 })();

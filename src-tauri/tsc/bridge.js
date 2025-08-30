@@ -6741,185 +6741,6 @@ var Bridge = (() => {
     return g;
   };
 
-  // ../src-ts/core/_main.ts
-  function buildCore() {
-    return {
-      get ready() {
-        return ensureCore().then(() => true);
-      },
-      async invoke(cmd, payload) {
-        const core = await ensureCore();
-        return core.invoke(cmd, payload);
-      }
-    };
-  }
-
-  // ../src-ts/bubbledesk/_main.ts
-  var BubbledeskInstance = {
-    ready: () => {
-      if (!window?.Bubbledesk) return false;
-      return true;
-    },
-    get: () => {
-      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
-      return window?.Bubbledesk;
-    }
-  };
-  var bdInitiators = () => {
-    if (!BubbledeskInstance.ready()) return console.error("'window.Bubbledesk' not found");
-    const Bubbledesk = BubbledeskInstance.get();
-    Bubbledesk.events.on("menu:event", (id) => {
-      if (id === "view.devtools") {
-        console.log("DevTools toggled");
-        Bubbledesk.window.devTools.toogle("main");
-      }
-    });
-  };
-
-  // ../src-ts/modules/files/_main.ts
-  function buildFiles(core) {
-    return {
-      open: (option) => core.invoke("bd_file_open", { multi: option?.multi ?? false }),
-      save: (default_name) => core.invoke("bd_file_save", { default_name: default_name ?? null })
-    };
-  }
-
-  // ../src-ts/modules/events/_main.ts
-  function buildEvents(core) {
-    return {
-      emit: (event, payload) => core.invoke("bd_event_emit", { event, payload }),
-      emitTo: (window_label, event, payload) => core.invoke("bd_event_emit_to", { window_label, event, payload }),
-      on: async (event, handler) => listenForEvent(event, handler),
-      once: (event) => new Promise(async (resolve) => {
-        const off = await listenForEvent(event, (p) => {
-          off();
-          resolve(p);
-        });
-      }),
-      onMany: async (events, handler) => {
-        const offs = await Promise.all(events.map((n) => listenForEvent(n, (p) => handler(n, p))));
-        return () => offs.forEach((off) => off());
-      },
-      onDeeplink: async (handler) => listenForEvent("deeplink", handler),
-      onNativeMenuClick: async (handler) => listenForEvent("menu:click", handler),
-      onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
-      onDragDrop: async (handler, options) => {
-        const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
-        if (options?.includeHover) evs.push("dragdrop:hover");
-        const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
-        return () => offs.forEach((off) => off());
-      },
-      onMenuEvent: async (handler) => listenForEvent("menu:event", handler)
-    };
-  }
-
-  // ../src-ts/modules/fs/_main.ts
-  function scope(core, permanent) {
-    return {
-      listDir: (rel = "") => core.invoke("fs_list_dir", { rel, permanent }),
-      mkdir: (rel) => core.invoke("fs_mkdir", { rel, permanent }),
-      rm: (rel, recursive = false) => core.invoke("fs_rm", { rel, recursive, permanent }),
-      stat: (rel = "") => core.invoke("fs_stat", { rel, permanent }),
-      writeText: (rel, contents, opts) => core.invoke("fs_write_text", {
-        rel,
-        permanent,
-        contents,
-        createDirs: opts?.createDirs,
-        append: opts?.append
-      }),
-      readText: (rel) => core.invoke("fs_read_text", { rel, permanent }),
-      writeBytes: (rel, base642, opts) => core.invoke("fs_write_bytes", {
-        rel,
-        permanent,
-        dataBase64: base642,
-        createDirs: opts?.createDirs
-      }),
-      readBytes: (rel) => core.invoke("fs_read_bytes", { rel, permanent }),
-      exists: (rel) => core.invoke("fs_exists", { rel, permanent }),
-      move: (src, dest, opts) => core.invoke("fs_move", {
-        src,
-        dest,
-        permanent,
-        createDirs: opts?.createDirs,
-        overwrite: opts?.overwrite
-      }),
-      copy: (src, dest, opts) => core.invoke("fs_copy", {
-        src,
-        dest,
-        permanent,
-        recursive: opts?.recursive,
-        createDirs: opts?.createDirs,
-        overwrite: opts?.overwrite
-      }),
-      path: async () => {
-        const p = await core.invoke("fs_paths");
-        return permanent ? p.data : p.cache;
-      },
-      base: permanent ? ".data" : ".cache"
-    };
-  }
-  function buildFs(core) {
-    const cache = scope(core, false);
-    const data = scope(core, true);
-    return {
-      cache: { ...cache, clear: () => core.invoke("fs_clear_cache") },
-      data,
-      paths: () => core.invoke("fs_paths"),
-      base: { cache: ".cache", data: ".data" }
-    };
-  }
-
-  // ../src-ts/modules/clipboard/_main.ts
-  function buildClipboard(core) {
-    return {
-      readText: () => core.invoke("bd_clipboard_read"),
-      writeText: (text) => core.invoke("bd_clipboard_write", { text })
-    };
-  }
-
-  // ../src-ts/modules/shortcuts/_main.ts
-  function buildShortcuts(core) {
-    return {
-      register: async (accelerator, cb, options) => {
-        const gs = tauriGlobalShortcut();
-        await gs.register(accelerator, async (e) => {
-          const payload = { accelerator, ...e };
-          if (options?.emitEvent) await core.invoke("bd_event_emit", { event: "shortcut:event", payload });
-          cb(payload);
-        });
-      },
-      unregister: async (accelerator) => {
-        const gs = tauriGlobalShortcut();
-        const reg = await gs.isRegistered(accelerator);
-        if (reg) await gs.unregister(accelerator);
-      },
-      unregisterAll: async () => {
-        const gs = tauriGlobalShortcut();
-        await gs.unregisterAll();
-      },
-      isRegistered: async (accelerator) => {
-        const gs = tauriGlobalShortcut();
-        return gs.isRegistered(accelerator);
-      }
-    };
-  }
-
-  // ../src-ts/modules/notifications/_main.ts
-  function buildNotifications(core) {
-    return {
-      state: () => core.invoke("bd_notification_state"),
-      request: () => core.invoke("bd_request_permission"),
-      show: (title, body) => core.invoke("bd_notify", { title, body })
-    };
-  }
-
-  // ../src-ts/modules/app/_main.ts
-  function buildAppInfo(core) {
-    return {
-      info: () => core.invoke("bd_app_info")
-    };
-  }
-
   // ../node_modules/@firebase/storage/dist/index.esm.js
   init_index_esm4();
   init_index_esm();
@@ -16570,21 +16391,6 @@ This typically indicates that your device does not have a healthy Internet conne
     const nodeEnv = "development";
     return nodeEnv !== "production" || isLocalhost2;
   };
-  function getRandomString(options) {
-    const length = options?.length || 6;
-    const includeUppercase = options?.includeUppercase || true;
-    const lower = "abcdefghijklmnopqrstuvwxyz";
-    const digits = "0123456789";
-    const upper = includeUppercase ? lower.toUpperCase() : "";
-    const chars = lower + digits + upper;
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      const randIndex = Math.floor(Math.random() * chars.length);
-      result += chars[randIndex];
-    }
-    if (options?.prefix) return `${options?.prefix}${result}`;
-    else return result;
-  }
   function callerName(level = 2) {
     const err = new Error();
     const stack = err.stack?.split("\n");
@@ -16594,6 +16400,14 @@ This typically indicates that your device does not have a healthy Internet conne
     }
     return "<unknown>";
   }
+  var wait = (timeout = 100, callback) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        callback?.();
+        resolve();
+      }, timeout);
+    });
+  };
   function pageStore() {
     let listeners = [];
     function getPage() {
@@ -16847,22 +16661,218 @@ This typically indicates that your device does not have a healthy Internet conne
     has: (target, prop) => !!getMethod2(target, prop) || oldTraps.has(target, prop)
   }));
 
+  // ../src-ts/_helpers.ts
+  var tauriReadyCheck = () => typeof window !== "undefined" && window.__TAURI__ && window.Bubbledesk;
+  var waitTauri = async () => {
+    const interval = 500;
+    let counter = 0;
+    while (counter <= 3e4 && !tauriReadyCheck()) {
+      await wait(interval);
+      counter = counter + interval;
+    }
+  };
+
+  // ../src-ts/core/_main.ts
+  function buildCore() {
+    return {
+      get ready() {
+        return ensureCore().then(() => true);
+      },
+      async invoke(cmd, payload) {
+        const core = await ensureCore();
+        return core.invoke(cmd, payload);
+      }
+    };
+  }
+
+  // ../src-ts/bubbledesk/_main.ts
+  var BubbledeskInstance = {
+    ready: () => {
+      if (!window?.Bubbledesk) return false;
+      return true;
+    },
+    get: () => {
+      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
+      return window?.Bubbledesk;
+    }
+  };
+  var bdInitiators = async () => {
+    try {
+      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
+      const Bubbledesk = BubbledeskInstance.get();
+      Bubbledesk.events.onMenuEvent((id) => {
+        if (id === "view.devtools") {
+          console.log("DevTools toggled");
+          Bubbledesk.window.devTools.toggle("main");
+        }
+      });
+      console.log("## READY ##");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ../src-ts/modules/files/_main.ts
+  function buildFiles(core) {
+    return {
+      open: (option) => core.invoke("bd_file_open", { multi: option?.multi ?? false }),
+      save: (default_name) => core.invoke("bd_file_save", { default_name: default_name ?? null })
+    };
+  }
+
+  // ../src-ts/modules/events/_main.ts
+  function buildEvents(core) {
+    return {
+      emit: (event, payload) => core.invoke("bd_event_emit", { event, payload }),
+      emitTo: (window_label, event, payload) => core.invoke("bd_event_emit_to", { window_label, event, payload }),
+      on: async (event, handler) => listenForEvent(event, handler),
+      once: (event) => new Promise(async (resolve) => {
+        const off = await listenForEvent(event, (p) => {
+          off();
+          resolve(p);
+        });
+      }),
+      onMany: async (events, handler) => {
+        const offs = await Promise.all(events.map((n) => listenForEvent(n, (p) => handler(n, p))));
+        return () => offs.forEach((off) => off());
+      },
+      onDeeplink: async (handler) => listenForEvent("deeplink", handler),
+      tray: {
+        onIconEvent: async (handler) => listenForEvent("tray:icon", handler),
+        onMenuEvent: async (handler) => listenForEvent("tray:menu", handler)
+      },
+      onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
+      onDragDrop: async (handler, options) => {
+        const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
+        if (options?.includeHover) evs.push("dragdrop:hover");
+        const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
+        return () => offs.forEach((off) => off());
+      },
+      onMenuEvent: async (handler) => listenForEvent("menu:event", handler)
+    };
+  }
+
+  // ../src-ts/modules/fs/_main.ts
+  function scope(core, permanent) {
+    return {
+      listDir: (rel = "") => core.invoke("fs_list_dir", { rel, permanent }),
+      mkdir: (rel) => core.invoke("fs_mkdir", { rel, permanent }),
+      rm: (rel, recursive = false) => core.invoke("fs_rm", { rel, recursive, permanent }),
+      stat: (rel = "") => core.invoke("fs_stat", { rel, permanent }),
+      writeText: (rel, contents, opts) => core.invoke("fs_write_text", {
+        rel,
+        permanent,
+        contents,
+        createDirs: opts?.createDirs,
+        append: opts?.append
+      }),
+      readText: (rel) => core.invoke("fs_read_text", { rel, permanent }),
+      writeBytes: (rel, base642, opts) => core.invoke("fs_write_bytes", {
+        rel,
+        permanent,
+        dataBase64: base642,
+        createDirs: opts?.createDirs
+      }),
+      readBytes: (rel) => core.invoke("fs_read_bytes", { rel, permanent }),
+      exists: (rel) => core.invoke("fs_exists", { rel, permanent }),
+      move: (src, dest, opts) => core.invoke("fs_move", {
+        src,
+        dest,
+        permanent,
+        createDirs: opts?.createDirs,
+        overwrite: opts?.overwrite
+      }),
+      copy: (src, dest, opts) => core.invoke("fs_copy", {
+        src,
+        dest,
+        permanent,
+        recursive: opts?.recursive,
+        createDirs: opts?.createDirs,
+        overwrite: opts?.overwrite
+      }),
+      path: async () => {
+        const p = await core.invoke("fs_paths");
+        return permanent ? p.data : p.cache;
+      },
+      base: permanent ? ".data" : ".cache"
+    };
+  }
+  function buildFs(core) {
+    const cache = scope(core, false);
+    const data = scope(core, true);
+    return {
+      cache: { ...cache, clear: () => core.invoke("fs_clear_cache") },
+      data,
+      paths: () => core.invoke("fs_paths"),
+      base: { cache: ".cache", data: ".data" }
+    };
+  }
+
+  // ../src-ts/modules/clipboard/_main.ts
+  function buildClipboard(core) {
+    return {
+      readText: () => core.invoke("bd_clipboard_read"),
+      writeText: (text) => core.invoke("bd_clipboard_write", { text })
+    };
+  }
+
+  // ../src-ts/modules/shortcuts/_main.ts
+  function buildShortcuts(core) {
+    return {
+      register: async (accelerator, cb, options) => {
+        const gs = tauriGlobalShortcut();
+        await gs.register(accelerator, async (e) => {
+          const payload = { accelerator, ...e };
+          if (options?.emitEvent) await core.invoke("bd_event_emit", { event: "shortcut:event", payload });
+          cb(payload);
+        });
+      },
+      unregister: async (accelerator) => {
+        const gs = tauriGlobalShortcut();
+        const reg = await gs.isRegistered(accelerator);
+        if (reg) await gs.unregister(accelerator);
+      },
+      unregisterAll: async () => {
+        const gs = tauriGlobalShortcut();
+        await gs.unregisterAll();
+      },
+      isRegistered: async (accelerator) => {
+        const gs = tauriGlobalShortcut();
+        return gs.isRegistered(accelerator);
+      }
+    };
+  }
+
+  // ../src-ts/modules/notifications/_main.ts
+  function buildNotifications(core) {
+    return {
+      state: () => core.invoke("bd_notification_state"),
+      request: () => core.invoke("bd_request_permission"),
+      show: (title, body) => core.invoke("bd_notify", { title, body })
+    };
+  }
+
+  // ../src-ts/modules/app/_main.ts
+  function buildAppInfo(core) {
+    return {
+      info: () => core.invoke("bd_app_info")
+    };
+  }
+
   // ../src-ts/modules/window/_main.ts
   function buildWindow(core) {
+    const randomWindowLabel = `w_${Math.random().toString(36).substring(2, 2 + 8)}`;
     return {
       devTools: {
-        toogle: (label) => core.invoke("bd_toogle_devtools", { label: label ?? "main" }),
+        toggle: (label) => core.invoke("bd_toggle_devtools", { label: label ?? "main" }),
         open: (label) => core.invoke("bd_open_devtools", { label: label ?? "main" }),
-        clse: (label) => core.invoke("bd_close_devtools", { label: label ?? "main" })
+        close: (label) => core.invoke("bd_close_devtools", { label: label ?? "main" })
       },
       minimize: (label) => core.invoke("bd_win_minimize", { label: label ?? "main" }),
       maximizeToggle: (label) => core.invoke("bd_win_maximize", { label: label ?? "main" }),
       fullscreen: (enable, label) => core.invoke("bd_win_fullscreen", { enable, label: label ?? "main" }),
       new: (options) => core.invoke("bd_win_open", {
-        label: options?.label ?? getRandomString({
-          length: 6,
-          prefix: "w_"
-        }),
+        label: options?.label ?? randomWindowLabel,
         fullscreen: options?.fullscreen || false,
         url: options?.url ?? ""
       }),
@@ -16898,7 +16908,6 @@ This typically indicates that your device does not have a healthy Internet conne
       },
       version: APP_VERSION,
       get ready() {
-        bdInitiators();
         return core.ready;
       },
       invoke: core.invoke,
@@ -16918,6 +16927,10 @@ This typically indicates that your device does not have a healthy Internet conne
       configurable: false,
       writable: false
     });
+  })();
+  (async () => {
+    await waitTauri();
+    if (tauriReadyCheck()) bdInitiators();
   })();
 })();
 /*! Bundled license information:

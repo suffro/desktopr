@@ -15,6 +15,7 @@ export type MenuEventId =
   | "help.hide-others"
   | "help.show-all";
 
+  export type MenuCustomItemEventPlayload = { id: MenuEventId, [key: string]: any };
 
 export interface MenuInterface {
     setEnabled: (id: string, enabled: boolean) => Promise<void>;

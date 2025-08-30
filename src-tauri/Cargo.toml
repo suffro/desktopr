@@ -3,6 +3,9 @@ name = "bubbledesk-wrapper"
 version = "0.2.1"
 edition = "2021"
 
+[target.'cfg(windows)'.dependencies]
+tauri-plugin-prevent-default = { version = "3", features = ["platform-windows"], optional = true }
+
 [dependencies]
 tauri = { version = "2", features = ["rustls-tls", "tray-icon", "devtools"] }
 # Optional plugins (enable via Cargo features)
@@ -14,7 +17,8 @@ tauri-plugin-persisted-scope = { version = "2", optional = true }
 tauri-plugin-clipboard-manager = { version = "2", optional = true }
 tauri-plugin-dialog = { version = "2", optional = true}
 tauri-plugin-deep-link =  { version = "2", optional = true}
-tauri-plugin-single-instance = { version = "2", features = ["deep-link"], optional = true }
+tauri-plugin-single-instance = { version = "2.3", features = ["deep-link"], optional = true }
+tauri-plugin-prevent-default = { version = "3", optional = true }
 
 serde = "1.0.219"
 serde_json = "1"
@@ -34,6 +38,7 @@ default = [
     "tauri-plugin-dialog",
     "tauri-plugin-deep-link",
     "tauri-plugin-single-instance",
+    "tauri-plugin-prevent-default",
 ]
 
 [profile.release]

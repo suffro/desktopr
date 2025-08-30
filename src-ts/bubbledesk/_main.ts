@@ -1,3 +1,4 @@
+import { listenForEvent } from "@helpers";
 import { MenuEventId, BubbledeskAPI, BubbledeskInstanceInterface } from "@types";
 
 export const BubbledeskInstance: BubbledeskInstanceInterface = {
@@ -11,15 +12,21 @@ export const BubbledeskInstance: BubbledeskInstanceInterface = {
     }
 }
 
-export const bdInitiators = () => {
-    if(!BubbledeskInstance.ready()) return console.error("'window.Bubbledesk' not found");
+export const bdInitiators = async () => {
+    try {
+        if(!BubbledeskInstance.ready()) throw("'window.Bubbledesk' not found");
 
-    const Bubbledesk = BubbledeskInstance.get()!; 
+        const Bubbledesk = BubbledeskInstance.get()!; 
+        
+        Bubbledesk.events.onMenuEvent((id: MenuEventId) => {
+            if (id === "view.devtools") {
+                console.log("DevTools toggled");
+                Bubbledesk.window.devTools.toggle("main");
+            }
+        });
 
-    Bubbledesk.events.on("menu:event", (id: MenuEventId) => {
-        if (id === "view.devtools") {
-            console.log("DevTools toggled");
-            Bubbledesk.window.devTools.toogle("main");
-        }
-    });
+        console.log("## READY ##");
+    } catch (error) {
+        console.error(error);
+    }
 }
