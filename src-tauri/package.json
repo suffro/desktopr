@@ -4,8 +4,8 @@
         "devconf": "npm run devconf --prefix ../",
         "clean": "rm -rf target && rm -rf gen && cargo clean",
         "build": "npm run ts:compile && npm run devconf && cargo tauri build",
-        "build:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri build",
-        "dev:log": "npm run ts:compile && npm run devconf && RUST_LOG=tauri_build=trace cargo tauri dev",
+        "build:log": "npm run ts:compile && npm run devconf && RUST_BACKTRACE=1 cargo tauri build",
+        "dev:log": "npm run ts:compile && npm run devconf && RUST_BACKTRACE=1 cargo tauri dev",
         "dev": "npm run ts:compile && npm run devconf && cargo tauri dev"
     }
 }
