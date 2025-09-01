@@ -1,5 +1,5 @@
 import { listenForEvent } from "@helpers";
-import { MenuEventId, BubbledeskAPI, BubbledeskInstanceInterface } from "@types";
+import { BubbledeskAPI, BubbledeskInstanceInterface } from "@types";
 
 export const BubbledeskInstance: BubbledeskInstanceInterface = {
     ready: (): boolean => {
@@ -18,7 +18,7 @@ export const bdInitiators = async () => {
 
         const Bubbledesk = BubbledeskInstance.get()!; 
         
-        Bubbledesk.events.onMenuEvent((id: MenuEventId) => {
+        Bubbledesk.events.onMenuEvent((id: string) => {
             if (id === "view.devtools") {
                 console.log("DevTools toggled");
                 Bubbledesk.window.devTools.toggle("main");

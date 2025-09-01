@@ -1,21 +1,6 @@
-export type MenuEventId =
-  | "file.new-window"
-  | "file.close-window"
-  | "file.quit"
-  | "view.reload"
-  | "view.reload-hard"
-  | "view.fullscreen"
-  | "view.devtools"
-  | "window.minimize"
-  | "window.maximize"
-  | "window.close-window"
-  | "help.about"
-  | "help.services"
-  | "help.hide"
-  | "help.hide-others"
-  | "help.show-all";
 
-  export type MenuCustomItemEventPlayload = { id: MenuEventId, [key: string]: any };
+
+export type MenuCustomItemEventPlayload = { id: string, [key: string]: any };
 
 export interface MenuInterface {
     setEnabled: (id: string, enabled: boolean) => Promise<void>;

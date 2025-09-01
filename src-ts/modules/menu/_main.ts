@@ -1,4 +1,4 @@
-import type { BubbledeskAPI } from "@types";
+import type { BubbledeskAPI, } from "@types";
 
 export function buildMenu(core: { invoke: BubbledeskAPI["invoke"] }) {
   return {

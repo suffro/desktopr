@@ -24,6 +24,8 @@ sed -e "s|%%APP_URL%%|${APP_URL}|g" \
 
 cp conf-templates/tauri.conf.template.dev.json src-tauri/tauri.conf.json
 
+cp conf-templates/menu.config.dev.json src-tauri/resources/menu/menu.config.json
+
 echo "Dev remote.json -> ${APP_URL}"
 echo "Dev Cargo.toml package name -> ${CARGO_PACKAGE_NAME}"
 echo "Dev Cargo.toml package version -> ${CARGO_PACKAGE_VERSION}"

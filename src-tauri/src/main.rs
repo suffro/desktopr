@@ -24,12 +24,12 @@ use tauri_plugin_prevent_default::{
 
 
 fn main() {
-  let prevent = PD::new()
-  .with_flags(Flags::CONTEXT_MENU | Flags::DEV_TOOLS) // disabilita menu e scorciatoie DevTools
-  .shortcut(KeyboardShortcut::new("F12"))
-  .shortcut(KeyboardShortcut::with_modifiers("I", &[CtrlKey, ShiftKey])) // Ctrl+Shift+I
-  .shortcut(KeyboardShortcut::with_modifiers("I", &[MetaKey, AltKey]))  // ⌘⌥I
-  .build();
+  // let prevent = PD::new()
+  // .with_flags(Flags::CONTEXT_MENU | Flags::DEV_TOOLS) // disabilita menu e scorciatoie DevTools
+  // .shortcut(KeyboardShortcut::new("F12"))
+  // .shortcut(KeyboardShortcut::with_modifiers("I", &[CtrlKey, ShiftKey])) // Ctrl+Shift+I
+  // .shortcut(KeyboardShortcut::with_modifiers("I", &[MetaKey, AltKey]))  // ⌘⌥I
+  // .build();
 
   let mut builder = tauri::Builder::default();
 
@@ -41,7 +41,7 @@ fn main() {
   // --- 1) Plugin del tuo bridge + altri già presenti ---
   builder = builder
     .plugin(bridge())
-    .plugin(prevent)
+    // .plugin(prevent)
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init());
@@ -86,9 +86,6 @@ fn main() {
     });
 
     Ok(())
-  })
-  .on_menu_event(|app, ev| {
-    let _ = app.emit("menu:event", ev);
   });
 
 
