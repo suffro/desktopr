@@ -4,7 +4,6 @@ mod bubbledesk;
 mod helpers;
 
 use bridge::*;
-use bridge::tray::init_tray;
 use bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
@@ -58,10 +57,6 @@ fn main() {
     app.handle().plugin(
       gsc::Builder::new().build(),
     )?;
-
-    // Tray
-    init_tray(app)?;
-
 
     // Registrazione runtime (solo dev su Win/Linux)
     #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]

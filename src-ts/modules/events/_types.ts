@@ -13,8 +13,5 @@ export interface EventsInterface {
       options?: { includeHover?: boolean }
     ) => Promise<() => void>;
     onMenuEvent: (handler: (payload: any) => void) => Promise<() => any>;
-    tray: {
-      onIconEvent: (handler: (payload: any) => void) => Promise<() => any>;
-      onMenuEvent: (handler: (payload: any) => void) => Promise<() => any>;
-    };
+    onTrayIconEvent: (handler: (payload: any) => void) => Promise<() => any>;
 }

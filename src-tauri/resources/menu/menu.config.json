@@ -92,5 +92,12 @@
       { "type": "separator" },
       { "type": "predefined", "item": "quit" }
     ]
-  }
+  },
+  "tray": {
+    "section": "tray",
+    "items": [
+      { "type": "separator" },
+      { "type": "custom", "id": "tray.custom.settings", "label": "Settings", "enabled": true, "interaction": "click" }
+    ]
+  }  
 }

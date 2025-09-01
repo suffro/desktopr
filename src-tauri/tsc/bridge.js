@@ -16737,10 +16737,6 @@ This typically indicates that your device does not have a healthy Internet conne
         return () => offs.forEach((off) => off());
       },
       onDeeplink: async (handler) => listenForEvent("deeplink", handler),
-      tray: {
-        onIconEvent: async (handler) => listenForEvent("tray:icon", handler),
-        onMenuEvent: async (handler) => listenForEvent("tray:menu", handler)
-      },
       onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
       onDragDrop: async (handler, options) => {
         const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
@@ -16748,7 +16744,8 @@ This typically indicates that your device does not have a healthy Internet conne
         const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
       },
-      onMenuEvent: async (handler) => listenForEvent("menu:event", handler)
+      onMenuEvent: async (handler) => listenForEvent("menu:event", handler),
+      onTrayIconEvent: async (handler) => listenForEvent("tray:icon", handler)
     };
   }
 

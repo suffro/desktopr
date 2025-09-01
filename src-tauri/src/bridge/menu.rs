@@ -8,17 +8,18 @@ use std::fs;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use crate::helpers::menu_builder::*;
+use crate::bridge::tray::init_tray_from_section;
 
 
 #[derive(Clone)]
-struct MenuMeta {
-  section: String,
-  parent_label: Option<String>,      // label del submenu genitore (se presente)
-  parent_id: Option<String>,         // id del submenu genitore (se presente)
+pub struct MenuMeta {
+  pub section: String,
+  pub parent_label: Option<String>,      // label del submenu genitore (se presente)
+  pub parent_id: Option<String>,         // id del submenu genitore (se presente)
 }
 
-struct MenuIndex {
-  by_id: HashMap<String, MenuMeta>,
+pub struct MenuIndex {
+  pub by_id: HashMap<String, MenuMeta>,
 }
 
 struct CheckState {
@@ -28,10 +29,16 @@ struct CheckState {
 // -------- init --------
 
 pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
+  eprintln!("[MENU] >>> init_menu CALLED");
   let cfg = match parse_menu_config(app) {
     Some(c) => c,
     None => return Ok(()),
   };
+  eprintln!("[MENU] enabled={} platforms={:?}", cfg.enabled, cfg.platforms);
+  eprintln!("[MENU] has macos_root? {} | file? {} | edit? {} | view? {} | window? {} | tray? {}",
+    cfg.macos_root.is_some(), cfg.file.is_some(), cfg.edit.is_some(), cfg.view.is_some(), cfg.window.is_some(), cfg.tray.is_some()
+  );
+
   if !cfg.enabled || !is_current_platform_in(&cfg.platforms) {
     return Ok(());
   }
@@ -71,9 +78,57 @@ pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     collect_check_items(&mut check_map, &sec.items);
     subs.push(build_submenu_from_section(app, "Window", sec)?);
   }
+  if let Some(sec) = cfg.tray.as_ref() {
+    // 1) costruisci i 3 item predefiniti (custom click) + separator
+    let mut tray_items: Vec<MenuItemUnion> = vec![
+      MenuItemUnion::Custom(MenuConfigCustomItem {
+        id: "tray.show".to_string(),
+        label: "Show".to_string(),
+        enabled: true,
+        interaction: MenuInteraction::Click,
+        checked: None,
+        accelerator: None,
+      }),
+      MenuItemUnion::Custom(MenuConfigCustomItem {
+        id: "tray.hide".to_string(),
+        label: "Hide".to_string(),
+        enabled: true,
+        interaction: MenuInteraction::Click,
+        checked: None,
+        accelerator: None,
+      }),
+      MenuItemUnion::Custom(MenuConfigCustomItem {
+        id: "tray.quit".to_string(),
+        label: "Quit".to_string(),
+        enabled: true,
+        interaction: MenuInteraction::Click,
+        checked: None,
+        accelerator: None,
+      }),
+      MenuItemUnion::Separator,
+    ];
+
+    // 2) aggiungi gli item dal JSON (in coda, così i 3 restano in cima)
+    tray_items.extend(sec.items.clone());
+
+    // 3) indicizza + raccogli check sull'intera lista (ora include i predefiniti)
+    index_section_items(&mut index_map, "Tray", &tray_items, None, None);
+    collect_check_items(&mut check_map, &tray_items);
+
+    // 4) crea una sezione "completa" da passare al builder del tray
+    //    (se il tuo enum MenuSection non ha Tray, usa `section: sec.section.clone()` e assicurati che MenuSection: Clone)
+    let sec_augmented = MenuSectionConfig {
+      section: MenuSection::Tray,
+      items: tray_items,
+    };
+
+    // 5) delega al costruttore del tray
+    init_tray_from_section(app, &sec_augmented)?;
+  }
 
   let refs: Vec<&dyn IsMenuItem<R>> = subs.iter().map(|s| s as &dyn IsMenuItem<R>).collect();
   let root = Menu::with_items(app, &refs)?;
+  eprintln!("[MENU] submenus count = {}", subs.len());
   app.set_menu(root)?;
 
   // 🧠 salva gli state
@@ -146,9 +201,9 @@ fn parse_menu_config<R: Runtime>(app: &App<R>) -> Option<MenuConfig> {
   for candidate in candidates {
     if let Ok(path) = app.path().resolve(candidate, BaseDirectory::Resource) {
       if let Ok(s) = fs::read_to_string(&path) {
-        #[cfg(debug_assertions)]
-        eprintln!("[RES] loaded: {:?}", path);
         if let Ok(cfg) = serde_json::from_str::<MenuConfig>(&s) {
+          #[cfg(debug_assertions)]
+          eprintln!("[RES] loaded: {:?}", path);
           return Some(cfg);
         }
       }

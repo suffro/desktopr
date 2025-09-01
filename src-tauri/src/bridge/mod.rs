@@ -1,5 +1,3 @@
-pub mod tray;
-
 pub mod notifications;
 pub mod clipboard;
 pub mod files;
@@ -10,6 +8,7 @@ pub mod dragdrop;
 pub mod fs;
 pub mod deeplink;
 pub mod menu;
+pub mod tray;
 
 pub use notifications::*;
 pub use clipboard::*;

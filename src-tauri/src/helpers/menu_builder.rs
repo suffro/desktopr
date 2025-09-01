@@ -8,7 +8,7 @@ const NO_ACCEL: Option<&str> = None;
 
 // ========= Tipi coerenti con i "CORRECT MENU CONFIGURATION TYPES" =========
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuConfig {
   pub enabled: bool,
@@ -19,14 +19,15 @@ pub struct MenuConfig {
   #[serde(default)] pub edit: Option<MenuSectionConfig>,
   #[serde(default)] pub window: Option<MenuSectionConfig>,
   #[serde(default)] pub macos_root: Option<MenuSectionConfig>, // camelCase -> macosRoot
+  #[serde(default)] pub tray: Option<MenuSectionConfig>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum MenuPlatform { Macos, Windows, Linux }
 
 // Valore della chiave: { section: "...", items: [...] }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuSectionConfig {
   pub section: MenuSection,
@@ -34,12 +35,12 @@ pub struct MenuSectionConfig {
 }
 
 // "file" | "view" | "edit" | "window" | "macosRoot"
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 #[serde(rename_all = "camelCase")]
-pub enum MenuSection { File, View, Edit, Window, MacosRoot }
+pub enum MenuSection { File, View, Edit, Window, MacosRoot, Tray }
 
 // Unione TAGGATA sul campo "type" degli item
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum MenuItemUnion {
   Custom(MenuConfigCustomItem),
@@ -48,7 +49,7 @@ pub enum MenuItemUnion {
   Separator, // item con { "type": "separator" }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuConfigCustomItem {
   pub id: String,
@@ -59,19 +60,19 @@ pub struct MenuConfigCustomItem {
   #[serde(default)] pub accelerator: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuConfigPredefinedItem {
   pub item: MenuPredefinedMenuItemSlug,
   #[serde(default)] pub custom_label: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum MenuInteraction { Click, Check }
 
 // NB: niente "bring_all_to_front" in Tauri v2
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum MenuPredefinedMenuItemSlug {
   About, CloseWindow, Copy, Cut, Fullscreen, Hide, HideOthers, Maximize,
@@ -79,7 +80,7 @@ pub enum MenuPredefinedMenuItemSlug {
 }
 
 // Per i submenu ricorsivi: il tag "type":"submenu" è gestito dall’enum
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuConfigSubmenuItem {
   pub id: String,
