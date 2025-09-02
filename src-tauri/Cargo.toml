@@ -26,6 +26,8 @@ base64 = "0.22"
 walkdir = "2.5"
 url = "2"
 getrandom = "0.3.3"
+chrono = { version = "0.4", features = ["clock"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [features]
 default = [

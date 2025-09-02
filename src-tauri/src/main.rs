@@ -53,6 +53,13 @@ fn main() {
     // Menu nativo
     crate::bridge::menu::init_menu(app)?;
     
+    let version = app.package_info().version.to_string();
+    start_heartbeat(app.handle().clone());
+    // panic hook
+    install_panic_hook(app.handle().clone(), version);
+    // retention all’avvio
+    let _ = db_logs_run_retention(app.handle().clone());
+
     // Global Shortcut
     app.handle().plugin(
       gsc::Builder::new().build(),
@@ -90,7 +97,16 @@ fn main() {
       match event {
         WindowEvent::Focused(true)  => { let _ = window.emit("window:focus",  ()); }
         WindowEvent::Focused(false) => { let _ = window.emit("window:blur",   ()); }
-        WindowEvent::CloseRequested { .. } => { let _ = window.emit("window:close-requested", ()); }
+        WindowEvent::CloseRequested { api, .. } => {
+          // blocca chiusura immediata
+          api.prevent_close();
+          // emette evento
+          let _ = window.emit("window:close-requested", ());
+          // marca clean shutdown centralmente
+          mark_clean_shutdown_now(&window.app_handle());
+          // chiudi davvero ora
+          let _ = window.close();
+        }
         WindowEvent::Resized(size) => {
           let _ = window.emit("window:resized", Some(serde_json::json!({
             "width": size.width,
@@ -132,11 +148,14 @@ fn main() {
       // events
       bd_event_emit, bd_event_emit_to,
       // fs
-      fs_list_dir, fs_mkdir, fs_rm, fs_stat, fs_write_text, fs_read_text,
-      fs_write_bytes, fs_read_bytes, fs_exists, fs_move, fs_copy,
-      fs_clear_cache, fs_paths,
+      db_fs_list_dir, db_fs_mkdir, db_fs_rm, db_fs_stat, db_fs_write_text, db_fs_read_text,
+      db_fs_write_bytes, db_fs_read_bytes, db_fs_exists, db_fs_move, db_fs_copy,
+      db_fs_clear_cache, db_fs_paths,
       // menu
-      bd_menu_set_enabled, bd_menu_set_checked
+      bd_menu_set_enabled, bd_menu_set_checked,
+      // diagnostics
+      db_logs_get_privacy, db_logs_set_privacy, db_logs_run_retention, db_logs_list_files, db_logs_read_file,
+      db_logs_record_js_error, db_logs_new_record, db_logs_export_zip
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

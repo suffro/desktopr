@@ -9,6 +9,7 @@ pub mod fs;
 pub mod deeplink;
 pub mod menu;
 pub mod tray;
+pub mod diagnostics;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -20,3 +21,4 @@ pub use dragdrop::*;
 pub use fs::*;
 pub use deeplink::*;
 pub use menu::*;
+pub use diagnostics::*;

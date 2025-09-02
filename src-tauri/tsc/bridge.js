@@ -16752,34 +16752,34 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/fs/_main.ts
   function scope(core, permanent) {
     return {
-      listDir: (rel = "") => core.invoke("fs_list_dir", { rel, permanent }),
-      mkdir: (rel) => core.invoke("fs_mkdir", { rel, permanent }),
-      rm: (rel, recursive = false) => core.invoke("fs_rm", { rel, recursive, permanent }),
-      stat: (rel = "") => core.invoke("fs_stat", { rel, permanent }),
-      writeText: (rel, contents, opts) => core.invoke("fs_write_text", {
+      listDir: (rel = "") => core.invoke("db_fs_list_dir", { rel, permanent }),
+      mkdir: (rel) => core.invoke("db_fs_mkdir", { rel, permanent }),
+      rm: (rel, recursive = false) => core.invoke("db_fs_rm", { rel, recursive, permanent }),
+      stat: (rel = "") => core.invoke("db_fs_stat", { rel, permanent }),
+      writeText: (rel, contents, opts) => core.invoke("db_fs_write_text", {
         rel,
         permanent,
         contents,
         createDirs: opts?.createDirs,
         append: opts?.append
       }),
-      readText: (rel) => core.invoke("fs_read_text", { rel, permanent }),
-      writeBytes: (rel, base642, opts) => core.invoke("fs_write_bytes", {
+      readText: (rel) => core.invoke("db_fs_read_text", { rel, permanent }),
+      writeBytes: (rel, base642, opts) => core.invoke("db_fs_write_bytes", {
         rel,
         permanent,
         dataBase64: base642,
         createDirs: opts?.createDirs
       }),
-      readBytes: (rel) => core.invoke("fs_read_bytes", { rel, permanent }),
-      exists: (rel) => core.invoke("fs_exists", { rel, permanent }),
-      move: (src, dest, opts) => core.invoke("fs_move", {
+      readBytes: (rel) => core.invoke("db_fs_read_bytes", { rel, permanent }),
+      exists: (rel) => core.invoke("db_fs_exists", { rel, permanent }),
+      move: (src, dest, opts) => core.invoke("db_fs_move", {
         src,
         dest,
         permanent,
         createDirs: opts?.createDirs,
         overwrite: opts?.overwrite
       }),
-      copy: (src, dest, opts) => core.invoke("fs_copy", {
+      copy: (src, dest, opts) => core.invoke("db_fs_copy", {
         src,
         dest,
         permanent,
@@ -16788,7 +16788,7 @@ This typically indicates that your device does not have a healthy Internet conne
         overwrite: opts?.overwrite
       }),
       path: async () => {
-        const p = await core.invoke("fs_paths");
+        const p = await core.invoke("db_fs_paths");
         return permanent ? p.data : p.cache;
       },
       base: permanent ? ".data" : ".cache"
@@ -16798,9 +16798,9 @@ This typically indicates that your device does not have a healthy Internet conne
     const cache = scope(core, false);
     const data = scope(core, true);
     return {
-      cache: { ...cache, clear: () => core.invoke("fs_clear_cache") },
+      cache: { ...cache, clear: () => core.invoke("db_fs_clear_cache") },
       data,
-      paths: () => core.invoke("fs_paths"),
+      paths: () => core.invoke("db_fs_paths"),
       base: { cache: ".cache", data: ".data" }
     };
   }
