@@ -81,7 +81,7 @@ fn resolve_any(app: &AppHandle, rel: &str, permanent: bool) -> Result<PathBuf, S
 }
 
 #[tauri::command]
-pub fn db_fs_list_dir(app: AppHandle, rel: String, permanent: bool) -> Result<Vec<FsEntry>, String> {
+pub fn bd_fs_list_dir(app: AppHandle, rel: String, permanent: bool) -> Result<Vec<FsEntry>, String> {
     let dir = resolve_existing(&app, &rel, permanent)?;
     let mut out = Vec::new();
     for e in fs::read_dir(&dir).map_err(|e| e.to_string())? {
@@ -97,13 +97,13 @@ pub fn db_fs_list_dir(app: AppHandle, rel: String, permanent: bool) -> Result<Ve
 }
 
 #[tauri::command]
-pub fn db_fs_mkdir(app: AppHandle, rel: String, permanent: bool) -> Result<(), String> {
+pub fn bd_fs_mkdir(app: AppHandle, rel: String, permanent: bool) -> Result<(), String> {
     let dir = resolve_any(&app, &rel, permanent)?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn db_fs_rm(app: AppHandle, rel: String, permanent: bool, recursive: bool) -> Result<(), String> {
+pub fn bd_fs_rm(app: AppHandle, rel: String, permanent: bool, recursive: bool) -> Result<(), String> {
     let p = resolve_any(&app, &rel, permanent)?;
     if !p.exists() {
         // idempotente: rimuovere ciò che non esiste è OK
@@ -119,7 +119,7 @@ pub fn db_fs_rm(app: AppHandle, rel: String, permanent: bool, recursive: bool) -
 }
 
 #[tauri::command]
-pub fn db_fs_stat(app: AppHandle, rel: String, permanent: bool) -> Result<FsEntry, String> {
+pub fn bd_fs_stat(app: AppHandle, rel: String, permanent: bool) -> Result<FsEntry, String> {
     let p = resolve_existing(&app, &rel, permanent)?;
     let md = fs::metadata(&p).map_err(|e| e.to_string())?;
     Ok(FsEntry {
@@ -132,7 +132,7 @@ pub fn db_fs_stat(app: AppHandle, rel: String, permanent: bool) -> Result<FsEntr
 
 // ---- WRITE TEXT ----
 #[tauri::command]
-pub fn db_fs_write_text(
+pub fn bd_fs_write_text(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -156,7 +156,7 @@ pub fn db_fs_write_text(
 
 // ---- READ TEXT ----
 #[tauri::command]
-pub fn db_fs_read_text(
+pub fn bd_fs_read_text(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -168,7 +168,7 @@ pub fn db_fs_read_text(
 
 // ---- WRITE BYTES (base64) ----
 #[tauri::command]
-pub fn db_fs_write_bytes(
+pub fn bd_fs_write_bytes(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -188,7 +188,7 @@ pub fn db_fs_write_bytes(
 
 // ---- READ BYTES (base64) ----
 #[tauri::command]
-pub fn db_fs_read_bytes(
+pub fn bd_fs_read_bytes(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -203,7 +203,7 @@ pub fn db_fs_read_bytes(
 
 // ---- EXISTS ----
 #[tauri::command]
-pub fn db_fs_exists(
+pub fn bd_fs_exists(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -215,7 +215,7 @@ pub fn db_fs_exists(
 
 // ---- MOVE (file o directory) ----
 #[tauri::command]
-pub fn db_fs_move(
+pub fn bd_fs_move(
   app: AppHandle,
   src: String,
   dest: String,
@@ -264,7 +264,7 @@ pub fn db_fs_move(
 
 // ---- COPY (file o directory; ricorsivo opzionale) ----
 #[tauri::command]
-pub fn db_fs_copy(
+pub fn bd_fs_copy(
   app: AppHandle,
   src: String,
   dest: String,
@@ -344,7 +344,7 @@ pub fn db_fs_copy(
 
 
 #[tauri::command]
-pub fn db_fs_clear_cache(app: AppHandle) -> Result<(), String> {
+pub fn bd_fs_clear_cache(app: AppHandle) -> Result<(), String> {
     let base = base_dir(&app, false); // false = cache
     if base.exists() {
         fs::remove_dir_all(&base).map_err(|e| e.to_string())?;
@@ -360,7 +360,7 @@ pub struct FsPaths {
 }
 
 #[tauri::command]
-pub fn db_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
+pub fn bd_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
     let cache = base_dir(&app, false);
     let data = base_dir(&app, true);
     Ok(FsPaths {

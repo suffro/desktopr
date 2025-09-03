@@ -9,4 +9,5 @@ export * from "./modules/notifications/_types";
 export * from "./modules/app/_types";
 export * from "./modules/window/_types";
 export * from "./modules/dragdrop/_types";
+export * from "./modules/diagnostics/_types";
 export * from "./modules/menu/_types";

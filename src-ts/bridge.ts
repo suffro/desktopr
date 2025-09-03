@@ -11,6 +11,7 @@ import {
     buildAppInfo,
     buildMenu,
     bdInitiators,
+    buildDiagnostics
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
@@ -37,6 +38,7 @@ import { tauriReadyCheck, waitTauri } from "@helpers";
     globalShortcut:buildShortcuts(core),
     fs:            buildFs(core),
     menu:          buildMenu(core),
+    diagnostics:   buildDiagnostics(core),
   };
 
   Object.defineProperty(window, "Bubbledesk", {

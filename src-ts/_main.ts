@@ -10,3 +10,4 @@ export * from "./modules/app/_main";
 export * from "./modules/window/_main";
 export * from "./modules/dragdrop/_main";
 export * from "./modules/menu/_main";
+export * from "./modules/diagnostics/_main";

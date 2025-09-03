@@ -7,7 +7,8 @@ import type {
   EventsInterface,
   ShortcutsInterface,
   FsInterface,
-  MenuInterface
+  MenuInterface,
+  DiagnosticsInterface
 } from "@types";
 
 
@@ -34,6 +35,8 @@ export type BubbledeskAPI = {
   fs: FsInterface;
 
   menu: MenuInterface;
+
+  diagnostics: DiagnosticsInterface;
 };
 
 export interface BubbledeskInstanceInterface {

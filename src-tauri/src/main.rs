@@ -58,7 +58,7 @@ fn main() {
     // panic hook
     install_panic_hook(app.handle().clone(), version);
     // retention all’avvio
-    let _ = db_logs_run_retention(app.handle().clone());
+    let _ = bd_logs_run_retention(app.handle().clone());
 
     // Global Shortcut
     app.handle().plugin(
@@ -148,14 +148,21 @@ fn main() {
       // events
       bd_event_emit, bd_event_emit_to,
       // fs
-      db_fs_list_dir, db_fs_mkdir, db_fs_rm, db_fs_stat, db_fs_write_text, db_fs_read_text,
-      db_fs_write_bytes, db_fs_read_bytes, db_fs_exists, db_fs_move, db_fs_copy,
-      db_fs_clear_cache, db_fs_paths,
+      bd_fs_list_dir, bd_fs_mkdir, bd_fs_rm, bd_fs_stat, bd_fs_write_text, bd_fs_read_text,
+      bd_fs_write_bytes, bd_fs_read_bytes, bd_fs_exists, bd_fs_move, bd_fs_copy,
+      bd_fs_clear_cache, bd_fs_paths,
       // menu
       bd_menu_set_enabled, bd_menu_set_checked,
       // diagnostics
-      db_logs_get_privacy, db_logs_set_privacy, db_logs_run_retention, db_logs_list_files, db_logs_read_file,
-      db_logs_record_js_error, db_logs_new_record, db_logs_export_zip
+      bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
+      bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
+      // test commands
+      #[cfg(debug_assertions)]
+      bd_logs_test_record_n,
+      #[cfg(debug_assertions)]
+      bd_logs_test_panic,
+      #[cfg(debug_assertions)]
+      bd_logs_test_force_retention,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

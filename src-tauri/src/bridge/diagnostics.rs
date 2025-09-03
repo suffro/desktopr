@@ -8,13 +8,24 @@ use std::{
     thread,
     sync::atomic::{AtomicBool, Ordering},
 };
+
+use chrono::Utc;
+use serde_json::{Value, Map};
 use tauri::{AppHandle, Manager};
+use walkdir::WalkDir;
+use zip::write::SimpleFileOptions;
+
+use crate::bridge::app::bd_app_info; // <-- adatta se il path è diverso
 
 // ==============================
 // Heartbeat / runtime markers
 // ==============================
 
 static HEARTBEAT_STOP: AtomicBool = AtomicBool::new(false);
+
+fn data_dir(app: &AppHandle) -> PathBuf {
+    app.path().app_data_dir().expect("app_data_dir not available")
+}
 
 fn runtime_dir(app: &AppHandle) -> PathBuf {
     data_dir(app).join("runtime")
@@ -32,20 +43,20 @@ pub fn start_heartbeat(app: AppHandle) {
     let dirty = hb.exists() && !ok.exists();
     if dirty {
         let entry = serde_json::json!({
-          "type": "dirty_shutdown",
-          "ts": chrono::Utc::now().to_rfc3339(),
+          "record_type": "dirty_shutdown",
+          "timestamp": Utc::now().timestamp_millis() as u64,
           "note": "previous run did not shut down cleanly"
         });
         let crash_path = data_dir(&app).join(format!(
             "crashes/crash-{}.json",
-            chrono::Utc::now().format("%Y-%m-%dT%H-%M-%SZ")
+            Utc::now().format("%Y-%m-%dT%H-%M-%SZ")
         ));
         let _ = fs::create_dir_all(crash_path.parent().unwrap());
         let _ = fs::write(&crash_path, serde_json::to_vec_pretty(&entry).unwrap());
 
         let log_path = data_dir(&app).join(format!(
-            "logs/app-{}.jsonl",
-            chrono::Utc::now().format("%Y-%m")
+            "logs/record-{}.jsonl",
+            Utc::now().format("%Y-%m")
         ));
         let _ = append_jsonl(log_path, &entry);
     }
@@ -59,7 +70,7 @@ pub fn start_heartbeat(app: AppHandle) {
             let _ = fs::write(
                 &hb,
                 serde_json::to_vec(&serde_json::json!({
-                    "ts": chrono::Utc::now().to_rfc3339()
+                    "ts": Utc::now().to_rfc3339()
                 }))
                 .unwrap(),
             );
@@ -104,11 +115,6 @@ fn default_privacy() -> PrivacySettings {
     }
 }
 
-fn data_dir(app: &AppHandle) -> PathBuf {
-    // Tauri v2 path resolver
-    app.path().app_data_dir().expect("app_data_dir not available")
-}
-
 fn privacy_path(app: &AppHandle) -> PathBuf {
     data_dir(app).join("settings/privacy.json")
 }
@@ -144,11 +150,15 @@ fn write_privacy(app: &AppHandle, s: &PrivacySettings) -> Result<(), String> {
 // ==============================
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct JsErrorPayload {
+pub struct ErrorPayload {
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub lineno: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub colno: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub stack: Option<String>,
 }
 
@@ -157,17 +167,38 @@ pub struct AnalyticsRecord {
     pub name: String,
     #[serde(default)]
     pub props: serde_json::Value, // object
-    pub ts: String,               // ISO8601
-    pub app_version: String,
-    pub os: String,
-    pub arch: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Payload {
+    Error(ErrorPayload),
+    Analytics(AnalyticsRecord),
+    Any(Value), // fallback
+}
+
+// AppInfo: lasciare volutamente libero (qualsiasi JSON)
+pub type AppInfo = Value;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LogData {
+    pub record_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub env: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<u64>, // millis
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub app_version: Option<String>,
+    pub payload: Payload,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub app_info: Option<AppInfo>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ListedFile {
-    pub rel_path: String, // e.g., "logs/app-2025-09.jsonl"
+    pub rel_path: String, // e.g., "logs/record-2025-09.jsonl"
     pub bytes: u64,
-    pub modified_ms: u128,
+    pub modified_ms: u64,
 }
 
 // ==============================
@@ -218,76 +249,128 @@ fn append_jsonl(path: PathBuf, value: &serde_json::Value) -> std::io::Result<()>
     Ok(())
 }
 
+fn new_log_data(
+    app: &tauri::AppHandle,
+    payload: Payload,
+    record_type: String,
+    env: Option<String>,
+    app_version: Option<String>,
+) -> LogData {
+    let app_info: AppInfo = bd_app_info(app); // definito nel tuo modulo app
+    LogData {
+        record_type,
+        env,
+        timestamp: Some(Utc::now().timestamp_millis() as u64),
+        app_version,
+        payload,
+        app_info: Some(app_info),
+    }
+}
+
 // ==============================
 // Public Tauri commands
 // ==============================
 
-/// Record a JS error (and optionally store as a crash, if enabled).
+/// Generic error record (also writes a crash file if enabled).
 #[tauri::command]
-pub fn db_logs_record_js_error(
+pub fn bd_logs_record_error(
     app: AppHandle,
-    payload: JsErrorPayload,
+    payload: ErrorPayload,
+    env: Option<String>,
     app_version: String,
 ) -> Result<(), String> {
     let settings = read_privacy(&app);
 
-    // General application log
+    // General application log (JSONL)
     let log_path = data_dir(&app).join(format!(
-        "logs/app-{}.jsonl",
-        chrono::Utc::now().format("%Y-%m")
+        "logs/record-{}.jsonl",
+        Utc::now().format("%Y-%m")
     ));
-    let entry = serde_json::json!({
-      "type": "js_error",
-      "ts": chrono::Utc::now().to_rfc3339(),
-      "appVersion": app_version,
-      "payload": payload
-    });
+    let log_data = new_log_data(
+        &app,
+        Payload::Error(payload),
+        "error".to_string(),
+        Some(env),
+        Some(app_version.clone()),
+    );
+    let entry = serde_json::to_value(&log_data).unwrap();
     append_jsonl(log_path, &entry).map_err(|e| e.to_string())?;
 
     // Crash store (if enabled)
     if settings.crash_reports_enabled {
         let crashes_dir = data_dir(&app).join("crashes");
         ensure_dir(&crashes_dir).map_err(|e| e.to_string())?;
-        let fname = format!("crash-{}.json", chrono::Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
+        let fname = format!("crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
         let fpath = crashes_dir.join(fname);
         fs::write(fpath, serde_json::to_vec_pretty(&entry).unwrap()).map_err(|e| e.to_string())?;
     }
     Ok(())
 }
 
+/// Shortcut for JS errors.
+#[tauri::command]
+pub fn bd_logs_record_js_error(
+    app: AppHandle,
+    payload: ErrorPayload,
+    app_version: String,
+) -> Result<(), String> {
+    bd_logs_record_error(app, payload, "js".into(), app_version)
+}
+
+/// Shortcut for native errors.
+#[tauri::command]
+pub fn bd_logs_record_native_error(
+    app: AppHandle,
+    payload: ErrorPayload,
+    app_version: String,
+) -> Result<(), String> {
+    bd_logs_record_error(app, payload, "native".into(), app_version)
+}
+
 /// Append one analytics record (if analytics are enabled).
 #[tauri::command]
-pub fn db_logs_new_record(app: AppHandle, record: AnalyticsRecord) -> Result<(), String> {
+pub fn bd_logs_new_record(
+    app: AppHandle,
+    record_type: String,
+    payload: AnalyticsRecord,
+    env: String,
+    app_version: String,
+) -> Result<(), String> {
     let settings = read_privacy(&app);
     if !settings.analytics_enabled {
         return Ok(());
     }
 
-    let analytics_path = data_dir(&app).join(format!(
-        "analytics/records-{}.jsonl",
-        chrono::Utc::now().format("%Y-%m")
+    let log_path = data_dir(&app).join(format!(
+        "logs/record-{}.jsonl",
+        Utc::now().format("%Y-%m")
     ));
-    let val = serde_json::to_value(&record).unwrap();
-    append_jsonl(analytics_path, &val).map_err(|e| e.to_string())
+    let log_data = new_log_data(
+        &app,
+        Payload::Analytics(payload),
+        record_type,
+        Some(env),
+        Some(app_version),
+    );
+    let entry = serde_json::to_value(&log_data).unwrap();
+    append_jsonl(log_path, &entry).map_err(|e| e.to_string())
 }
 
-/// Export logs/, analytics/, crashes/ as a zip file at `target_zip_path`.
+/// Export logs/ and crashes/ as a zip file at `target_zip_path`.
 #[tauri::command]
-pub fn db_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
+pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
     let base = data_dir(&app);
     let file = std::fs::File::create(&target_zip_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipWriter::new(file);
-    // zip v2: use SimpleFileOptions
-    let options =
-        zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
-    let dirs = ["logs", "analytics", "crashes"];
+    let dirs = ["logs", "crashes"];
     for d in dirs {
         let dir_path = base.join(d);
         if !dir_path.exists() {
             continue;
         }
-        for entry in walkdir::WalkDir::new(&dir_path).into_iter().filter_map(Result::ok) {
+        for entry in WalkDir::new(&dir_path).into_iter().filter_map(Result::ok) {
             if entry.file_type().is_file() {
                 let rel = entry
                     .path()
@@ -308,9 +391,7 @@ pub fn db_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
 /// Install a Rust panic hook that writes JSON and text crash files.
 pub fn install_panic_hook(app: AppHandle, app_version: String) {
     std::panic::set_hook(Box::new(move |info| {
-        let ts = chrono::Utc::now()
-            .format("%Y-%m-%dT%H-%M-%SZ")
-            .to_string();
+        let ts = Utc::now().format("%Y-%m-%dT%H-%M-%SZ").to_string();
         let base = app.path().app_data_dir().expect("app_data_dir not available");
         let crashes = base.join("crashes");
         let _ = fs::create_dir_all(&crashes);
@@ -318,8 +399,8 @@ pub fn install_panic_hook(app: AppHandle, app_version: String) {
         let bt = std::backtrace::Backtrace::force_capture().to_string();
 
         let json = serde_json::json!({
-          "type": "panic",
-          "ts": chrono::Utc::now().to_rfc3339(),
+          "record_type": "panic",
+          "timestamp": Utc::now().timestamp_millis() as u64,
           "appVersion": app_version,
           "cause": cause,
           "backtrace": bt
@@ -345,7 +426,7 @@ fn purge_older_than(dir: &Path, max_age_days: u32) -> std::io::Result<()> {
     }
     let now = std::time::SystemTime::now();
     let cutoff = now - Duration::from_secs((max_age_days as u64) * 24 * 3600);
-    for entry in walkdir::WalkDir::new(dir).into_iter().filter_map(Result::ok) {
+    for entry in WalkDir::new(dir).into_iter().filter_map(Result::ok) {
         if entry.file_type().is_file() {
             let meta = entry.metadata()?;
             if let Ok(modified) = meta.modified() {
@@ -363,13 +444,14 @@ fn run_retention(app: &AppHandle) -> Result<(), String> {
     let s = read_privacy(app);
     let base = data_dir(app);
     purge_older_than(&base.join("logs"), s.retention_days_logs).map_err(|e| e.to_string())?;
+    // opzionale: se non usi più analytics/, puoi rimuovere la riga sotto
     purge_older_than(&base.join("analytics"), s.retention_days_analytics).map_err(|e| e.to_string())?;
     purge_older_than(&base.join("crashes"), s.retention_days_crashes).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn db_logs_run_retention(app: AppHandle) -> Result<(), String> {
+pub fn bd_logs_run_retention(app: AppHandle) -> Result<(), String> {
     run_retention(&app)
 }
 
@@ -378,26 +460,24 @@ pub fn db_logs_run_retention(app: AppHandle) -> Result<(), String> {
 // ==============================
 
 #[tauri::command]
-pub fn db_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
-    // area: "logs" | "analytics" | "crashes"
+pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
+    // area: "logs" | "crashes"
     let base = data_dir(&app);
-    let allowed = ["logs", "analytics", "crashes"];
+    let allowed = ["logs", "crashes"];
     if !allowed.contains(&area.as_str()) {
         return Err("Invalid area".into());
     }
     let dir = base.join(&area);
     let mut out = vec![];
     if dir.exists() {
-        for entry in walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
+        for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
             if entry.file_type().is_file() {
                 let meta = entry.metadata().map_err(|e| e.to_string())?;
-                let m = meta
-                    .modified()
-                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                let m = meta.modified().unwrap_or(std::time::SystemTime::UNIX_EPOCH);
                 let modified_ms = m
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default()
-                    .as_millis();
+                    .as_millis() as u64;
                 let rel = entry
                     .path()
                     .strip_prefix(&base)
@@ -412,13 +492,12 @@ pub fn db_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile
             }
         }
     }
-    // Newest first
     out.sort_by(|a, b| b.modified_ms.cmp(&a.modified_ms));
     Ok(out)
 }
 
 #[tauri::command]
-pub fn db_logs_read_file(
+pub fn bd_logs_read_file(
     app: AppHandle,
     rel_path: String,
     max_bytes: Option<u64>,
@@ -445,12 +524,12 @@ pub fn db_logs_read_file(
 // ==============================
 
 #[tauri::command]
-pub fn db_logs_get_privacy(app: AppHandle) -> Result<PrivacySettings, String> {
+pub fn bd_logs_get_privacy(app: AppHandle) -> Result<PrivacySettings, String> {
     Ok(read_privacy(&app))
 }
 
 #[tauri::command]
-pub fn db_logs_set_privacy(
+pub fn bd_logs_set_privacy(
     app: AppHandle,
     analytics_enabled: Option<bool>,
     crash_reports_enabled: Option<bool>,
@@ -476,4 +555,53 @@ pub fn db_logs_set_privacy(
     }
     write_privacy(&app, &s)?;
     Ok(s)
+}
+
+// ==============================
+// Test commands (dev only)
+// ==============================
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn bd_logs_test_record_n(app: AppHandle, n: u32) -> Result<(), String> {
+    for i in 0..n {
+        let rec = AnalyticsRecord {
+            name: "test_event".into(),
+            props: serde_json::json!({ "i": i, "blob": "x".repeat((i % 5 + 1) as usize * 2000) }),
+        };
+        bd_logs_new_record(
+            app.clone(),
+            "test".into(),
+            rec,
+            "dev".into(),
+            "0.0.0-dev".into(),
+        )?;
+    }
+    Ok(())
+}
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn bd_logs_test_panic() {
+    panic!("Intentional panic for testing crash pipeline");
+}
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), String> {
+    // Purge TUTTO nell’area indicata (logs|analytics|crashes). Utile per verificare la retention.
+    let base = data_dir(&app);
+    let allowed = ["logs", "analytics", "crashes"];
+    if !allowed.contains(&area.as_str()) {
+        return Err("Invalid area".into());
+    }
+    let dir = base.join(area);
+    if dir.exists() {
+        for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
+            if entry.file_type().is_file() {
+                let _ = fs::remove_file(entry.path());
+            }
+        }
+    }
+    Ok(())
 }
