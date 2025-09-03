@@ -16660,6 +16660,82 @@ This typically indicates that your device does not have a healthy Internet conne
     get: (target, prop, receiver) => getMethod2(target, prop) || oldTraps.get(target, prop, receiver),
     has: (target, prop) => !!getMethod2(target, prop) || oldTraps.has(target, prop)
   }));
+  function isIntegerInRange(v, min, max) {
+    return typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
+  }
+  function isF32Runtime(v) {
+    return typeof v === "number" && Math.fround(v) === v;
+  }
+  var Pred = {
+    // Unsigned
+    isU8: (v) => isIntegerInRange(v, 0, 255),
+    isU16: (v) => isIntegerInRange(v, 0, 65535),
+    isU32: (v) => isIntegerInRange(v, 0, 4294967295),
+    isU64: (v) => isIntegerInRange(v, 0, Number.MAX_SAFE_INTEGER),
+    // Signed
+    isI8: (v) => isIntegerInRange(v, -128, 127),
+    isI16: (v) => isIntegerInRange(v, -32768, 32767),
+    isI32: (v) => isIntegerInRange(v, -2147483648, 2147483647),
+    isI64: (v) => typeof v === "number" && Number.isInteger(v) && v >= Number.MIN_SAFE_INTEGER && v <= Number.MAX_SAFE_INTEGER,
+    // Floats
+    isF32: (v) => isF32Runtime(v),
+    isF64: (v) => typeof v === "number"
+  };
+  function makeRefinement(tag, isFn) {
+    return {
+      is: (v) => isFn(v),
+      as: (v) => {
+        if (!isFn(v)) throw new TypeError(`Expected ${tag}, got ${String(v)}`);
+        return v;
+      },
+      try: (v) => isFn(v) ? v : null,
+      parse: (s) => {
+        const n = Number(s);
+        if (!Number.isFinite(n) || !isFn(n)) {
+          throw new TypeError(`Invalid ${tag} from "${s}"`);
+        }
+        return n;
+      }
+    };
+  }
+  var Num = {
+    // Predicates (stile number.is...)
+    isU8: Pred.isU8,
+    isU16: Pred.isU16,
+    isU32: Pred.isU32,
+    isU64: Pred.isU64,
+    isI8: Pred.isI8,
+    isI16: Pred.isI16,
+    isI32: Pred.isI32,
+    isI64: Pred.isI64,
+    isF32: Pred.isF32,
+    isF64: Pred.isF64,
+    // Branded constructors / refiners
+    U8: makeRefinement("u8", Pred.isU8),
+    U16: makeRefinement("u16", Pred.isU16),
+    U32: makeRefinement("u32", Pred.isU32),
+    U64: makeRefinement("u64", Pred.isU64),
+    I8: makeRefinement("i8", Pred.isI8),
+    I16: makeRefinement("i16", Pred.isI16),
+    I32: makeRefinement("i32", Pred.isI32),
+    I64: makeRefinement("i64", Pred.isI64),
+    F32: makeRefinement("f32", Pred.isF32),
+    F64: makeRefinement("f64", Pred.isF64)
+  };
+
+  // ../src-ts/modules/diagnostics/_helpers.ts
+  function buildDiagnosticsTestFunctions(core) {
+    return {
+      testGenerateRecords: (n = 200) => core.invoke("bd_logs_test_record_n", { n }),
+      // Questa può semplicemente lanciare un errore JS: non serve invoke.
+      testThrowJsError: async () => {
+        throw new Error("DEV: test JS error");
+      },
+      testPanicRust: () => core.invoke("bd_logs_test_panic", {}),
+      testExportZip: (path) => core.invoke("bd_logs_export_zip", { target_zip_path: path }),
+      testForceRetention: (area) => core.invoke("bd_logs_test_force_retention", { area })
+    };
+  }
 
   // ../src-ts/_helpers.ts
   var tauriReadyCheck = () => typeof window !== "undefined" && window.__TAURI__ && window.Bubbledesk;
@@ -16885,6 +16961,42 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
+  // ../src-ts/modules/diagnostics/_main.ts
+  function buildDiagnostics(core) {
+    return {
+      settings: {
+        // set: mappa ai parametri snake_case attesi da Rust (tutti opzionali)
+        set: (settings) => core.invoke("bd_logs_set_privacy", {
+          analytics_enabled: settings?.analytics_enabled,
+          crash_reports_enabled: settings?.crash_reports_enabled,
+          retention_days_logs: settings?.retention_days_logs,
+          retention_days_analytics: settings?.retention_days_analytics,
+          retention_days_crashes: settings?.retention_days_crashes
+        }),
+        get: () => core.invoke("bd_logs_get_privacy", {})
+      },
+      // SOLO analytics (Rust vuole AnalyticsRecord), usa key record_type
+      newRecord: (record_type, payload, env, app_version) => core.invoke("bd_logs_new_record", {
+        record_type,
+        payload,
+        env,
+        app_version
+      }),
+      newError: {
+        js: (payload, app_version) => core.invoke("bd_logs_record_js_error", { payload, app_version }),
+        native: (payload, app_version) => core.invoke("bd_logs_record_native_error", { payload, app_version }),
+        // Rust richiede 'env' obbligatorio: di default "generic" se non passato
+        generic: (payload, app_version, env = "generic") => core.invoke("bd_logs_record_error", { payload, app_version, env })
+      },
+      readRecordsFile: (rel_path, max_bytes) => core.invoke("bd_logs_read_file", { rel_path, max_bytes }),
+      // qui avevi chiamato bd_logs_read_file: correggo su bd_logs_list_files
+      listRecordsFiles: (area) => core.invoke("bd_logs_list_files", { area }),
+      runRetention: () => core.invoke("bd_logs_run_retention", {}),
+      export: (target_zip_path) => core.invoke("bd_logs_export_zip", { target_zip_path }),
+      test: () => buildDiagnosticsTestFunctions(core)
+    };
+  }
+
   // ../src-ts/bridge.constants.json
   var bridge_constants_default = {
     appUrl: "http://blank.html",
@@ -16916,7 +17028,8 @@ This typically indicates that your device does not have a healthy Internet conne
       events: buildEvents(core),
       globalShortcut: buildShortcuts(core),
       fs: buildFs(core),
-      menu: buildMenu(core)
+      menu: buildMenu(core),
+      diagnostics: buildDiagnostics(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,

@@ -10,12 +10,12 @@ use std::{
 };
 
 use chrono::Utc;
-use serde_json::{Value, Map};
+use serde_json::Value;
 use tauri::{AppHandle, Manager};
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
-use crate::bridge::app::bd_app_info; // <-- adatta se il path è diverso
+use crate::bridge::app::{bd_app_info, AppInfo as AppInfoStruct}; // adatta se il path è diverso
 
 // ==============================
 // Heartbeat / runtime markers
@@ -177,8 +177,8 @@ pub enum Payload {
     Any(Value), // fallback
 }
 
-// AppInfo: lasciare volutamente libero (qualsiasi JSON)
-pub type AppInfo = Value;
+// AppInfo: libero (qualsiasi JSON)
+pub type AppInfoJson = Value;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LogData {
@@ -191,7 +191,7 @@ pub struct LogData {
     pub app_version: Option<String>,
     pub payload: Payload,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub app_info: Option<AppInfo>,
+    pub app_info: Option<AppInfoJson>,
 }
 
 #[derive(Debug, Serialize)]
@@ -256,16 +256,21 @@ fn new_log_data(
     env: Option<String>,
     app_version: Option<String>,
 ) -> LogData {
-    let app_info: AppInfo = bd_app_info(app); // definito nel tuo modulo app
+    // bd_app_info(AppHandle) -> Result<AppInfoStruct, String>
+    let app_info_json: Option<Value> = bd_app_info(app.clone())
+        .ok()
+        .and_then(|ai: AppInfoStruct| serde_json::to_value(ai).ok());
+
     LogData {
         record_type,
         env,
         timestamp: Some(Utc::now().timestamp_millis() as u64),
         app_version,
         payload,
-        app_info: Some(app_info),
+        app_info: app_info_json,
     }
 }
+
 
 // ==============================
 // Public Tauri commands
@@ -276,7 +281,7 @@ fn new_log_data(
 pub fn bd_logs_record_error(
     app: AppHandle,
     payload: ErrorPayload,
-    env: Option<String>,
+    env: String,            // <-- Opzione A: String
     app_version: String,
 ) -> Result<(), String> {
     let settings = read_privacy(&app);
@@ -290,7 +295,7 @@ pub fn bd_logs_record_error(
         &app,
         Payload::Error(payload),
         "error".to_string(),
-        Some(env),
+        Some(env),                 // <-- passiamo Some(env)
         Some(app_version.clone()),
     );
     let entry = serde_json::to_value(&log_data).unwrap();
@@ -314,7 +319,7 @@ pub fn bd_logs_record_js_error(
     payload: ErrorPayload,
     app_version: String,
 ) -> Result<(), String> {
-    bd_logs_record_error(app, payload, "js".into(), app_version)
+    bd_logs_record_error(app, payload, "js".to_string(), app_version)
 }
 
 /// Shortcut for native errors.
@@ -324,7 +329,7 @@ pub fn bd_logs_record_native_error(
     payload: ErrorPayload,
     app_version: String,
 ) -> Result<(), String> {
-    bd_logs_record_error(app, payload, "native".into(), app_version)
+    bd_logs_record_error(app, payload, "native".to_string(), app_version)
 }
 
 /// Append one analytics record (if analytics are enabled).
@@ -444,7 +449,7 @@ fn run_retention(app: &AppHandle) -> Result<(), String> {
     let s = read_privacy(app);
     let base = data_dir(app);
     purge_older_than(&base.join("logs"), s.retention_days_logs).map_err(|e| e.to_string())?;
-    // opzionale: se non usi più analytics/, puoi rimuovere la riga sotto
+    // opzionale (se non usi più analytics/ puoi rimuoverla)
     purge_older_than(&base.join("analytics"), s.retention_days_analytics).map_err(|e| e.to_string())?;
     purge_older_than(&base.join("crashes"), s.retention_days_crashes).map_err(|e| e.to_string())?;
     Ok(())
