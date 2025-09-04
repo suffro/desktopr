@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    io::Write,
+    io::Write as IoWrite,
     path::{Path, PathBuf},
     sync::Mutex,
     time::Duration,
@@ -14,81 +14,57 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
+use base64::{engine::general_purpose, Engine as _};
 
-use crate::bridge::app::{bd_app_info, AppInfo as AppInfoStruct}; // adatta se il path è diverso
+use crate::bridge::fs as bdfs;
+use crate::bridge::app::{bd_app_info, AppInfo as AppInfoStruct};
 
 // ==============================
 // Heartbeat / runtime markers
 // ==============================
 
 static HEARTBEAT_STOP: AtomicBool = AtomicBool::new(false);
+const PRIVACY_REL_PATH: &str = "settings/privacy.json";
 
 fn data_dir(app: &AppHandle) -> PathBuf {
-    app.path().app_data_dir().expect("app_data_dir not available")
+    bdfs::bd_fs_data_dir(app).expect("data base dir not available")
 }
 
-fn runtime_dir(app: &AppHandle) -> PathBuf {
-    data_dir(app).join("runtime")
+fn runtime_dir_rel() -> &'static str {
+    "runtime"
 }
 
-/// Start a background heartbeat that writes "runtime/heartbeat.json" every few seconds.
-/// On next startup, if heartbeat exists and no "shutdown.ok" is present, we record a dirty shutdown.
-pub fn start_heartbeat(app: AppHandle) {
-    let dir = runtime_dir(&app);
-    let _ = fs::create_dir_all(&dir);
-    let hb = dir.join("heartbeat.json");
-    let ok = dir.join("shutdown.ok");
-
-    // Startup check: previous dirty shutdown?
-    let dirty = hb.exists() && !ok.exists();
-    if dirty {
-        let entry = serde_json::json!({
-          "record_type": "dirty_shutdown",
-          "timestamp": Utc::now().timestamp_millis() as u64,
-          "note": "previous run did not shut down cleanly"
-        });
-        let crash_path = data_dir(&app).join(format!(
-            "crashes/crash-{}.json",
-            Utc::now().format("%Y-%m-%dT%H-%M-%SZ")
-        ));
-        let _ = fs::create_dir_all(crash_path.parent().unwrap());
-        let _ = fs::write(&crash_path, serde_json::to_vec_pretty(&entry).unwrap());
-
-        let log_path = data_dir(&app).join(format!(
-            "logs/record-{}.jsonl",
-            Utc::now().format("%Y-%m")
-        ));
-        let _ = append_jsonl(log_path, &entry);
-    }
-
-    // Reset markers for this new run
-    let _ = fs::remove_file(&ok);
-
-    // Background ticker
-    thread::spawn(move || {
-        while !HEARTBEAT_STOP.load(Ordering::Relaxed) {
-            let _ = fs::write(
-                &hb,
-                serde_json::to_vec(&serde_json::json!({
-                    "ts": Utc::now().to_rfc3339()
-                }))
-                .unwrap(),
-            );
-            thread::sleep(Duration::from_secs(5));
-        }
-        // On stop, write clean shutdown marker and remove heartbeat
-        let _ = fs::write(runtime_dir(&app).join("shutdown.ok"), b"ok");
-        let _ = fs::remove_file(runtime_dir(&app).join("heartbeat.json"));
-    });
+fn runtime_heartbeat_rel() -> &'static str {
+    "runtime/heartbeat.json"
 }
 
-/// Stop heartbeat and write clean shutdown marker right now.
-pub fn mark_clean_shutdown_now(app: &AppHandle) {
-    HEARTBEAT_STOP.store(true, Ordering::Relaxed);
-    let dir = runtime_dir(app);
-    let _ = fs::create_dir_all(&dir);
-    let _ = fs::write(dir.join("shutdown.ok"), b"ok");
-    let _ = fs::remove_file(dir.join("heartbeat.json"));
+fn runtime_shutdown_ok_rel() -> &'static str {
+    "runtime/shutdown.ok"
+}
+
+/// helper: scrive testo via bdfs (permanent=true, create_dirs=true, append flag)
+fn fs_write_text(app: &AppHandle, rel: &str, contents: &str, append: bool) -> Result<(), String> {
+    bdfs::bd_fs_write_text(
+        app.clone(),
+        rel.to_string(),
+        Some(true),  // permanent
+        contents.to_string(),
+        Some(true),  // create_dirs
+        Some(append) // append
+    )
+}
+
+/// helper: legge testo via bdfs (permanent=true)
+fn fs_read_text(app: &AppHandle, rel: &str) -> Result<String, String> {
+    bdfs::bd_fs_read_text(app.clone(), rel.to_string(), Some(true))
+}
+
+/// helper: legge bytes via bdfs (permanent=true)
+fn fs_read_bytes(app: &AppHandle, rel: &str) -> Result<Vec<u8>, String> {
+    let b64 = bdfs::bd_fs_read_bytes(app.clone(), rel.to_string(), Some(true))?;
+    general_purpose::STANDARD
+        .decode(b64.as_bytes())
+        .map_err(|e| e.to_string())
 }
 
 // ==============================
@@ -115,34 +91,16 @@ fn default_privacy() -> PrivacySettings {
     }
 }
 
-fn privacy_path(app: &AppHandle) -> PathBuf {
-    data_dir(app).join("settings/privacy.json")
-}
-
-fn ensure_dir(p: &PathBuf) -> std::io::Result<()> {
-    if !p.exists() {
-        fs::create_dir_all(p)?;
-    }
-    Ok(())
-}
-
 fn read_privacy(app: &AppHandle) -> PrivacySettings {
-    let p = privacy_path(app);
-    if let Ok(b) = fs::read(&p) {
-        if let Ok(v) = serde_json::from_slice::<PrivacySettings>(&b) {
-            return v;
-        }
+    match fs_read_text(app, PRIVACY_REL_PATH) {
+        Ok(s) => serde_json::from_str(&s).unwrap_or_else(|_| default_privacy()),
+        Err(_) => default_privacy(),
     }
-    default_privacy()
 }
 
 fn write_privacy(app: &AppHandle, s: &PrivacySettings) -> Result<(), String> {
-    let p = privacy_path(app);
-    if let Some(parent) = p.parent() {
-        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    let bytes = serde_json::to_vec_pretty(s).map_err(|e| e.to_string())?;
-    fs::write(p, bytes).map_err(|e| e.to_string())
+    let json = serde_json::to_string_pretty(s).map_err(|e| e.to_string())?;
+    fs_write_text(app, PRIVACY_REL_PATH, &json, false)
 }
 
 // ==============================
@@ -177,7 +135,7 @@ pub enum Payload {
     Any(Value), // fallback
 }
 
-// AppInfo: libero (qualsiasi JSON)
+// AppInfo serializzato come JSON libero
 pub type AppInfoJson = Value;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -208,13 +166,14 @@ pub struct ListedFile {
 static ROTATE_MAX_BYTES: usize = 10 * 1024 * 1024; // 10 MB
 static LOG_MUTEX: Mutex<()> = Mutex::new(());
 
-/// Rename "file.jsonl" -> "file.partN.jsonl" when size threshold is exceeded.
-fn rotate_with_part_suffix(path: &Path) -> std::io::Result<()> {
-    if let Ok(meta) = fs::metadata(path) {
+/// Rename "<file>.jsonl" -> "<file>.partN.jsonl" quando supera soglia.
+/// Richiede path assoluto; lo otteniamo con bdfs::bd_fs_safe_join_data.
+fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
+    if let Ok(meta) = fs::metadata(abs_path) {
         if meta.len() as usize >= ROTATE_MAX_BYTES {
-            // Build "{stem}.partN.jsonl"
-            let (stem, ext) = if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
-                let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
+            // stem + ext
+            let (stem, ext) = if let Some(ext) = abs_path.extension().and_then(|s| s.to_str()) {
+                let stem = abs_path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
                 (stem.to_string(), format!(".{}", ext))
             } else {
                 ("file".to_string(), String::new())
@@ -222,9 +181,9 @@ fn rotate_with_part_suffix(path: &Path) -> std::io::Result<()> {
             let mut n = 2;
             loop {
                 let rotated_name = format!("{}.part{}{}", stem, n, ext);
-                let rotated_path = path.with_file_name(rotated_name);
+                let rotated_path = abs_path.with_file_name(rotated_name);
                 if !rotated_path.exists() {
-                    fs::rename(path, rotated_path)?;
+                    fs::rename(abs_path, rotated_path)?;
                     break;
                 }
                 n += 1;
@@ -234,19 +193,14 @@ fn rotate_with_part_suffix(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-fn append_jsonl(path: PathBuf, value: &serde_json::Value) -> std::io::Result<()> {
+/// Append su JSONL via bdfs (append=true) + rotazione su path assoluto.
+fn append_jsonl(app: &AppHandle, rel_path: &str, value: &serde_json::Value) -> Result<(), String> {
     let _guard = LOG_MUTEX.lock().unwrap();
-    if let Some(parent) = path.parent() {
-        ensure_dir(&parent.to_path_buf())?;
-    }
-    if !path.exists() {
-        fs::File::create(&path)?;
-    }
-    rotate_with_part_suffix(&path)?;
-    let mut f = fs::OpenOptions::new().append(true).open(&path)?;
-    let line = serde_json::to_string(value).unwrap();
-    writeln!(f, "{}", line)?;
-    Ok(())
+    // path assoluto per rotazione
+    let abs = bdfs::bd_fs_safe_join_data(app, rel_path)?;
+    rotate_with_part_suffix(&abs).map_err(|e| e.to_string())?;
+    let line = serde_json::to_string(value).unwrap() + "\n";
+    fs_write_text(app, rel_path, &line, true)
 }
 
 fn new_log_data(
@@ -271,6 +225,53 @@ fn new_log_data(
     }
 }
 
+// ==============================
+// Heartbeat
+// ==============================
+
+/// Avvia il heartbeat che scrive "runtime/heartbeat.json" ogni pochi secondi.
+/// Se all'avvio esiste heartbeat ma non "shutdown.ok", registra un dirty_shutdown.
+pub fn start_heartbeat(app: AppHandle) {
+    // check dirty shutdown
+    let base = data_dir(&app);
+    let hb_abs = base.join(runtime_heartbeat_rel());
+    let ok_abs = base.join(runtime_shutdown_ok_rel());
+    let dirty = hb_abs.exists() && !ok_abs.exists();
+    if dirty {
+        let entry = serde_json::json!({
+          "record_type": "dirty_shutdown",
+          "timestamp": Utc::now().timestamp_millis() as u64,
+          "note": "previous run did not shut down cleanly"
+        });
+        let crash_rel = format!("crashes/crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
+        let _ = fs_write_text(&app, &crash_rel, &serde_json::to_string_pretty(&entry).unwrap(), false);
+
+        let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
+        let _ = append_jsonl(&app, &log_rel, &entry);
+    }
+
+    // reset shutdown.ok
+    let _ = bdfs::bd_fs_rm(app.clone(), runtime_shutdown_ok_rel().into(), true, false);
+
+    // background ticker
+    thread::spawn(move || {
+        while !HEARTBEAT_STOP.load(Ordering::Relaxed) {
+            let payload = serde_json::json!({ "ts": Utc::now().to_rfc3339() });
+            let _ = fs_write_text(&app, runtime_heartbeat_rel(), &serde_json::to_string(&payload).unwrap(), false);
+            thread::sleep(Duration::from_secs(5));
+        }
+        // on stop
+        let _ = fs_write_text(&app, runtime_shutdown_ok_rel(), "ok", false);
+        let _ = bdfs::bd_fs_rm(app.clone(), runtime_heartbeat_rel().into(), true, false);
+    });
+}
+
+/// Intercetta chiusura pulita immediata (se vuoi chiamarla da un handler centralizzato).
+pub fn mark_clean_shutdown_now(app: &AppHandle) {
+    HEARTBEAT_STOP.store(true, Ordering::Relaxed);
+    let _ = fs_write_text(app, runtime_shutdown_ok_rel(), "ok", false);
+    let _ = bdfs::bd_fs_rm(app.clone(), runtime_heartbeat_rel().into(), true, false);
+}
 
 // ==============================
 // Public Tauri commands
@@ -281,33 +282,25 @@ fn new_log_data(
 pub fn bd_logs_record_error(
     app: AppHandle,
     payload: ErrorPayload,
-    env: String,            // <-- Opzione A: String
+    env: String,            // Opzione A: String obbligatoria
     app_version: String,
 ) -> Result<(), String> {
     let settings = read_privacy(&app);
 
-    // General application log (JSONL)
-    let log_path = data_dir(&app).join(format!(
-        "logs/record-{}.jsonl",
-        Utc::now().format("%Y-%m")
-    ));
+    let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
     let log_data = new_log_data(
         &app,
         Payload::Error(payload),
         "error".to_string(),
-        Some(env),                 // <-- passiamo Some(env)
+        Some(env),
         Some(app_version.clone()),
     );
     let entry = serde_json::to_value(&log_data).unwrap();
-    append_jsonl(log_path, &entry).map_err(|e| e.to_string())?;
+    append_jsonl(&app, &log_rel, &entry)?;
 
-    // Crash store (if enabled)
     if settings.crash_reports_enabled {
-        let crashes_dir = data_dir(&app).join("crashes");
-        ensure_dir(&crashes_dir).map_err(|e| e.to_string())?;
-        let fname = format!("crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
-        let fpath = crashes_dir.join(fname);
-        fs::write(fpath, serde_json::to_vec_pretty(&entry).unwrap()).map_err(|e| e.to_string())?;
+        let crash_rel = format!("crashes/crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
+        fs_write_text(&app, &crash_rel, &serde_json::to_string_pretty(&entry).unwrap(), false)?;
     }
     Ok(())
 }
@@ -346,10 +339,7 @@ pub fn bd_logs_new_record(
         return Ok(());
     }
 
-    let log_path = data_dir(&app).join(format!(
-        "logs/record-{}.jsonl",
-        Utc::now().format("%Y-%m")
-    ));
+    let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
     let log_data = new_log_data(
         &app,
         Payload::Analytics(payload),
@@ -358,7 +348,7 @@ pub fn bd_logs_new_record(
         Some(app_version),
     );
     let entry = serde_json::to_value(&log_data).unwrap();
-    append_jsonl(log_path, &entry).map_err(|e| e.to_string())
+    append_jsonl(&app, &log_rel, &entry)
 }
 
 /// Export logs/ and crashes/ as a zip file at `target_zip_path`.
@@ -369,7 +359,7 @@ pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
     let mut zip = zip::ZipWriter::new(file);
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
-    let dirs = ["logs", "crashes"];
+    let dirs = ["logs", "crashes", runtime_dir_rel()];
     for d in dirs {
         let dir_path = base.join(d);
         if !dir_path.exists() {
@@ -383,8 +373,10 @@ pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
                     .unwrap()
                     .to_string_lossy()
                     .to_string();
+
+                // leggi via bdfs
+                let bytes = fs_read_bytes(&app, &rel)?;
                 zip.start_file(rel, options).map_err(|e| e.to_string())?;
-                let bytes = fs::read(entry.path()).map_err(|e| e.to_string())?;
                 zip.write_all(&bytes).map_err(|e| e.to_string())?;
             }
         }
@@ -397,9 +389,6 @@ pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
 pub fn install_panic_hook(app: AppHandle, app_version: String) {
     std::panic::set_hook(Box::new(move |info| {
         let ts = Utc::now().format("%Y-%m-%dT%H-%M-%SZ").to_string();
-        let base = app.path().app_data_dir().expect("app_data_dir not available");
-        let crashes = base.join("crashes");
-        let _ = fs::create_dir_all(&crashes);
         let cause = info.to_string();
         let bt = std::backtrace::Backtrace::force_capture().to_string();
 
@@ -410,14 +399,8 @@ pub fn install_panic_hook(app: AppHandle, app_version: String) {
           "cause": cause,
           "backtrace": bt
         });
-        let _ = fs::write(
-            crashes.join(format!("crash-{}.json", ts)),
-            serde_json::to_vec_pretty(&json).unwrap(),
-        );
-        let _ = fs::write(
-            crashes.join(format!("crash-{}.log", ts)),
-            format!("{}\n\n{}", cause, bt),
-        );
+        let _ = fs_write_text(&app, &format!("crashes/crash-{}.json", ts), &serde_json::to_string_pretty(&json).unwrap(), false);
+        let _ = fs_write_text(&app, &format!("crashes/crash-{}.log",  ts), &format!("{}\n\n{}", cause, bt), false);
     }));
 }
 
@@ -425,18 +408,28 @@ pub fn install_panic_hook(app: AppHandle, app_version: String) {
 // Retention
 // ==============================
 
-fn purge_older_than(dir: &Path, max_age_days: u32) -> std::io::Result<()> {
+fn purge_older_than(app: &AppHandle, base: &Path, dir_rel: &str, max_age_days: u32) -> std::io::Result<()> {
+    let dir = base.join(dir_rel);
     if !dir.exists() {
         return Ok(());
     }
     let now = std::time::SystemTime::now();
     let cutoff = now - Duration::from_secs((max_age_days as u64) * 24 * 3600);
-    for entry in WalkDir::new(dir).into_iter().filter_map(Result::ok) {
+
+    for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
         if entry.file_type().is_file() {
             let meta = entry.metadata()?;
             if let Ok(modified) = meta.modified() {
                 if modified < cutoff {
-                    let _ = fs::remove_file(entry.path());
+                    // rimuovi via bdfs (coerente col sandbox)
+                    let rel = entry
+                        .path()
+                        .strip_prefix(base)
+                        .ok()
+                        .and_then(|p| Some(p.to_string_lossy().to_string()));
+                    if let Some(rel) = rel {
+                        let _ = bdfs::bd_fs_rm(app.clone(), rel, true, false);
+                    }
                 }
             }
         }
@@ -444,14 +437,15 @@ fn purge_older_than(dir: &Path, max_age_days: u32) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Runs retention for logs/, analytics/, crashes/ according to current settings.
+/// Runs retention for logs/, analytics/ (opzionale), crashes/ according to current settings.
 fn run_retention(app: &AppHandle) -> Result<(), String> {
     let s = read_privacy(app);
     let base = data_dir(app);
-    purge_older_than(&base.join("logs"), s.retention_days_logs).map_err(|e| e.to_string())?;
-    // opzionale (se non usi più analytics/ puoi rimuoverla)
-    purge_older_than(&base.join("analytics"), s.retention_days_analytics).map_err(|e| e.to_string())?;
-    purge_older_than(&base.join("crashes"), s.retention_days_crashes).map_err(|e| e.to_string())?;
+
+    purge_older_than(app, &base, "logs", s.retention_days_logs).map_err(|e| e.to_string())?;
+    // opzionale: se non usi più analytics/, rimuovi questa riga
+    purge_older_than(app, &base, "analytics", s.retention_days_analytics).map_err(|e| e.to_string())?;
+    purge_older_than(app, &base, "crashes", s.retention_days_crashes).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -466,9 +460,9 @@ pub fn bd_logs_run_retention(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
-    // area: "logs" | "crashes"
+    // area: "logs" | "crashes" | "runtime"
     let base = data_dir(&app);
-    let allowed = ["logs", "crashes"];
+    let allowed = ["logs", "crashes", runtime_dir_rel()];
     if !allowed.contains(&area.as_str()) {
         return Err("Invalid area".into());
     }
@@ -507,15 +501,7 @@ pub fn bd_logs_read_file(
     rel_path: String,
     max_bytes: Option<u64>,
 ) -> Result<Vec<u8>, String> {
-    // Constrain reads to app data dir.
-    let base = data_dir(&app);
-    let p = base.join(&rel_path);
-    let canon_base = base.canonicalize().map_err(|e| e.to_string())?;
-    let canon_file = p.canonicalize().map_err(|e| e.to_string())?;
-    if !canon_file.starts_with(&canon_base) {
-        return Err("Path escapes data directory".into());
-    }
-    let data = fs::read(&canon_file).map_err(|e| e.to_string())?;
+    let data = fs_read_bytes(&app, &rel_path)?;
     if let Some(limit) = max_bytes {
         if data.len() as u64 > limit {
             return Err(format!("File too large ({} > {})", data.len(), limit));
@@ -544,19 +530,24 @@ pub fn bd_logs_set_privacy(
 ) -> Result<PrivacySettings, String> {
     let mut s = read_privacy(&app);
     if let Some(v) = analytics_enabled {
+        eprintln!("test1");
         s.analytics_enabled = v;
     }
-    if let Some(v) = crash_reports_enabled {
-        s.crash_reports_enabled = v;
+    if let Some(v) = crash_reports_enabled { 
+        eprintln!("test2");
+        s.crash_reports_enabled = v; 
     }
     if let Some(v) = retention_days_logs {
-        s.retention_days_logs = v.max(30); // minimum safety
+        eprintln!("test3");
+        s.retention_days_logs = v.max(30);
     }
-    if let Some(v) = retention_days_analytics {
+    if let Some(v) = retention_days_analytics { 
+        eprintln!("test4");
         s.retention_days_analytics = v.max(30);
     }
     if let Some(v) = retention_days_crashes {
-        s.retention_days_crashes = v.max(90); // crashes often valuable longer
+        eprintln!("test5");
+        s.retention_days_crashes = v.max(90);
     }
     write_privacy(&app, &s)?;
     Ok(s)
@@ -594,9 +585,9 @@ pub fn bd_logs_test_panic() {
 #[cfg(debug_assertions)]
 #[tauri::command]
 pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), String> {
-    // Purge TUTTO nell’area indicata (logs|analytics|crashes). Utile per verificare la retention.
+    // Pulisce TUTTO nell’area (logs|analytics|crashes|runtime) per verificare retention/marker.
     let base = data_dir(&app);
-    let allowed = ["logs", "analytics", "crashes"];
+    let allowed = ["logs", "analytics", "crashes", runtime_dir_rel()];
     if !allowed.contains(&area.as_str()) {
         return Err("Invalid area".into());
     }
@@ -604,7 +595,13 @@ pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), 
     if dir.exists() {
         for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
             if entry.file_type().is_file() {
-                let _ = fs::remove_file(entry.path());
+                let rel = entry
+                    .path()
+                    .strip_prefix(&base)
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string();
+                let _ = bdfs::bd_fs_rm(app.clone(), rel, true, false);
             }
         }
     }

@@ -368,3 +368,25 @@ pub fn bd_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
         data: data.to_string_lossy().into_owned(),
     })
 }
+
+// Espone la base dir "data" (persistente) usando la stessa logica interna
+pub fn bd_fs_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+  ensure_base_exists(app, true)
+}
+
+// Espone la base dir "cache" (non persistente)
+pub fn bd_fs_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
+  ensure_base_exists(app, false)
+}
+
+// Join sicuro (stessa logica di safe_join) rispetto a "data"
+pub fn bd_fs_safe_join_data(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
+  let base = ensure_base_exists(app, true)?;
+  safe_join(&base, rel)
+}
+
+// Join sicuro (stessa logica di safe_join) rispetto a "cache"
+pub fn bd_fs_safe_join_cache(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
+  let base = ensure_base_exists(app, false)?;
+  safe_join(&base, rel)
+}

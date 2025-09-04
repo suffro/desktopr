@@ -9,11 +9,11 @@ export const diagnosticsSettings = async(core: { invoke: BubbledeskAPI["invoke"]
   if(settings?.retention_days_crashes && !Num.isU32(settings.retention_days_crashes)) throw("[retention_days_crashes] the value must be a U32 integer number");
 
   await core.invoke("bd_logs_set_privacy", {
-    analyticsEnabled: settings?.analytics_enabled,
-    crashReportsEnabled: settings?.crash_reports_enabled,
-    retentionDaysAnalytics: settings?.retention_days_analytics,
-    retentionDaysLogs: settings?.retention_days_logs,
-    retentionDaysCrashes: settings?.retention_days_crashes,
+    analytics_enabled: settings?.analytics_enabled,
+    crash_reports_enabled: settings?.crash_reports_enabled,
+    retention_days_analytics: settings?.retention_days_analytics,
+    retention_days_logs: settings?.retention_days_logs,
+    retention_days_crashes: settings?.retention_days_crashes,
   });
 }
 

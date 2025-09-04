@@ -1,19 +1,12 @@
 import { BubbledeskAPI } from "@types";
-import { buildDiagnosticsTestFunctions } from "./_helpers";
+import { buildDiagnosticsTestFunctions, diagnosticsSettings } from "./_helpers";
 import { AnalyticsPayload, DiagnosticsInterface, ErrorPayload, ListedFile, PrivacySettings, RecordPayload } from "./_types";
 
 export function buildDiagnostics(core: { invoke: BubbledeskAPI["invoke"] }): DiagnosticsInterface {
   return {
     settings: {
       // set: mappa ai parametri snake_case attesi da Rust (tutti opzionali)
-      set: (settings?: PrivacySettings) =>
-        core.invoke("bd_logs_set_privacy", {
-          analytics_enabled: settings?.analytics_enabled,
-          crash_reports_enabled: settings?.crash_reports_enabled,
-          retention_days_logs: settings?.retention_days_logs,
-          retention_days_analytics: settings?.retention_days_analytics,
-          retention_days_crashes: settings?.retention_days_crashes,
-        }),
+      set: (settings?: PrivacySettings) => diagnosticsSettings(core, settings),
       get: () => core.invoke("bd_logs_get_privacy", {}),
     },
 
