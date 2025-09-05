@@ -4,7 +4,8 @@ import type { DragDropPayload } from "@types";
 
 export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
   return {
-    emit: (event: string, payload?: unknown) => core.invoke("bd_event_emit", { event, payload }),
+    emit: (event: string, payload?: unknown) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
+    emitToAll: (event: string, payload?: unknown) => core.invoke("bd_event_emit", { event, payload }),
     emitTo: (window_label: string, event: string, payload?: unknown) =>
       core.invoke("bd_event_emit_to", { window_label, event, payload }),
 

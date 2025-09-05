@@ -4,16 +4,18 @@ import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
 import { Num } from "suffro-lib";
 
 export const diagnosticsSettings = async(core: { invoke: BubbledeskAPI["invoke"] }, settings?: PrivacySettings)=> {
-  if(settings?.retention_days_analytics && !Num.isU32(settings.retention_days_analytics)) throw("[retention_days_analytics] the value must be a U32 integer number");
-  if(settings?.retention_days_logs && !Num.isU32(settings.retention_days_logs)) throw("[retention_days_logs] the value must be a U32 integer number");
-  if(settings?.retention_days_crashes && !Num.isU32(settings.retention_days_crashes)) throw("[retention_days_crashes] the value must be a U32 integer number");
+  if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");
+  if(settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs)) throw("[retentionDaysLogs] the value must be a U32 integer number");
+  if(settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes)) throw("[retentionDaysCrashes] the value must be a U32 integer number");
 
-  await core.invoke("bd_logs_set_privacy", {
-    analytics_enabled: settings?.analytics_enabled,
-    crash_reports_enabled: settings?.crash_reports_enabled,
-    retention_days_analytics: settings?.retention_days_analytics,
-    retention_days_logs: settings?.retention_days_logs,
-    retention_days_crashes: settings?.retention_days_crashes,
+  return await core.invoke("bd_logs_set_privacy", {
+    patch: {
+      analytics_enabled: settings?.analyticsEnabled,
+      crash_reports_enabled: settings?.crashReportsEnabled,
+      retention_days_analytics: settings?.retentionDaysAnalytics,
+      retention_days_logs: settings?.retentionDaysLogs,
+      retention_days_crashes: settings?.retentionDaysCrashes,
+    }
   });
 }
 

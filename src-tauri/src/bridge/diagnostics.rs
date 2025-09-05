@@ -519,36 +519,25 @@ pub fn bd_logs_get_privacy(app: AppHandle) -> Result<PrivacySettings, String> {
     Ok(read_privacy(&app))
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct PrivacyPatch {
+    pub analytics_enabled: Option<bool>,
+    pub crash_reports_enabled: Option<bool>,
+    pub retention_days_logs: Option<u32>,
+    pub retention_days_analytics: Option<u32>,
+    pub retention_days_crashes: Option<u32>,
+}
+
 #[tauri::command]
-pub fn bd_logs_set_privacy(
-    app: AppHandle,
-    analytics_enabled: Option<bool>,
-    crash_reports_enabled: Option<bool>,
-    retention_days_logs: Option<u32>,
-    retention_days_analytics: Option<u32>,
-    retention_days_crashes: Option<u32>,
-) -> Result<PrivacySettings, String> {
+pub fn bd_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<PrivacySettings, String> {
+    // eprintln!("[set_privacy] patch = {:?}", patch);
     let mut s = read_privacy(&app);
-    if let Some(v) = analytics_enabled {
-        eprintln!("test1");
-        s.analytics_enabled = v;
-    }
-    if let Some(v) = crash_reports_enabled { 
-        eprintln!("test2");
-        s.crash_reports_enabled = v; 
-    }
-    if let Some(v) = retention_days_logs {
-        eprintln!("test3");
-        s.retention_days_logs = v.max(30);
-    }
-    if let Some(v) = retention_days_analytics { 
-        eprintln!("test4");
-        s.retention_days_analytics = v.max(30);
-    }
-    if let Some(v) = retention_days_crashes {
-        eprintln!("test5");
-        s.retention_days_crashes = v.max(90);
-    }
+    if let Some(v) = patch.analytics_enabled { s.analytics_enabled = v; }
+    if let Some(v) = patch.crash_reports_enabled { s.crash_reports_enabled = v; }
+    if let Some(v) = patch.retention_days_logs { s.retention_days_logs = v.max(30); }
+    if let Some(v) = patch.retention_days_analytics { s.retention_days_analytics = v.max(30); }
+    if let Some(v) = patch.retention_days_crashes { s.retention_days_crashes = v.max(90); }
     write_privacy(&app, &s)?;
     Ok(s)
 }

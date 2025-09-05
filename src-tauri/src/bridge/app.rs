@@ -147,3 +147,9 @@ pub fn bd_app_info(app: AppHandle) -> Result<AppInfo, String> {
     now_unix_ms,
   })
 }
+
+#[tauri::command]
+pub fn bd_app_exit(app: AppHandle, code: i32) -> Result<(), String> {
+  app.exit(code);
+  Ok(())
+}

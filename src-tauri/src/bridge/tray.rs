@@ -2,9 +2,10 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
+use crate::helpers::states::*;
 
 use tauri::{
-  App, Runtime, Manager, Emitter,
+  AppHandle, Wry, Manager, Emitter,
   menu::{Menu, Submenu, MenuItem, CheckMenuItem, PredefinedMenuItem, IsMenuItem},
   tray::{TrayIconBuilder, TrayIconEvent, MouseButton, MouseButtonState},
 };
@@ -28,10 +29,10 @@ const NO_ACCEL: Option<&str> = None;
 
 /// Costruisce un singolo item per il TRAY a partire dal JSON.
 /// La rendo `pub(crate)` così resta interna al crate ma riusabile.
-pub(crate) fn tray_build_item<R: Runtime>(
-  app: &App<R>,
+pub(crate) fn tray_build_item(
+  app: &AppHandle<Wry>,
   it: &MenuItemUnion
-) -> tauri::Result<Option<Box<dyn IsMenuItem<R>>>> {
+) -> tauri::Result<Option<Box<dyn IsMenuItem<Wry>>>> {
   Ok(match it {
     MenuItemUnion::Custom(MenuConfigCustomItem { id, label, enabled, interaction, checked, accelerator }) => {
       match interaction {
@@ -47,7 +48,7 @@ pub(crate) fn tray_build_item<R: Runtime>(
     }
     MenuItemUnion::Predefined(p) => {
       let label = p.custom_label.as_deref();
-      let b: Option<Box<dyn IsMenuItem<R>>> = match p.item {
+      let b: Option<Box<dyn IsMenuItem<Wry>>> = match p.item {
         P::Separator    => Some(Box::new(PredefinedMenuItem::separator(app)?)),
         P::Quit         => Some(Box::new(PredefinedMenuItem::quit(app, label)?)),
         P::CloseWindow  => Some(Box::new(PredefinedMenuItem::close_window(app, label)?)),
@@ -71,13 +72,13 @@ pub(crate) fn tray_build_item<R: Runtime>(
     }
     MenuItemUnion::Separator => Some(Box::new(PredefinedMenuItem::separator(app)?)),
     MenuItemUnion::Submenu(MenuConfigSubmenuItem { label, items, .. }) => {
-      let mut children: Vec<Box<dyn IsMenuItem<R>>> = Vec::new();
+      let mut children: Vec<Box<dyn IsMenuItem<Wry>>> = Vec::new();
       for child in items {
         if let Some(b) = tray_build_item(app, child)? {
           children.push(b);
         }
       }
-      let refs: Vec<&dyn IsMenuItem<R>> = children.iter().map(|b| b.as_ref()).collect();
+      let refs: Vec<&dyn IsMenuItem<Wry>> = children.iter().map(|b| b.as_ref()).collect();
       let submenu = Submenu::with_items(app, label, true, &refs)?;
       Some(Box::new(submenu))
     }
@@ -86,15 +87,15 @@ pub(crate) fn tray_build_item<R: Runtime>(
 
 /// Crea il tray con i tre item di default in cima (show/hide/quit) e poi gli items dal JSON.
 /// Esporta solo questa funzione e chiamala da `menu.rs` quando `cfg.tray.is_some()`.
-pub fn init_tray_from_section<R: Runtime>(app: &App<R>, sec: &MenuSectionConfig) -> tauri::Result<()> {
-  let mut sec_items_vector: Vec<Box<dyn IsMenuItem<R>>> = Vec::new();
+pub fn init_tray_from_section(app: &AppHandle<Wry>, sec: &MenuSectionConfig) -> tauri::Result<()> {
+  let mut sec_items_vector: Vec<Box<dyn IsMenuItem<Wry>>> = Vec::new();
   for it in &sec.items {
     if let Some(b) = tray_build_item(app, it)? {
       sec_items_vector.push(b);
     }
   }
 
-  let mut all: Vec<&dyn IsMenuItem<R>> = vec![];
+  let mut all: Vec<&dyn IsMenuItem<Wry>> = vec![];
   for b in &sec_items_vector { all.push(b.as_ref()); }
 
   let menu = Menu::with_items(app, &all)?;
@@ -104,16 +105,17 @@ pub fn init_tray_from_section<R: Runtime>(app: &App<R>, sec: &MenuSectionConfig)
     .show_menu_on_left_click(false)
     .on_menu_event(|app, ev| {
       let id = ev.id.0.as_str();
+      let window_label = get_latest_window_label(app);
       match id {
         "tray.show" => {
-          if let Some(win) = app.get_webview_window("main") {
+          if let Some(win) = app.get_webview_window(&window_label) {
             let _ = win.show();
             let _ = win.unminimize();
             let _ = win.set_focus();
           }
         }
         "tray.hide" => {
-          if let Some(win) = app.get_webview_window("main") {
+          if let Some(win) = app.get_webview_window(&window_label) {
             let _ = win.minimize();
             let _ = win.hide();
           }

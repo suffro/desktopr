@@ -2,6 +2,7 @@ import { DragDropPayload } from "@types";
 
 export interface EventsInterface {
     emit: (event: string, payload?: unknown) => Promise<unknown>;
+    emitToAll: (event: string, payload?: unknown) => Promise<unknown>;
     emitTo: (window_label: string, event: string, payload?: unknown) => Promise<unknown>;
     on: (event: string, handler: (payload: any) => void) => Promise<() => void>;
     once: (event: string) => Promise<any>;

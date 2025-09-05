@@ -1,6 +1,6 @@
 use serde::Serialize;
 use tauri::{
-  App, AppHandle, Emitter, Manager, Runtime,
+  App, AppHandle, Wry, Emitter, Manager,
   menu::{Menu, MenuItemKind, IsMenuItem, Submenu},
   path::BaseDirectory
 };
@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use crate::helpers::menu_builder::*;
 use crate::bridge::tray::init_tray_from_section;
+use crate::helpers::states::*;
 
 
 #[derive(Clone)]
@@ -28,7 +29,7 @@ struct CheckState {
 
 // -------- init --------
 
-pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
+pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
   eprintln!("[MENU] >>> init_menu CALLED");
   let cfg = match parse_menu_config(app) {
     Some(c) => c,
@@ -48,7 +49,7 @@ pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
   // 🔘 stato check id -> bool
   let mut check_map: HashMap<String, bool> = HashMap::new();
 
-  let mut subs: Vec<Submenu<R>> = Vec::new();
+  let mut subs: Vec<Submenu<Wry>> = Vec::new();
 
   #[cfg(target_os = "macos")]
   if let Some(sec) = cfg.macos_root.as_ref() {
@@ -98,6 +99,14 @@ pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
         accelerator: None,
       }),
       MenuItemUnion::Custom(MenuConfigCustomItem {
+        id: "tray.cose".to_string(),
+        label: "Close".to_string(),
+        enabled: true,
+        interaction: MenuInteraction::Click,
+        checked: None,
+        accelerator: None,
+      }),
+      MenuItemUnion::Custom(MenuConfigCustomItem {
         id: "tray.quit".to_string(),
         label: "Quit".to_string(),
         enabled: true,
@@ -123,10 +132,10 @@ pub fn init_menu<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
     };
 
     // 5) delega al costruttore del tray
-    init_tray_from_section(app, &sec_augmented)?;
+    init_tray_from_section(&app.handle(), &sec_augmented)?;
   }
 
-  let refs: Vec<&dyn IsMenuItem<R>> = subs.iter().map(|s| s as &dyn IsMenuItem<R>).collect();
+  let refs: Vec<&dyn IsMenuItem<Wry>> = subs.iter().map(|s| s as &dyn IsMenuItem<Wry>).collect();
   let root = Menu::with_items(app, &refs)?;
   eprintln!("[MENU] submenus count = {}", subs.len());
   app.set_menu(root)?;
@@ -156,9 +165,9 @@ fn collect_check_items(map: &mut HashMap<String, bool>, items: &[MenuItemUnion])
   }
 }
 
-fn add_if_some<R: Runtime>(
-  app: &App<R>,
-  acc: &mut Vec<Submenu<R>>,
+fn add_if_some(
+  app: &App<Wry>,
+  acc: &mut Vec<Submenu<Wry>>,
   title: &str,
   sec: Option<&MenuSectionConfig>,
 ) -> tauri::Result<()> {
@@ -176,7 +185,7 @@ fn is_current_platform_in(list: &[MenuPlatform]) -> bool {
 
 // -------- config parsing (risorse) --------
 
-fn parse_menu_config<R: Runtime>(app: &App<R>) -> Option<MenuConfig> {
+fn parse_menu_config(app: &App<Wry>) -> Option<MenuConfig> {
   #[cfg(debug_assertions)]
   {
     if let Ok(root) = app.path().resolve("", BaseDirectory::Resource) {
@@ -259,9 +268,11 @@ struct MenuEventPayload<'a> {
   parent_label: Option<String>,   // se annidato
   #[serde(skip_serializing_if = "Option::is_none")]
   parent_id: Option<String>,      // se annidato
+  #[serde(skip_serializing_if = "Option::is_none")]
+  last_focused_window_label: Option<String>,
 }
 
-fn attach_menu_events<R: Runtime>(app: AppHandle<R>) {
+fn attach_menu_events(app: AppHandle<Wry>) {
   app.on_menu_event(move |app, ev| {
     let id = ev.id().as_ref();
 
@@ -295,17 +306,17 @@ fn attach_menu_events<R: Runtime>(app: AppHandle<R>) {
     } else {
       (None, None, None)
     };
-    
+    let window_label = get_latest_window_label(app);
     let _ = app.emit(
       "menu:event",
-      MenuEventPayload { id, checked, section, parent_label, parent_id }
+      MenuEventPayload { id, checked, section, parent_label, parent_id, last_focused_window_label: Some(window_label) }
     );
   });
 }
 
 // -------- runtime mutators --------
 
-pub fn set_enabled<R: Runtime>(app: &AppHandle<R>, id: &str, enabled: bool) -> tauri::Result<()> {
+pub fn set_enabled(app: &AppHandle<Wry>, id: &str, enabled: bool) -> tauri::Result<()> {
   if let Some(menu) = app.menu() {
     if let Some(kind) = menu.get(id) {
       match kind {
@@ -319,7 +330,7 @@ pub fn set_enabled<R: Runtime>(app: &AppHandle<R>, id: &str, enabled: bool) -> t
   Ok(())
 }
 
-pub fn set_checked<R: Runtime>(app: &AppHandle<R>, id: &str, checked: bool) -> tauri::Result<()> {
+pub fn set_checked(app: &AppHandle<Wry>, id: &str, checked: bool) -> tauri::Result<()> {
   if let Some(menu) = app.menu() {
     if let Some(MenuItemKind::Check(mi)) = menu.get(id) {
       mi.set_checked(checked)?;
@@ -329,11 +340,11 @@ pub fn set_checked<R: Runtime>(app: &AppHandle<R>, id: &str, checked: bool) -> t
 }
 
 #[tauri::command]
-pub fn bd_menu_set_enabled<R: Runtime>(app: AppHandle<R>, id: String, enabled: bool) -> Result<(), String> {
+pub fn bd_menu_set_enabled(app: AppHandle<Wry>, id: String, enabled: bool) -> Result<(), String> {
   set_enabled(&app, &id, enabled).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_menu_set_checked<R: Runtime>(app: AppHandle<R>, id: String, checked: bool) -> Result<(), String> {
+pub fn bd_menu_set_checked(app: AppHandle<Wry>, id: String, checked: bool) -> Result<(), String> {
   set_checked(&app, &id, checked).map_err(|e| e.to_string())
 }

@@ -12,6 +12,7 @@ use crate::bridge::dragdrop;
 use tauri_plugin_global_shortcut as gsc;
 use crate::gsc::Builder;
 use crate::gsc::ShortcutState;
+use helpers::states::*;
 
 // Deep-link + single-instance
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -20,6 +21,8 @@ use tauri_plugin_prevent_default::{
   Builder as PD, Flags, KeyboardShortcut,
   ModifierKey::{CtrlKey, ShiftKey, AltKey, MetaKey}
 };
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 
 fn main() {
@@ -32,6 +35,13 @@ fn main() {
 
   let mut builder = tauri::Builder::default();
 
+  builder = builder.manage(CloseGuard {
+            closing: AtomicBool::new(false),
+        });
+
+  builder = builder.manage(LatestWindowLabel {
+            label: Mutex::new("main".to_string()),
+        });
   // --- 0) Single-instance PRIMO (importante con deep-link) ---
   builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
     println!("single-instance argv: {argv:?}");
@@ -95,17 +105,36 @@ fn main() {
   builder
     .on_window_event(|window, event| {
       match event {
-        WindowEvent::Focused(true)  => { let _ = window.emit("window:focus",  ()); }
+        WindowEvent::Focused(true)  => {
+          let _ = window.emit("window:focus",  ());
+          let app = window.app_handle();
+          let window_label = window.label().to_string();
+          // Prendi lo state e aggiornalo
+          let state = window.app_handle().state::<LatestWindowLabel>();
+          state.set(window_label);
+        }
         WindowEvent::Focused(false) => { let _ = window.emit("window:blur",   ()); }
         WindowEvent::CloseRequested { api, .. } => {
+
+          let app = window.app_handle();
+          let guard = app.state::<CloseGuard>();
+          let is_closing = guard.closing.load(Ordering::SeqCst);
+
+          // Se è già in fase di chiusura → ignora
+          if guard.closing.swap(true, Ordering::SeqCst) {
+            return;
+          }
+
           // blocca chiusura immediata
           api.prevent_close();
+
           // emette evento
           let _ = window.emit("window:close-requested", ());
           // marca clean shutdown centralmente
-          mark_clean_shutdown_now(&window.app_handle());
+          mark_clean_shutdown_now(&app);
           // chiudi davvero ora
-          let _ = window.close();
+          let window_label = window.label().to_string();
+          let _ = bd_win_close(app.clone(), window_label);
         }
         WindowEvent::Resized(size) => {
           let _ = window.emit("window:resized", Some(serde_json::json!({
@@ -140,13 +169,13 @@ fn main() {
       bd_clipboard_write, bd_clipboard_read,
       // files
       bd_file_open, bd_file_save,
-      // app info
-      bd_app_info,
+      // app
+      bd_app_info, bd_app_exit,
       // window
       bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
       bd_toggle_devtools, bd_open_devtools, bd_close_devtools,
       // events
-      bd_event_emit, bd_event_emit_to,
+      bd_event_emit, bd_event_emit_to, bd_event_emit_to_current_window,
       // fs
       bd_fs_list_dir, bd_fs_mkdir, bd_fs_rm, bd_fs_stat, bd_fs_write_text, bd_fs_read_text,
       bd_fs_write_bytes, bd_fs_read_bytes, bd_fs_exists, bd_fs_move, bd_fs_copy,

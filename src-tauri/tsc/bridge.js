@@ -16725,15 +16725,17 @@ This typically indicates that your device does not have a healthy Internet conne
 
   // ../src-ts/modules/diagnostics/_helpers.ts
   var diagnosticsSettings = async (core, settings) => {
-    if (settings?.retention_days_analytics && !Num.isU32(settings.retention_days_analytics)) throw "[retention_days_analytics] the value must be a U32 integer number";
-    if (settings?.retention_days_logs && !Num.isU32(settings.retention_days_logs)) throw "[retention_days_logs] the value must be a U32 integer number";
-    if (settings?.retention_days_crashes && !Num.isU32(settings.retention_days_crashes)) throw "[retention_days_crashes] the value must be a U32 integer number";
-    await core.invoke("bd_logs_set_privacy", {
-      analytics_enabled: settings?.analytics_enabled,
-      crash_reports_enabled: settings?.crash_reports_enabled,
-      retention_days_analytics: settings?.retention_days_analytics,
-      retention_days_logs: settings?.retention_days_logs,
-      retention_days_crashes: settings?.retention_days_crashes
+    if (settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw "[retentionDaysAnalytics] the value must be a U32 integer number";
+    if (settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs)) throw "[retentionDaysLogs] the value must be a U32 integer number";
+    if (settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes)) throw "[retentionDaysCrashes] the value must be a U32 integer number";
+    return await core.invoke("bd_logs_set_privacy", {
+      patch: {
+        analytics_enabled: settings?.analyticsEnabled,
+        crash_reports_enabled: settings?.crashReportsEnabled,
+        retention_days_analytics: settings?.retentionDaysAnalytics,
+        retention_days_logs: settings?.retentionDaysLogs,
+        retention_days_crashes: settings?.retentionDaysCrashes
+      }
     });
   };
   function buildDiagnosticsTestFunctions(core) {
@@ -16811,7 +16813,8 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/events/_main.ts
   function buildEvents(core) {
     return {
-      emit: (event, payload) => core.invoke("bd_event_emit", { event, payload }),
+      emit: (event, payload) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
+      emitToAll: (event, payload) => core.invoke("bd_event_emit", { event, payload }),
       emitTo: (window_label, event, payload) => core.invoke("bd_event_emit_to", { window_label, event, payload }),
       on: async (event, handler) => listenForEvent(event, handler),
       once: (event) => new Promise(async (resolve) => {
@@ -16940,7 +16943,8 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/app/_main.ts
   function buildAppInfo(core) {
     return {
-      info: () => core.invoke("bd_app_info")
+      info: () => core.invoke("bd_app_info"),
+      exit: (code) => core.invoke("bd_app_exit", { code: code ?? 0 })
     };
   }
 
@@ -16973,36 +16977,6 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/diagnostics/_main.ts
-  function buildDiagnostics(core) {
-    return {
-      settings: {
-        // set: mappa ai parametri snake_case attesi da Rust (tutti opzionali)
-        set: (settings) => diagnosticsSettings(core, settings),
-        get: () => core.invoke("bd_logs_get_privacy", {})
-      },
-      // SOLO analytics (Rust vuole AnalyticsRecord), usa key record_type
-      newRecord: (record_type, payload, env, app_version) => core.invoke("bd_logs_new_record", {
-        record_type,
-        payload,
-        env,
-        app_version
-      }),
-      newError: {
-        js: (payload, app_version) => core.invoke("bd_logs_record_js_error", { payload, app_version }),
-        native: (payload, app_version) => core.invoke("bd_logs_record_native_error", { payload, app_version }),
-        // Rust richiede 'env' obbligatorio: di default "generic" se non passato
-        generic: (payload, app_version, env = "generic") => core.invoke("bd_logs_record_error", { payload, app_version, env })
-      },
-      readRecordsFile: (rel_path, max_bytes) => core.invoke("bd_logs_read_file", { rel_path, max_bytes }),
-      // qui avevi chiamato bd_logs_read_file: correggo su bd_logs_list_files
-      listRecordsFiles: (area) => core.invoke("bd_logs_list_files", { area }),
-      runRetention: () => core.invoke("bd_logs_run_retention", {}),
-      export: (target_zip_path) => core.invoke("bd_logs_export_zip", { target_zip_path }),
-      test: () => buildDiagnosticsTestFunctions(core)
-    };
-  }
-
   // ../src-ts/bridge.constants.json
   var bridge_constants_default = {
     appUrl: "http://blank.html",
@@ -17012,6 +16986,36 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/_constants.ts
   var APP_URL = bridge_constants_default.appUrl;
   var APP_VERSION = bridge_constants_default.appVersion;
+
+  // ../src-ts/modules/diagnostics/_main.ts
+  function buildDiagnostics(core) {
+    return {
+      settings: {
+        // set: mappa ai parametri snake_case attesi da Rust (tutti opzionali)
+        set: (settings) => diagnosticsSettings(core, settings),
+        get: () => core.invoke("bd_logs_get_privacy", {})
+      },
+      // SOLO analytics (Rust vuole AnalyticsRecord), usa key record_type
+      newRecord: (recordType, payload, env) => core.invoke("bd_logs_new_record", {
+        record_type: recordType,
+        payload,
+        env,
+        app_version: APP_VERSION
+      }),
+      newError: {
+        js: (payload) => core.invoke("bd_logs_record_js_error", { payload, app_version: APP_VERSION }),
+        native: (payload) => core.invoke("bd_logs_record_native_error", { payload, app_version: APP_VERSION }),
+        // Rust richiede 'env' obbligatorio: di default "generic" se non passato
+        generic: (payload, env = "generic") => core.invoke("bd_logs_record_error", { payload, app_version: APP_VERSION, env })
+      },
+      readRecordsFile: (relPath, maxBytes) => core.invoke("bd_logs_read_file", { rel_path: relPath, max_bytes: maxBytes }),
+      // qui avevi chiamato bd_logs_read_file: correggo su bd_logs_list_files
+      listRecordsFiles: (area) => core.invoke("bd_logs_list_files", { area }),
+      runRetention: () => core.invoke("bd_logs_run_retention", {}),
+      export: (targetZipPath) => core.invoke("bd_logs_export_zip", { target_zip_path: targetZipPath }),
+      test: () => buildDiagnosticsTestFunctions(core)
+    };
+  }
 
   // ../src-ts/bridge.ts
   (() => {

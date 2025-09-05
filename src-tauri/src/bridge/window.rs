@@ -48,7 +48,8 @@ pub async fn bd_win_open(
   // This should be a unique label for all windows. For example, we can use a random suffix:
   let mut buf = [0u8; 1];
   assert_eq!(getrandom::fill(&mut buf), Ok(()));
-  conf.label = label;
+  let suffix = buf[0];
+  conf.label = format!("{}-{}", label, suffix);
   conf.fullscreen = fullscreen;
   if !s.is_empty(){
     let webview_url = WebviewUrl::External(
