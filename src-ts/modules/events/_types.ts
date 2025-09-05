@@ -7,7 +7,8 @@ export interface EventsInterface {
     on: (event: string, handler: (payload: any) => void) => Promise<() => void>;
     once: (event: string) => Promise<any>;
     onMany: (events: string[], handler: (name: string, payload: any) => void) => Promise<() => void>;
-    onDeeplink: (handler: (payload: any) => void) => Promise<() => any>
+    onNetworkStatus: (handler: (payload: any) => void) => Promise<() => any>;
+    onDeeplink: (handler: (payload: any) => void) => Promise<() => any>;
     onShortcut: (handler: (payload: any) => void) => Promise<() => void>;
     onDragDrop: (
       handler: (name: string, payload: DragDropPayload) => void,

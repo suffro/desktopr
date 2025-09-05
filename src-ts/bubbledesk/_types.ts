@@ -8,35 +8,29 @@ import type {
   ShortcutsInterface,
   FsInterface,
   MenuInterface,
-  DiagnosticsInterface
+  DiagnosticsInterface,
 } from "@types";
-
+import { NetworkInterface } from "modules/network/_types";
 
 export type BubbledeskAPI = {
   readonly isAvailable: boolean;
   readonly version: string;
   readonly ready: Promise<true>;
-  invoke<T = unknown>(cmd: string, payload?: Record<string, unknown>): Promise<T>;
-
+  invoke<T = unknown>(
+    cmd: string,
+    payload?: Record<string, unknown>
+  ): Promise<T>;
   notifications: NotificationsInterface;
-
   clipboard: ClipboardInterface;
-
   files: FilesInterface;
-
   app: AppInterface;
-
   window: WindowInterface;
-
   events: EventsInterface;
-
   globalShortcut: ShortcutsInterface;
-
   fs: FsInterface;
-
   menu: MenuInterface;
-
   diagnostics: DiagnosticsInterface;
+  network: NetworkInterface;
 };
 
 export interface BubbledeskInstanceInterface {

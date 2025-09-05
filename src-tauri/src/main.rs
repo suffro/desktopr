@@ -185,7 +185,9 @@ fn main() {
       // diagnostics
       bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
-      // test commands
+      // network
+      bd_network_get_status, bd_network_ping, bd_network_resolve, bd_network_bandwidth_estimate, bd_network_set_monitor, bd_network_stop_monitor,
+      // test commands (only in dev)
       #[cfg(debug_assertions)]
       bd_logs_test_record_n,
       #[cfg(debug_assertions)]

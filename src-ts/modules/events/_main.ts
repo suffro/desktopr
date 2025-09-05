@@ -1,8 +1,8 @@
 import { BubbledeskAPI } from "@types";
 import { listenForEvent } from "@helpers";
-import type { DragDropPayload } from "@types";
+import type { DragDropPayload, EventsInterface } from "@types";
 
-export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
+export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }): EventsInterface {
   return {
     emit: (event: string, payload?: unknown) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
     emitToAll: (event: string, payload?: unknown) => core.invoke("bd_event_emit", { event, payload }),
@@ -23,6 +23,8 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }) {
       const offs = await Promise.all(events.map((n) => listenForEvent(n, (p) => handler(n, p))));
       return () => offs.forEach((off) => off());
     },
+
+    onNetworkStatus: async (handler: (payload: any) => void) => listenForEvent("network:status", handler),
 
     onDeeplink: async (handler: (payload: any) => void) => listenForEvent("deeplink", handler),
 

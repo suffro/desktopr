@@ -15,6 +15,7 @@ import {
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
+import { buildNetwork } from "modules/network/_main";
 
 (() => {
   if (typeof window === "undefined" || (window as any).Bubbledesk) return;
@@ -39,6 +40,7 @@ import { tauriReadyCheck, waitTauri } from "@helpers";
     fs:            buildFs(core),
     menu:          buildMenu(core),
     diagnostics:   buildDiagnostics(core),
+    network:       buildNetwork(core),
   };
 
   Object.defineProperty(window, "Bubbledesk", {

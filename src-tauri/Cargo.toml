@@ -28,6 +28,8 @@ url = "2"
 getrandom = "0.3.3"
 chrono = { version = "0.4", features = ["clock"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
+tokio = "1.47.1"
+reqwest = "0.12.23"
 
 [features]
 default = [

@@ -16827,6 +16827,7 @@ This typically indicates that your device does not have a healthy Internet conne
         const offs = await Promise.all(events.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
       },
+      onNetworkStatus: async (handler) => listenForEvent("network:status", handler),
       onDeeplink: async (handler) => listenForEvent("deeplink", handler),
       onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
       onDragDrop: async (handler, options) => {
@@ -17017,6 +17018,18 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
+  // ../src-ts/modules/network/_main.ts
+  function buildNetwork(core) {
+    return {
+      status: () => core.invoke("bd_network_get_status"),
+      ping: (url, timeoutMs) => core.invoke("bd_network_ping", { url, timeoutMs }),
+      resolve: (host) => core.invoke("bd_network_resolve", { host }),
+      estimateBandwidth: (url, sizeHintBytes, timeoutMs) => core.invoke("bd_network_bandwidth_estimate", { url, size_hint_bytes: sizeHintBytes, timeoutMs }),
+      setMonitor: (intervalMs, targets) => core.invoke("bd_network_set_monitor", { intervalMs: intervalMs ?? 3e3, targets }),
+      stopMonitor: () => core.invoke("bd_network_stop_monitor")
+    };
+  }
+
   // ../src-ts/bridge.ts
   (() => {
     if (typeof window === "undefined" || window.Bubbledesk) return;
@@ -17039,7 +17052,8 @@ This typically indicates that your device does not have a healthy Internet conne
       globalShortcut: buildShortcuts(core),
       fs: buildFs(core),
       menu: buildMenu(core),
-      diagnostics: buildDiagnostics(core)
+      diagnostics: buildDiagnostics(core),
+      network: buildNetwork(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,
