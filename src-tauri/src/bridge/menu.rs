@@ -99,7 +99,7 @@ pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
         accelerator: None,
       }),
       MenuItemUnion::Custom(MenuConfigCustomItem {
-        id: "tray.cose".to_string(),
+        id: "tray.close".to_string(),
         label: "Close".to_string(),
         enabled: true,
         interaction: MenuInteraction::Click,
