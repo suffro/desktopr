@@ -15,7 +15,7 @@ export interface DiagnosticsInterface {
   listRecordsFiles: (area: "logs" | "crashes") => Promise<unknown>;
   runRetention: () => Promise<unknown>;
   export: (targetZipPath: string) => Promise<unknown>;
-  test: () => DiagnosticsTestFunctions;
+  test: DiagnosticsTestFunctions;
 }
 
 export type DiagnosticsTestFunctions = {

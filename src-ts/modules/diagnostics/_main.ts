@@ -48,6 +48,6 @@ export function buildDiagnostics(core: { invoke: BubbledeskAPI["invoke"] }): Dia
     export: (targetZipPath: string) =>
       core.invoke("bd_logs_export_zip", { target_zip_path: targetZipPath }),
 
-    test: () => buildDiagnosticsTestFunctions(core),
+    test: buildDiagnosticsTestFunctions(core),
   };
 }

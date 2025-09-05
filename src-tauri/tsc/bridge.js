@@ -17013,7 +17013,7 @@ This typically indicates that your device does not have a healthy Internet conne
       listRecordsFiles: (area) => core.invoke("bd_logs_list_files", { area }),
       runRetention: () => core.invoke("bd_logs_run_retention", {}),
       export: (targetZipPath) => core.invoke("bd_logs_export_zip", { target_zip_path: targetZipPath }),
-      test: () => buildDiagnosticsTestFunctions(core)
+      test: buildDiagnosticsTestFunctions(core)
     };
   }
 
