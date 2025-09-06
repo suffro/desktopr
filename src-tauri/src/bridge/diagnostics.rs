@@ -20,48 +20,92 @@ use crate::bridge::fs as bdfs;
 use crate::bridge::app::{bd_app_info, AppInfo as AppInfoStruct};
 
 // ==============================
+// Centralized relative paths
+// ==============================
+//
+// Tutti i path qui sotto sono RELATIVI alla root "_diagnostics".
+// NON usare più "diagnostics/..." come prefisso altrove.
+//
+
+#[inline]
+fn rel_base() -> &'static str { "" }
+
+#[inline]
+fn rel_settings_dir() -> String { format!("{}settings", rel_base()) }
+
+#[inline]
+fn rel_privacy_settings() -> String { format!("{}/privacy.json", rel_settings_dir()) }
+
+#[inline]
+fn rel_runtime_dir() -> String { format!("{}runtime", rel_base()) }
+
+#[inline]
+fn rel_runtime_heartbeat() -> String { format!("{}/heartbeat.json", rel_runtime_dir()) }
+
+#[inline]
+fn rel_runtime_shutdown_ok() -> String { format!("{}/shutdown.ok", rel_runtime_dir()) }
+
+#[inline]
+fn rel_logs_dir() -> String { format!("{}logs", rel_base()) }
+
+#[inline]
+fn rel_monthly_log_file() -> String {
+    // e.g., "logs/record-2025-09.jsonl"
+    format!("{}/record-{}.jsonl", rel_logs_dir(), Utc::now().format("%Y-%m"))
+}
+
+#[inline]
+fn rel_crashes_dir() -> String { format!("{}crashes", rel_base()) }
+
+#[inline]
+fn rel_crash_json_file(ts_iso_filename: &str) -> String {
+    // ts_iso_filename like "2025-09-05T21-30-00Z"
+    format!("{}/crash-{}.json", rel_crashes_dir(), ts_iso_filename)
+}
+
+#[inline]
+fn rel_crash_log_file(ts_iso_filename: &str) -> String {
+    format!("{}/crash-{}.log", rel_crashes_dir(), ts_iso_filename)
+}
+
+// Backward-compat helper names (non più con prefisso diagnostics/)
+#[inline]
+fn runtime_dir_rel() -> String { rel_runtime_dir() }
+#[inline]
+fn runtime_heartbeat_rel() -> String { rel_runtime_heartbeat() }
+#[inline]
+fn runtime_shutdown_ok_rel() -> String { rel_runtime_shutdown_ok() }
+
+// ==============================
 // Heartbeat / runtime markers
 // ==============================
 
 static HEARTBEAT_STOP: AtomicBool = AtomicBool::new(false);
-const PRIVACY_REL_PATH: &str = "settings/privacy.json";
 
-fn data_dir(app: &AppHandle) -> PathBuf {
-    bdfs::bd_fs_data_dir(app).expect("data base dir not available")
+fn diagnostics_root(app: &AppHandle) -> PathBuf {
+    // ottiene la root assoluta di _diagnostics
+    bdfs::bd_fs_safe_join_diagnostics(app, ".").expect("_diagnostics base dir not available")
 }
 
-fn runtime_dir_rel() -> &'static str {
-    "runtime"
-}
-
-fn runtime_heartbeat_rel() -> &'static str {
-    "runtime/heartbeat.json"
-}
-
-fn runtime_shutdown_ok_rel() -> &'static str {
-    "runtime/shutdown.ok"
-}
-
-/// helper: scrive testo via bdfs (permanent=true, create_dirs=true, append flag)
+/// helper: scrive testo via bdfs (scope _diagnostics, create_dirs=true, append flag)
 fn fs_write_text(app: &AppHandle, rel: &str, contents: &str, append: bool) -> Result<(), String> {
-    bdfs::bd_fs_write_text(
+    bdfs::bd_fs_diagnostics_write_text(
         app.clone(),
         rel.to_string(),
-        Some(true),  // permanent
         contents.to_string(),
         Some(true),  // create_dirs
         Some(append) // append
     )
 }
 
-/// helper: legge testo via bdfs (permanent=true)
+/// helper: legge testo via bdfs (scope _diagnostics)
 fn fs_read_text(app: &AppHandle, rel: &str) -> Result<String, String> {
-    bdfs::bd_fs_read_text(app.clone(), rel.to_string(), Some(true))
+    bdfs::bd_fs_diagnostics_read_text(app.clone(), rel.to_string())
 }
 
-/// helper: legge bytes via bdfs (permanent=true)
+/// helper: legge bytes via bdfs (scope _diagnostics)
 fn fs_read_bytes(app: &AppHandle, rel: &str) -> Result<Vec<u8>, String> {
-    let b64 = bdfs::bd_fs_read_bytes(app.clone(), rel.to_string(), Some(true))?;
+    let b64 = bdfs::bd_fs_diagnostics_read_bytes(app.clone(), rel.to_string())?;
     general_purpose::STANDARD
         .decode(b64.as_bytes())
         .map_err(|e| e.to_string())
@@ -92,7 +136,7 @@ fn default_privacy() -> PrivacySettings {
 }
 
 fn read_privacy(app: &AppHandle) -> PrivacySettings {
-    match fs_read_text(app, PRIVACY_REL_PATH) {
+    match fs_read_text(app, &rel_privacy_settings()) {
         Ok(s) => serde_json::from_str(&s).unwrap_or_else(|_| default_privacy()),
         Err(_) => default_privacy(),
     }
@@ -100,7 +144,7 @@ fn read_privacy(app: &AppHandle) -> PrivacySettings {
 
 fn write_privacy(app: &AppHandle, s: &PrivacySettings) -> Result<(), String> {
     let json = serde_json::to_string_pretty(s).map_err(|e| e.to_string())?;
-    fs_write_text(app, PRIVACY_REL_PATH, &json, false)
+    fs_write_text(app, &rel_privacy_settings(), &json, false)
 }
 
 // ==============================
@@ -166,12 +210,11 @@ pub struct ListedFile {
 static ROTATE_MAX_BYTES: usize = 10 * 1024 * 1024; // 10 MB
 static LOG_MUTEX: Mutex<()> = Mutex::new(());
 
-/// Rename "<file>.jsonl" -> "<file>.partN.jsonl" quando supera soglia.
-/// Richiede path assoluto; lo otteniamo con bdfs::bd_fs_safe_join_data.
+/// Rename "<file>.jsonl" -> "<file>.partN.jsonl" when size exceeds threshold.
+/// Uses absolute path resolved via bdfs::bd_fs_safe_join_diagnostics.
 fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
     if let Ok(meta) = fs::metadata(abs_path) {
         if meta.len() as usize >= ROTATE_MAX_BYTES {
-            // stem + ext
             let (stem, ext) = if let Some(ext) = abs_path.extension().and_then(|s| s.to_str()) {
                 let stem = abs_path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
                 (stem.to_string(), format!(".{}", ext))
@@ -193,11 +236,10 @@ fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Append su JSONL via bdfs (append=true) + rotazione su path assoluto.
+/// Append JSONL via diagnostics scope (append=true) + rotate on absolute path.
 fn append_jsonl(app: &AppHandle, rel_path: &str, value: &serde_json::Value) -> Result<(), String> {
     let _guard = LOG_MUTEX.lock().unwrap();
-    // path assoluto per rotazione
-    let abs = bdfs::bd_fs_safe_join_data(app, rel_path)?;
+    let abs = bdfs::bd_fs_safe_join_diagnostics(app, rel_path)?;
     rotate_with_part_suffix(&abs).map_err(|e| e.to_string())?;
     let line = serde_json::to_string(value).unwrap() + "\n";
     fs_write_text(app, rel_path, &line, true)
@@ -229,13 +271,13 @@ fn new_log_data(
 // Heartbeat
 // ==============================
 
-/// Avvia il heartbeat che scrive "runtime/heartbeat.json" ogni pochi secondi.
-/// Se all'avvio esiste heartbeat ma non "shutdown.ok", registra un dirty_shutdown.
+/// Starts the heartbeat that writes "runtime/heartbeat.json" every few seconds under _diagnostics.
+/// If at startup heartbeat exists but "shutdown.ok" does not, we register a dirty_shutdown.
 pub fn start_heartbeat(app: AppHandle) {
     // check dirty shutdown
-    let base = data_dir(&app);
-    let hb_abs = base.join(runtime_heartbeat_rel());
-    let ok_abs = base.join(runtime_shutdown_ok_rel());
+    let base = diagnostics_root(&app);
+    let hb_abs = base.join(&runtime_heartbeat_rel());
+    let ok_abs = base.join(&runtime_shutdown_ok_rel());
     let dirty = hb_abs.exists() && !ok_abs.exists();
     if dirty {
         let entry = serde_json::json!({
@@ -243,34 +285,35 @@ pub fn start_heartbeat(app: AppHandle) {
           "timestamp": Utc::now().timestamp_millis() as u64,
           "note": "previous run did not shut down cleanly"
         });
-        let crash_rel = format!("crashes/crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
-        let _ = fs_write_text(&app, &crash_rel, &serde_json::to_string_pretty(&entry).unwrap(), false);
+        let ts = Utc::now().format("%Y-%m-%dT%H-%M-%SZ").to_string();
+        let _ = fs_write_text(&app, &rel_crash_json_file(&ts), &serde_json::to_string_pretty(&entry).unwrap(), false);
 
-        let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
+        let log_rel = rel_monthly_log_file();
         let _ = append_jsonl(&app, &log_rel, &entry);
     }
 
-    // reset shutdown.ok
-    let _ = bdfs::bd_fs_rm(app.clone(), runtime_shutdown_ok_rel().into(), true, false);
+    // reset shutdown.ok e rimuovi heartbeat precedente (nel cestino)
+    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_shutdown_ok_rel().into(), false);
+    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
 
     // background ticker
     thread::spawn(move || {
         while !HEARTBEAT_STOP.load(Ordering::Relaxed) {
             let payload = serde_json::json!({ "ts": Utc::now().to_rfc3339() });
-            let _ = fs_write_text(&app, runtime_heartbeat_rel(), &serde_json::to_string(&payload).unwrap(), false);
+            let _ = fs_write_text(&app, &runtime_heartbeat_rel(), &serde_json::to_string(&payload).unwrap(), false);
             thread::sleep(Duration::from_secs(5));
         }
         // on stop
-        let _ = fs_write_text(&app, runtime_shutdown_ok_rel(), "ok", false);
-        let _ = bdfs::bd_fs_rm(app.clone(), runtime_heartbeat_rel().into(), true, false);
+        let _ = fs_write_text(&app, &runtime_shutdown_ok_rel(), "ok", false);
+        let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
     });
 }
 
-/// Intercetta chiusura pulita immediata (se vuoi chiamarla da un handler centralizzato).
+/// Marks a clean shutdown immediately (can be called from a centralized handler).
 pub fn mark_clean_shutdown_now(app: &AppHandle) {
     HEARTBEAT_STOP.store(true, Ordering::Relaxed);
-    let _ = fs_write_text(app, runtime_shutdown_ok_rel(), "ok", false);
-    let _ = bdfs::bd_fs_rm(app.clone(), runtime_heartbeat_rel().into(), true, false);
+    let _ = fs_write_text(app, &runtime_shutdown_ok_rel(), "ok", false);
+    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
 }
 
 // ==============================
@@ -282,12 +325,12 @@ pub fn mark_clean_shutdown_now(app: &AppHandle) {
 pub fn bd_logs_record_error(
     app: AppHandle,
     payload: ErrorPayload,
-    env: String,            // Opzione A: String obbligatoria
+    env: String,            // Option A: required String
     app_version: String,
 ) -> Result<(), String> {
     let settings = read_privacy(&app);
 
-    let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
+    let log_rel = rel_monthly_log_file();
     let log_data = new_log_data(
         &app,
         Payload::Error(payload),
@@ -299,7 +342,8 @@ pub fn bd_logs_record_error(
     append_jsonl(&app, &log_rel, &entry)?;
 
     if settings.crash_reports_enabled {
-        let crash_rel = format!("crashes/crash-{}.json", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"));
+        let ts = Utc::now().format("%Y-%m-%dT%H-%M-%SZ").to_string();
+        let crash_rel = rel_crash_json_file(&ts);
         fs_write_text(&app, &crash_rel, &serde_json::to_string_pretty(&entry).unwrap(), false)?;
     }
     Ok(())
@@ -339,7 +383,7 @@ pub fn bd_logs_new_record(
         return Ok(());
     }
 
-    let log_rel = format!("logs/record-{}.jsonl", Utc::now().format("%Y-%m"));
+    let log_rel = rel_monthly_log_file();
     let log_data = new_log_data(
         &app,
         Payload::Analytics(payload),
@@ -351,17 +395,18 @@ pub fn bd_logs_new_record(
     append_jsonl(&app, &log_rel, &entry)
 }
 
-/// Export logs/ and crashes/ as a zip file at `target_zip_path`.
+/// Export diagnostics subdirs as a zip file at `target_zip_path`.
 #[tauri::command]
 pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
-    let base = data_dir(&app);
+    let base = diagnostics_root(&app);
     let file = std::fs::File::create(&target_zip_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipWriter::new(file);
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
-    let dirs = ["logs", "crashes", runtime_dir_rel()];
+    // Always iterate THROUGH diagnostics subfolders.
+    let dirs = [rel_logs_dir(), rel_crashes_dir(), runtime_dir_rel()];
     for d in dirs {
-        let dir_path = base.join(d);
+        let dir_path = base.join(&d);
         if !dir_path.exists() {
             continue;
         }
@@ -374,7 +419,7 @@ pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
                     .to_string_lossy()
                     .to_string();
 
-                // leggi via bdfs
+                // read via bdfs (scope _diagnostics)
                 let bytes = fs_read_bytes(&app, &rel)?;
                 zip.start_file(rel, options).map_err(|e| e.to_string())?;
                 zip.write_all(&bytes).map_err(|e| e.to_string())?;
@@ -399,8 +444,8 @@ pub fn install_panic_hook(app: AppHandle, app_version: String) {
           "cause": cause,
           "backtrace": bt
         });
-        let _ = fs_write_text(&app, &format!("crashes/crash-{}.json", ts), &serde_json::to_string_pretty(&json).unwrap(), false);
-        let _ = fs_write_text(&app, &format!("crashes/crash-{}.log",  ts), &format!("{}\n\n{}", cause, bt), false);
+        let _ = fs_write_text(&app, &rel_crash_json_file(&ts), &serde_json::to_string_pretty(&json).unwrap(), false);
+        let _ = fs_write_text(&app, &rel_crash_log_file(&ts),  &format!("{}\n\n{}", cause, bt), false);
     }));
 }
 
@@ -421,14 +466,14 @@ fn purge_older_than(app: &AppHandle, base: &Path, dir_rel: &str, max_age_days: u
             let meta = entry.metadata()?;
             if let Ok(modified) = meta.modified() {
                 if modified < cutoff {
-                    // rimuovi via bdfs (coerente col sandbox)
+                    // sposta nel cestino tramite API diagnostics
                     let rel = entry
                         .path()
                         .strip_prefix(base)
                         .ok()
-                        .and_then(|p| Some(p.to_string_lossy().to_string()));
+                        .map(|p| p.to_string_lossy().to_string());
                     if let Some(rel) = rel {
-                        let _ = bdfs::bd_fs_rm(app.clone(), rel, true, false);
+                        let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), rel, false);
                     }
                 }
             }
@@ -437,15 +482,13 @@ fn purge_older_than(app: &AppHandle, base: &Path, dir_rel: &str, max_age_days: u
     Ok(())
 }
 
-/// Runs retention for logs/, analytics/ (opzionale), crashes/ according to current settings.
+/// Runs retention for logs/ and crashes/ according to current settings.
 fn run_retention(app: &AppHandle) -> Result<(), String> {
     let s = read_privacy(app);
-    let base = data_dir(app);
+    let base = diagnostics_root(app);
 
-    purge_older_than(app, &base, "logs", s.retention_days_logs).map_err(|e| e.to_string())?;
-    // opzionale: se non usi più analytics/, rimuovi questa riga
-    purge_older_than(app, &base, "analytics", s.retention_days_analytics).map_err(|e| e.to_string())?;
-    purge_older_than(app, &base, "crashes", s.retention_days_crashes).map_err(|e| e.to_string())?;
+    purge_older_than(app, &base, &rel_logs_dir(), s.retention_days_logs).map_err(|e| e.to_string())?;
+    purge_older_than(app, &base, &rel_crashes_dir(), s.retention_days_crashes).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -461,12 +504,16 @@ pub fn bd_logs_run_retention(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
     // area: "logs" | "crashes" | "runtime"
-    let base = data_dir(&app);
-    let allowed = ["logs", "crashes", runtime_dir_rel()];
-    if !allowed.contains(&area.as_str()) {
-        return Err("Invalid area".into());
-    }
-    let dir = base.join(&area);
+    let base = diagnostics_root(&app);
+
+    let dir_rel = match area.as_str() {
+        "logs" => rel_logs_dir(),
+        "crashes" => rel_crashes_dir(),
+        "runtime" => rel_runtime_dir(),
+        _ => return Err("Invalid area".into()),
+    };
+
+    let dir = base.join(&dir_rel);
     let mut out = vec![];
     if dir.exists() {
         for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
@@ -499,14 +546,14 @@ pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile
 pub fn bd_logs_read_file(
     app: AppHandle,
     rel_path: String,
-    max_bytes: Option<u64>,
-) -> Result<Vec<u8>, String> {
-    let data = fs_read_bytes(&app, &rel_path)?;
-    if let Some(limit) = max_bytes {
-        if data.len() as u64 > limit {
-            return Err(format!("File too large ({} > {})", data.len(), limit));
-        }
-    }
+    // max_bytes: Option<u64>,
+) -> Result<String, String> {
+    let data = fs_read_text(&app, &rel_path)?;
+    // if let Some(limit) = max_bytes {
+    //     if data.len() as u64 > limit {
+    //         return Err(format!("File too large ({} > {})", data.len(), limit));
+    //     }
+    // }
     Ok(data)
 }
 
@@ -531,7 +578,6 @@ pub struct PrivacyPatch {
 
 #[tauri::command]
 pub fn bd_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<PrivacySettings, String> {
-    // eprintln!("[set_privacy] patch = {:?}", patch);
     let mut s = read_privacy(&app);
     if let Some(v) = patch.analytics_enabled { s.analytics_enabled = v; }
     if let Some(v) = patch.crash_reports_enabled { s.crash_reports_enabled = v; }
@@ -574,13 +620,17 @@ pub fn bd_logs_test_panic() {
 #[cfg(debug_assertions)]
 #[tauri::command]
 pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), String> {
-    // Pulisce TUTTO nell’area (logs|analytics|crashes|runtime) per verificare retention/marker.
-    let base = data_dir(&app);
-    let allowed = ["logs", "analytics", "crashes", runtime_dir_rel()];
-    if !allowed.contains(&area.as_str()) {
-        return Err("Invalid area".into());
-    }
-    let dir = base.join(area);
+    // Sposta TUTTI i file nella relativa area in _trash (logs|crashes|runtime)
+    let base = diagnostics_root(&app);
+
+    let dir_rel = match area.as_str() {
+        "logs" => rel_logs_dir(),
+        "crashes" => rel_crashes_dir(),
+        "runtime" => rel_runtime_dir(),
+        _ => return Err("Invalid area".into()),
+    };
+
+    let dir = base.join(&dir_rel);
     if dir.exists() {
         for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
             if entry.file_type().is_file() {
@@ -590,7 +640,7 @@ pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), 
                     .unwrap()
                     .to_string_lossy()
                     .to_string();
-                let _ = bdfs::bd_fs_rm(app.clone(), rel, true, false);
+                let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), rel, false);
             }
         }
     }

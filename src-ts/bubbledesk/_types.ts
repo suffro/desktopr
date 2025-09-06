@@ -10,6 +10,7 @@ import type {
   MenuInterface,
   DiagnosticsInterface,
 } from "@types";
+import { AutostartInterface } from "modules/autostart/_types";
 import { NetworkInterface } from "modules/network/_types";
 
 export type BubbledeskAPI = {
@@ -31,6 +32,7 @@ export type BubbledeskAPI = {
   menu: MenuInterface;
   diagnostics: DiagnosticsInterface;
   network: NetworkInterface;
+  autostart: AutostartInterface;
 };
 
 export interface BubbledeskInstanceInterface {

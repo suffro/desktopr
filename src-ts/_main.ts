@@ -11,3 +11,5 @@ export * from "./modules/window/_main";
 export * from "./modules/dragdrop/_main";
 export * from "./modules/menu/_main";
 export * from "./modules/diagnostics/_main";
+export * from "./modules/network/_main";
+export * from "./modules/autostart/_main";

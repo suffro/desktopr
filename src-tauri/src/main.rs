@@ -53,7 +53,9 @@ fn main() {
     // .plugin(prevent)
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
-    .plugin(tauri_plugin_dialog::init());
+    .plugin(tauri_plugin_dialog::init())
+    .plugin(bridge::autostart::init_plugin())
+    .setup(bridge::autostart::setup());
 
   // --- 2) Plugin Deep Link ---
   builder = builder.plugin(tauri_plugin_deep_link::init());
@@ -179,7 +181,13 @@ fn main() {
       // fs
       bd_fs_list_dir, bd_fs_mkdir, bd_fs_rm, bd_fs_stat, bd_fs_write_text, bd_fs_read_text,
       bd_fs_write_bytes, bd_fs_read_bytes, bd_fs_exists, bd_fs_move, bd_fs_copy,
-      bd_fs_clear_cache, bd_fs_paths,
+      bd_fs_clear_cache, bd_fs_clear_data, bd_fs_paths,
+      // fs trash
+      bd_fs_trash_list_dir, bd_fs_trash_stat, bd_fs_trash_exists, bd_fs_trash_read_text, bd_fs_trash_read_bytes,
+      bd_fs_data_recover_trash, bd_fs_data_clear_trash,
+      // fs diagnostics
+      bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
+      bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
       // menu
       bd_menu_set_enabled, bd_menu_set_checked,
       // diagnostics
@@ -187,6 +195,8 @@ fn main() {
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
       // network
       bd_network_get_status, bd_network_ping, bd_network_resolve, bd_network_bandwidth_estimate, bd_network_set_monitor, bd_network_stop_monitor,
+      // autostart
+      bd_get_autostart_mode, bd_set_autostart_mode, bd_autostart_enable, bd_autostart_disable, bd_autostart_status,
       // test commands (only in dev)
       #[cfg(debug_assertions)]
       bd_logs_test_record_n,

@@ -16806,7 +16806,7 @@ This typically indicates that your device does not have a healthy Internet conne
   function buildFiles(core) {
     return {
       open: (option) => core.invoke("bd_file_open", { multi: option?.multi ?? false }),
-      save: (default_name) => core.invoke("bd_file_save", { default_name: default_name ?? null })
+      save: (defaultName) => core.invoke("bd_file_save", { defaultName: defaultName ?? null })
     };
   }
 
@@ -16815,7 +16815,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return {
       emit: (event, payload) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
       emitToAll: (event, payload) => core.invoke("bd_event_emit", { event, payload }),
-      emitTo: (window_label, event, payload) => core.invoke("bd_event_emit_to", { window_label, event, payload }),
+      emitTo: (windowLabel, event, payload) => core.invoke("bd_event_emit_to", { windowLabel, event, payload }),
       on: async (event, handler) => listenForEvent(event, handler),
       once: (event) => new Promise(async (resolve) => {
         const off = await listenForEvent(event, (p) => {
@@ -16844,9 +16844,9 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/fs/_main.ts
   function scope(core, permanent) {
     return {
-      listDir: (rel = "") => core.invoke("bd_fs_list_dir", { rel, permanent }),
-      mkdir: (rel) => core.invoke("bd_fs_mkdir", { rel, permanent }),
-      rm: (rel, recursive = false) => core.invoke("bd_fs_rm", { rel, recursive, permanent }),
+      listContent: (rel = "") => core.invoke("bd_fs_list_dir", { rel, permanent }),
+      newDirectory: (rel) => core.invoke("bd_fs_mkdir", { rel, permanent }),
+      remove: (rel, recursive = false) => core.invoke("bd_fs_rm", { rel, recursive, permanent }),
       stat: (rel = "") => core.invoke("bd_fs_stat", { rel, permanent }),
       writeText: (rel, contents, opts) => core.invoke("bd_fs_write_text", {
         rel,
@@ -16883,6 +16883,10 @@ This typically indicates that your device does not have a healthy Internet conne
         const p = await core.invoke("bd_fs_paths");
         return permanent ? p.data : p.cache;
       },
+      clear: async () => {
+        if (permanent) core.invoke("bd_fs_clear_data");
+        else core.invoke("bd_fs_clear_cache");
+      },
       base: permanent ? ".data" : ".cache"
     };
   }
@@ -16890,10 +16894,28 @@ This typically indicates that your device does not have a healthy Internet conne
     const cache = scope(core, false);
     const data = scope(core, true);
     return {
-      cache: { ...cache, clear: () => core.invoke("bd_fs_clear_cache") },
+      cache,
       data,
-      paths: () => core.invoke("bd_fs_paths"),
-      base: { cache: ".cache", data: ".data" }
+      paths: async () => core.invoke("bd_fs_paths"),
+      base: { cache: ".cache", data: ".data" },
+      trash: {
+        clear: async () => core.invoke("bd_fs_data_clear_trash"),
+        recover: async () => core.invoke("bd_fs_data_recover_trash"),
+        listContent: async (rel = "") => core.invoke("bd_fs_trash_list_dir", { rel }),
+        stat: async (rel = "") => core.invoke("bd_fs_trash_stat", { rel }),
+        exists: async (rel = "") => core.invoke("bd_fs_trash_exists", { rel }),
+        readText: async (rel) => core.invoke("bd_fs_trash_read_text", { rel }),
+        readBytes: async (rel) => core.invoke("bd_fs_trash_read_bytes", { rel })
+      },
+      diagnostics: {
+        clear: async () => core.invoke("bd_fs_diagnostics_clear"),
+        remove: async (rel, recursive = false) => core.invoke("bd_fs_diagnostics_rm", { rel, recursive }),
+        listContent: async (rel = "") => core.invoke("bd_fs_diagnostics_list_dir", { rel }),
+        stat: async (rel = "") => core.invoke("bd_fs_diagnostics_stat", { rel }),
+        exists: async (rel = "") => core.invoke("bd_fs_diagnostics_exists", { rel }),
+        readText: async (rel) => core.invoke("bd_fs_diagnostics_read_text", { rel }),
+        readBytes: async (rel) => core.invoke("bd_fs_diagnostics_read_bytes", { rel })
+      }
     };
   }
 
@@ -16998,22 +17020,22 @@ This typically indicates that your device does not have a healthy Internet conne
       },
       // SOLO analytics (Rust vuole AnalyticsRecord), usa key record_type
       newRecord: (recordType, payload, env) => core.invoke("bd_logs_new_record", {
-        record_type: recordType,
+        recordType,
         payload,
         env,
-        app_version: APP_VERSION
+        appVersion: APP_VERSION
       }),
       newError: {
-        js: (payload) => core.invoke("bd_logs_record_js_error", { payload, app_version: APP_VERSION }),
-        native: (payload) => core.invoke("bd_logs_record_native_error", { payload, app_version: APP_VERSION }),
+        js: (payload) => core.invoke("bd_logs_record_js_error", { payload, appVersion: APP_VERSION }),
+        native: (payload) => core.invoke("bd_logs_record_native_error", { payload, appVersion: APP_VERSION }),
         // Rust richiede 'env' obbligatorio: di default "generic" se non passato
-        generic: (payload, env = "generic") => core.invoke("bd_logs_record_error", { payload, app_version: APP_VERSION, env })
+        generic: (payload, env = "generic") => core.invoke("bd_logs_record_error", { payload, appVersion: APP_VERSION, env })
       },
-      readRecordsFile: (relPath, maxBytes) => core.invoke("bd_logs_read_file", { rel_path: relPath, max_bytes: maxBytes }),
+      readRecordsFile: (relPath, maxBytes) => core.invoke("bd_logs_read_file", { relPath, maxBytes }),
       // qui avevi chiamato bd_logs_read_file: correggo su bd_logs_list_files
       listRecordsFiles: (area) => core.invoke("bd_logs_list_files", { area }),
       runRetention: () => core.invoke("bd_logs_run_retention", {}),
-      export: (targetZipPath) => core.invoke("bd_logs_export_zip", { target_zip_path: targetZipPath }),
+      export: (targetZipPath) => core.invoke("bd_logs_export_zip", { targetZipPath }),
       test: buildDiagnosticsTestFunctions(core)
     };
   }
@@ -17022,11 +17044,24 @@ This typically indicates that your device does not have a healthy Internet conne
   function buildNetwork(core) {
     return {
       status: () => core.invoke("bd_network_get_status"),
-      ping: (url, timeoutMs) => core.invoke("bd_network_ping", { url, timeoutMs }),
+      ping: (url, timeoutMs) => core.invoke("bd_network_ping", { url: url ?? "", timeoutMs }),
       resolve: (host) => core.invoke("bd_network_resolve", { host }),
-      estimateBandwidth: (url, sizeHintBytes, timeoutMs) => core.invoke("bd_network_bandwidth_estimate", { url, size_hint_bytes: sizeHintBytes, timeoutMs }),
+      estimateBandwidth: (url, sizeHintBytes, timeoutMs) => core.invoke("bd_network_bandwidth_estimate", { url, sizeHintBytes, timeoutMs }),
       setMonitor: (intervalMs, targets) => core.invoke("bd_network_set_monitor", { intervalMs: intervalMs ?? 3e3, targets }),
       stopMonitor: () => core.invoke("bd_network_stop_monitor")
+    };
+  }
+
+  // ../src-ts/modules/autostart/_main.ts
+  function buildAutostart(core) {
+    return {
+      enable: () => core.invoke("bd_autostart_enable"),
+      disable: () => core.invoke("bd_autostart_disable"),
+      isEnabled: () => core.invoke("bd_autostart_status"),
+      mode: {
+        get: () => core.invoke("bd_get_autostart_mode"),
+        set: (mode) => core.invoke("bd_set_autostart_mode", { mode })
+      }
     };
   }
 
@@ -17053,7 +17088,8 @@ This typically indicates that your device does not have a healthy Internet conne
       fs: buildFs(core),
       menu: buildMenu(core),
       diagnostics: buildDiagnostics(core),
-      network: buildNetwork(core)
+      network: buildNetwork(core),
+      autostart: buildAutostart(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,

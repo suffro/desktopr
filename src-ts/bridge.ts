@@ -11,11 +11,12 @@ import {
     buildAppInfo,
     buildMenu,
     bdInitiators,
-    buildDiagnostics
+    buildDiagnostics,
+    buildNetwork,
+    buildAutostart
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
-import { buildNetwork } from "modules/network/_main";
 
 (() => {
   if (typeof window === "undefined" || (window as any).Bubbledesk) return;
@@ -41,6 +42,7 @@ import { buildNetwork } from "modules/network/_main";
     menu:          buildMenu(core),
     diagnostics:   buildDiagnostics(core),
     network:       buildNetwork(core),
+    autostart:     buildAutostart(core)
   };
 
   Object.defineProperty(window, "Bubbledesk", {

@@ -6,8 +6,8 @@ export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }): EventsIn
   return {
     emit: (event: string, payload?: unknown) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
     emitToAll: (event: string, payload?: unknown) => core.invoke("bd_event_emit", { event, payload }),
-    emitTo: (window_label: string, event: string, payload?: unknown) =>
-      core.invoke("bd_event_emit_to", { window_label, event, payload }),
+    emitTo: (windowLabel: string, event: string, payload?: unknown) =>
+      core.invoke("bd_event_emit_to", { windowLabel, event, payload }),
 
     on: async (event: string, handler: (payload: any) => void) => listenForEvent(event, handler),
 

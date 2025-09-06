@@ -3,7 +3,7 @@ import { BubbledeskAPI } from "@types";
 import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
 import { Num } from "suffro-lib";
 
-export const diagnosticsSettings = async(core: { invoke: BubbledeskAPI["invoke"] }, settings?: PrivacySettings)=> {
+export const diagnosticsSettings = async (core: { invoke: BubbledeskAPI["invoke"] }, settings?: PrivacySettings)=> {
   if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");
   if(settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs)) throw("[retentionDaysLogs] the value must be a U32 integer number");
   if(settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes)) throw("[retentionDaysCrashes] the value must be a U32 integer number");

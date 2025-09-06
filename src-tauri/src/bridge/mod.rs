@@ -11,6 +11,7 @@ pub mod menu;
 pub mod tray;
 pub mod diagnostics;
 pub mod network;
+pub mod autostart;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -24,3 +25,4 @@ pub use deeplink::*;
 pub use menu::*;
 pub use diagnostics::*;
 pub use network::*;
+pub use autostart::*;

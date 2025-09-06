@@ -11,6 +11,8 @@ export * from "./modules/window/_helpers";
 export * from "./modules/dragdrop/_helpers";
 export * from "./modules/menu/_helpers";
 export * from "./modules/diagnostics/_helpers";
+export * from "./modules/network/_helpers";
+export * from "./modules/autostart/_helpers";
 
 import { wait } from "suffro-lib";
 
