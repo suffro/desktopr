@@ -2,8 +2,12 @@
 
 use serde::{Deserialize, Serialize};
 use tauri::{App, AppHandle, Manager};
+use serde_json::{json, Value};
+use tokio::time::sleep;
+use std::time::Duration;
 
 use crate::bridge::fs::{bd_fs_read_text, bd_fs_write_text};
+use crate::bridge::events::{bd_event_emit};
 
 // ✅ Correct trait for v2 to access autostart manager via `app.autolaunch()`
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -48,6 +52,7 @@ fn save_settings(app: &AppHandle, s: &AutostartSettings) -> Result<(), String> {
 /// Apply how the main window should appear when launched by the OS.
 fn apply_autostart_window_behavior(app: &AppHandle, mode: AutostartMode) {
   // ✅ v2 uses `get_webview_window`
+  let app_handle = app.clone();
   if let Some(win) = app.get_webview_window("main") {
     match mode {
       AutostartMode::Shown => {
@@ -56,9 +61,22 @@ fn apply_autostart_window_behavior(app: &AppHandle, mode: AutostartMode) {
         let _ = win.set_focus();
       }
       AutostartMode::Minimized => {
-        // Show then minimize is the most robust sequence across DEs/OSes.
-        let _ = win.show();
-        let _ = win.minimize();
+        // Ensure hidden first, then show+minimize on the next ticks to avoid flashing.
+        let _ = win.hide();
+        let app2 = app.clone();
+        tauri::async_runtime::spawn(async move {
+          use std::time::Duration;
+          sleep(Duration::from_millis(120)).await;
+          if let Some(w) = app2.get_webview_window("main") {
+            let _ = w.show();
+            let _ = w.minimize();
+          }
+          // Re-apply once more in case something else showed the window late.
+          sleep(Duration::from_millis(300)).await;
+          if let Some(w) = app2.get_webview_window("main") {
+            let _ = w.minimize();
+          }
+        });
       }
       AutostartMode::Hidden => {
         // Keep running (e.g., with tray) without showing the main window.
@@ -76,16 +94,39 @@ pub fn init_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
   )
 }
 
-/// Setup hook: return the signature Tauri expects (Box<dyn Error>).
-pub fn setup() -> impl Fn(&mut App) -> Result<(), Box<dyn std::error::Error>> {
-  |app| {
-    let launched_by_os = std::env::args().any(|a| a == "--autostart");
-    if launched_by_os {
-      let s = load_settings(&app.handle());
-      apply_autostart_window_behavior(&app.handle(), s.autostart_mode);
+pub fn run_from_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+  let launched_by_os = std::env::args().any(|a| a == "--autostart");
+  if launched_by_os {
+    eprintln!("[autostart] Detected --autostart, applying mode…");
+    if let Some(win) = app.get_webview_window("main") {
+      // Ensure the window is not visible before applying mode-specific behavior,
+      // to prevent any flashing at startup.
+      let _ = win.hide();
     }
-    Ok(())
+    let s = load_settings(&app.handle());
+    apply_autostart_window_behavior(&app.handle(), s.autostart_mode);
+  } else {
+    // In dev / manual start the window may not exist yet at setup() time.
+    // Retry for a short period and then show/focus it once available.
+    let handle = app.handle().clone();
+    tauri::async_runtime::spawn(async move {
+      for _ in 0..40 { // ~2s total at 50ms interval
+        if let Some(win) = handle.get_webview_window("main") {
+          let _ = win.show();
+          let _ = win.unminimize();
+          let _ = win.set_focus();
+          return;
+        }
+        sleep(std::time::Duration::from_millis(50)).await;
+      }
+      // Optional: emit a diagnostics event if the window never appeared.
+      let _ = bd_event_emit(handle, "autostart".to_string(), Some(serde_json::json!({
+        "mode": "manual",
+        "note": "main window not found within retry window"
+      })));
+    });
   }
+  Ok(())
 }
 
 // ---------- Commands (Rust only; your TS bridge uses `invoke`) ----------

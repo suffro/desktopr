@@ -50,6 +50,7 @@ pub async fn bd_win_open(
   assert_eq!(getrandom::fill(&mut buf), Ok(()));
   let suffix = buf[0];
   conf.label = format!("{}-{}", label, suffix);
+  conf.visible = true;
   conf.fullscreen = fullscreen;
   if !s.is_empty(){
     let webview_url = WebviewUrl::External(

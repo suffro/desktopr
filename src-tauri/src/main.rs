@@ -54,14 +54,16 @@ fn main() {
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())
-    .plugin(bridge::autostart::init_plugin())
-    .setup(bridge::autostart::setup());
+    .plugin(bridge::autostart::init_plugin());
 
   // --- 2) Plugin Deep Link ---
   builder = builder.plugin(tauri_plugin_deep_link::init());
 
   // --- 3) Setup: tray, shortcut e deeplink (boot + runtime) ---
   builder = builder.setup(|app| {
+    // Run autostart bootstrap first so this setup owns the timing.
+    bridge::autostart::run_from_setup(app)?;
+
     // Menu nativo
     crate::bridge::menu::init_menu(app)?;
     

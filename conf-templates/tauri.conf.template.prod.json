@@ -27,6 +27,7 @@
           "height": "%%MAIN_WINDOW_HEIGHT%%",
           "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",
           "resizable": true,
+          "visible": false,
           "fullscreen": false,
           "url": "%%MAIN_WINDOW_URL%%"
         }
