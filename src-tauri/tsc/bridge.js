@@ -17065,6 +17065,14 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
+  // ../src-ts/modules/badge/_main.ts
+  function buildBadge(core) {
+    return {
+      set: async (count) => core.invoke("bd_badge_set", { count }),
+      clear: async () => core.invoke("bd_badge_clear")
+    };
+  }
+
   // ../src-ts/bridge.ts
   (() => {
     if (typeof window === "undefined" || window.Bubbledesk) return;
@@ -17089,7 +17097,8 @@ This typically indicates that your device does not have a healthy Internet conne
       menu: buildMenu(core),
       diagnostics: buildDiagnostics(core),
       network: buildNetwork(core),
-      autostart: buildAutostart(core)
+      autostart: buildAutostart(core),
+      badge: buildBadge(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,

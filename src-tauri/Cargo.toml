@@ -6,6 +6,20 @@ edition = "2021"
 [target.'cfg(windows)'.dependencies]
 tauri-plugin-prevent-default = { version = "3", features = ["platform-windows"], optional = true }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.24"
+objc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = [
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_Foundation",
+] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+image = "0.25"
+
 [dependencies]
 tauri = { version = "2", features = ["rustls-tls", "tray-icon", "devtools"] }
 # Optional plugins (enable via Cargo features)

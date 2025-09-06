@@ -1,6 +1,7 @@
 import { tauriGlobalShortcut } from "@helpers";
+import { ShortcutsInterface } from "@types";
 
-export function buildShortcuts(core: { invoke: <T=unknown>(cmd: string, payload?: any)=>Promise<T> }) {
+export function buildShortcuts(core: { invoke: <T=unknown>(cmd: string, payload?: any)=>Promise<T> }): ShortcutsInterface {
   return {
     register: async (accelerator: string, cb: (e: any) => void, options?: { emitEvent?: boolean }) => {
       const gs = tauriGlobalShortcut();

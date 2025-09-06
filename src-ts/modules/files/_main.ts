@@ -1,7 +1,7 @@
-import { BubbledeskAPI } from "@types";
+import { BubbledeskAPI, FilesInterface } from "@types";
 import { OpenResult } from "@types";
 
-export function buildFiles(core: { invoke: BubbledeskAPI["invoke"] }) {
+export function buildFiles(core: { invoke: BubbledeskAPI["invoke"] }): FilesInterface {
   return {
     open: (option?: { multi?: boolean }) =>
       core.invoke<OpenResult>("bd_file_open", { multi: option?.multi ?? false }),

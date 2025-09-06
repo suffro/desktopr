@@ -199,6 +199,8 @@ fn main() {
       bd_network_get_status, bd_network_ping, bd_network_resolve, bd_network_bandwidth_estimate, bd_network_set_monitor, bd_network_stop_monitor,
       // autostart
       bd_get_autostart_mode, bd_set_autostart_mode, bd_autostart_enable, bd_autostart_disable, bd_autostart_status,
+      // badge
+      bd_badge_set, bd_badge_clear,
       // test commands (only in dev)
       #[cfg(debug_assertions)]
       bd_logs_test_record_n,

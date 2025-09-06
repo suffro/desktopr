@@ -1,6 +1,6 @@
-import type { BubbledeskAPI } from "@types";
+import type { BubbledeskAPI, NotificationsInterface } from "@types";
 
-export function buildNotifications(core: { invoke: BubbledeskAPI["invoke"] }) {
+export function buildNotifications(core: { invoke: BubbledeskAPI["invoke"] }): NotificationsInterface {
   return {
     state: (): Promise<string> => core.invoke("bd_notification_state"),
     request: (): Promise<string> => core.invoke("bd_request_permission"),

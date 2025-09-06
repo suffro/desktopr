@@ -13,7 +13,8 @@ import {
     bdInitiators,
     buildDiagnostics,
     buildNetwork,
-    buildAutostart
+    buildAutostart,
+    buildBadge
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
@@ -42,7 +43,8 @@ import { tauriReadyCheck, waitTauri } from "@helpers";
     menu:          buildMenu(core),
     diagnostics:   buildDiagnostics(core),
     network:       buildNetwork(core),
-    autostart:     buildAutostart(core)
+    autostart:     buildAutostart(core),
+    badge:         buildBadge(core)
   };
 
   Object.defineProperty(window, "Bubbledesk", {

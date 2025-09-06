@@ -13,3 +13,4 @@ export * from "./modules/menu/_main";
 export * from "./modules/diagnostics/_main";
 export * from "./modules/network/_main";
 export * from "./modules/autostart/_main";
+export * from "./modules/badge/_main";
