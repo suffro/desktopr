@@ -101,6 +101,10 @@ fn main() {
       }
     });
 
+    if let Err(e) = crate::bridge::sandbox::sandbox_cleanup_on_boot(&app.handle()) {
+        eprintln!("[sandbox] cleanup on boot failed: {e}");
+    }
+    
     Ok(())
   });
 
@@ -172,7 +176,7 @@ fn main() {
       // clipboard
       bd_clipboard_write, bd_clipboard_read,
       // files
-      bd_file_open, bd_file_save,
+      bd_file_open, bd_file_save, bd_file_open_with_bytes,
       // app
       bd_app_info, bd_app_exit,
       // window

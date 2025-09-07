@@ -16805,7 +16805,8 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/files/_main.ts
   function buildFiles(core) {
     return {
-      open: (option) => core.invoke("bd_file_open", { multi: option?.multi ?? false }),
+      open: (options) => core.invoke("bd_file_open", { multi: options?.multi ?? false, allowedExtensions: options?.allowed, maxBytes: options?.maxBytes }),
+      openWithBytes: (options) => core.invoke("bd_file_open_with_bytes", { multi: options?.multi ?? false, allowedExtensions: options?.allowed, maxBytes: options?.maxBytes }),
       save: (defaultName) => core.invoke("bd_file_save", { defaultName: defaultName ?? null })
     };
   }
@@ -17073,6 +17074,28 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
+  // ../src-ts/modules/sandbox/_main.ts
+  function buildSandbox(core) {
+    return {
+      run: (input) => core.invoke("bd_sandbox_run", { input }),
+      modules: {
+        list: () => core.invoke("bd_sandbox_list_modules"),
+        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: name6 })
+      },
+      clearAll: () => core.invoke("bd_sandbox_clear_all"),
+      activeJobs: () => core.invoke("bd_sandbox_list_active"),
+      ttl: {
+        sweep: () => core.invoke("bd_sandbox_sweep"),
+        set: (minutes) => core.invoke("bd_sandbox_set_ttl_minutes", { minutes }),
+        get: () => core.invoke("bd_sandbox_set_ttl_minutes")
+      },
+      concurrency: {
+        setLimit: (limit) => core.invoke("bd_sandbox_set_concurrency_limit", { limit }),
+        get: () => core.invoke("bd_sandbox_get_concurrency")
+      }
+    };
+  }
+
   // ../src-ts/bridge.ts
   (() => {
     if (typeof window === "undefined" || window.Bubbledesk) return;
@@ -17098,7 +17121,8 @@ This typically indicates that your device does not have a healthy Internet conne
       diagnostics: buildDiagnostics(core),
       network: buildNetwork(core),
       autostart: buildAutostart(core),
-      badge: buildBadge(core)
+      badge: buildBadge(core),
+      sandbox: buildSandbox(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,

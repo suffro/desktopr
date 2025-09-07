@@ -13,3 +13,4 @@ export * from "./modules/diagnostics/_types";
 export * from "./modules/menu/_types";
 export * from "./modules/autostart/_types";
 export * from "./modules/badge/_types";
+export * from "./modules/sandbox/_types";

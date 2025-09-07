@@ -13,6 +13,7 @@ pub mod diagnostics;
 pub mod network;
 pub mod autostart;
 pub mod badge;
+pub mod sandbox;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -28,3 +29,4 @@ pub use diagnostics::*;
 pub use network::*;
 pub use autostart::*;
 pub use badge::*;
+pub use sandbox::*;

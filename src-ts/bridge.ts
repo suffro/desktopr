@@ -14,7 +14,8 @@ import {
     buildDiagnostics,
     buildNetwork,
     buildAutostart,
-    buildBadge
+    buildBadge,
+    buildSandbox
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
@@ -44,7 +45,8 @@ import { tauriReadyCheck, waitTauri } from "@helpers";
     diagnostics:   buildDiagnostics(core),
     network:       buildNetwork(core),
     autostart:     buildAutostart(core),
-    badge:         buildBadge(core)
+    badge:         buildBadge(core),
+    sandbox:       buildSandbox(core)
   };
 
   Object.defineProperty(window, "Bubbledesk", {
