@@ -17080,7 +17080,9 @@ This typically indicates that your device does not have a healthy Internet conne
       run: (input) => core.invoke("bd_sandbox_run", { input }),
       modules: {
         list: () => core.invoke("bd_sandbox_list_modules"),
-        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: name6 })
+        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: name6 }),
+        addFromBytes: (name6, contents) => core.invoke("bd_sandbox_save_module", { name: name6, contents }),
+        add: (name6, maxBytes) => core.invoke("bd_sandbox_pick_and_save_module", { maxBytes, defaultName: name6 })
       },
       clearAll: () => core.invoke("bd_sandbox_clear_all"),
       activeJobs: () => core.invoke("bd_sandbox_list_active"),

@@ -19,8 +19,8 @@ use anyhow::{anyhow, Context, Result};
 // Wasmtime/WASI (Preview1 in wasmtime-wasi 19.x)
 use wasmtime::{Config, Engine, Linker, Module, Store};
 use wasmtime_wasi::{WasiCtxBuilder, DirPerms, FilePerms, I32Exit};
-use wasmtime_wasi::preview1::{add_to_linker_sync};
-use wasmtime_wasi::WasiP1Ctx;
+use wasmtime_wasi::preview1::add_to_linker_sync;
+use wasmtime_wasi::WasiP1Ctx; // exported when feature "preview1" is enabled
 // Stdio virtual pipes (implement the required traits for WasiCtxBuilder)
 use wasmtime_wasi::pipe::{MemoryInputPipe, MemoryOutputPipe};
 use bytes::Bytes;
@@ -30,6 +30,8 @@ use wasi_common::sync::Dir as WasiSyncDir;
 // Helpers
 use once_cell::sync::Lazy;
 use rand::{distributions::Alphanumeric, Rng};
+// Reuse the file-open helper to pick a .wasm and read bytes
+use crate::bridge::files::bd_file_open_with_bytes;
 
 /// Store data: holds WASI context + optional limiter so we can hand
 /// a &'static lifetime to wasmtime via a reference into store data.
@@ -67,6 +69,15 @@ pub struct SandboxRunInput {
     pub stdin: Option<String>,
     pub caps: Option<SandboxCaps>,
     pub working_dir: Option<String>,         // set to "_sandbox/<jobId>"
+}
+
+/// Unified call input: send JSON to stdin, expect JSON on stdout.
+#[derive(Debug, Deserialize, Clone)]
+pub struct SandboxCallInputJson {
+    pub module_path: String,                  // e.g. "_external_modules/my.wasm" or "mylib.wasm"
+    pub payload: serde_json::Value,           // arbitrary JSON to send to stdin
+    pub caps: Option<SandboxCaps>,            // optional limits (timeout/mem/stdout cap)
+    pub env: Option<std::collections::HashMap<String, String>>, // optional env
 }
 
 #[derive(Debug, Serialize, Default, Clone)]
@@ -386,6 +397,56 @@ fn run_wasi_module(app: &AppHandle, job_id: &str, input: SandboxRunInput) -> Res
 /// Tauri commands
 /// ======================================================
 
+/// Single high-level command: send JSON to `_start` and return parsed JSON/stdout/stderr.
+#[tauri::command]
+pub async fn bd_sandbox_call(app: AppHandle, input: SandboxCallInputJson) -> Result<serde_json::Value, String> {
+    // Concurrency gate
+    let limit = CONCURRENCY_LIMIT.load(Ordering::SeqCst);
+    let prev = RUNNING_JOBS.fetch_add(1, Ordering::SeqCst);
+    if prev >= limit {
+        RUNNING_JOBS.fetch_sub(1, Ordering::SeqCst);
+        return Err(format!("sandbox is busy: {prev} running, limit={limit}"));
+    }
+
+    // Ensure base dirs and services
+    external_modules_dir(&app).map_err(|e| e.to_string())?;
+    sandbox_dir(&app).map_err(|e| e.to_string())?;
+    if let Err(e) = start_sandbox_janitor(&app) {
+        eprintln!("[sandbox] janitor start failed: {e}");
+    }
+
+    // Create job workspace
+    let job_id = gen_job_id();
+    let work_abs = job_sandbox_dir(&app, &job_id).map_err(|e| e.to_string())?;
+    let _ = fs::write(work_abs.join(".RUNNING"), b"");
+
+    // Build SandboxRunInput from JSON payload
+    let stdin_str = serde_json::to_string(&input.payload).map_err(|e| e.to_string())?;
+    let run_input = SandboxRunInput {
+        module_path: input.module_path.clone(),
+        args: Some(vec![]),
+        env: input.env.clone(),
+        stdin: Some(stdin_str),
+        caps: input.caps.clone(),
+        working_dir: Some(work_abs.to_string_lossy().to_string()),
+    };
+
+    // Execute
+    let res = run_wasi_module(&app, &job_id, run_input);
+
+    // Cleanup ONLY this job workspace
+    let _ = fs::remove_file(work_abs.join(".RUNNING"));
+    let _ = fs::remove_dir_all(&work_abs);
+
+    // Decrement running counter
+    RUNNING_JOBS.fetch_sub(1, Ordering::SeqCst);
+
+    // Return
+    let out = res.map_err(|e| e.to_string())?;
+    serde_json::to_value(out).map_err(|e| e.to_string())
+}
+
+/// Legacy command kept for backward-compat (optional).
 #[tauri::command]
 pub async fn bd_sandbox_run(app: AppHandle, input: serde_json::Value) -> Result<serde_json::Value, String> {
     let limit = CONCURRENCY_LIMIT.load(Ordering::SeqCst);
@@ -439,6 +500,57 @@ pub fn bd_sandbox_save_module(app: AppHandle, name: String, contents: Vec<u8>) -
     if let Some(parent) = target.parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
     fs::write(&target, &contents).map_err(|e| e.to_string())?;
     Ok(true)
+}
+
+/// Opens a file dialog (filtered to .wasm), reads bytes via `bd_file_open_with_bytes`,
+/// and saves (overwrites if exists) the selected module into `_external_modules`.
+/// If `default_name` is None, it uses the picked file's basename.
+#[tauri::command]
+pub async fn bd_sandbox_pick_and_save_module(
+    app: AppHandle,
+    default_name: Option<String>,
+    max_bytes: Option<u64>,
+) -> Result<serde_json::Value, String> {
+    // 1) Ask user to pick exactly one .wasm file and read it as bytes
+    let allowed = Some(vec!["wasm".to_string()]);
+    let picked = bd_file_open_with_bytes(app.clone(), /* multi */ false, allowed, max_bytes)
+        .await?;
+
+    let file = match picked.files.into_iter().next() {
+        Some(f) => f,
+        None => return Err("no file selected".into()),
+    };
+
+    // 2) Determine target name: default_name or basename of picked path
+    let name = match default_name {
+        Some(n) if !n.trim().is_empty() => n,
+        _ => {
+            Path::new(&file.path)
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .filter(|s| !s.is_empty())
+                .ok_or_else(|| "cannot derive file name".to_string())?
+        }
+    };
+
+    // 3) Save/overwrite into _external_modules
+    let base = external_modules_dir(&app).map_err(|e| e.to_string())?;
+    if name.contains(std::path::is_separator) {
+        return Err("Invalid module name".into());
+    }
+    let target = base.join(&name);
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    fs::write(&target, &file.bytes).map_err(|e| e.to_string())?;
+
+    // 4) Return a small JSON summary
+    Ok(serde_json::json!({
+        "saved": true,
+        "name": name,
+        "path": target.to_string_lossy(),
+        "bytes": file.bytes.len(),
+    }))
 }
 
 #[tauri::command]

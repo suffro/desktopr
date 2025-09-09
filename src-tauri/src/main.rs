@@ -205,6 +205,11 @@ fn main() {
       bd_get_autostart_mode, bd_set_autostart_mode, bd_autostart_enable, bd_autostart_disable, bd_autostart_status,
       // badge
       bd_badge_set, bd_badge_clear,
+      // sandbox
+      bd_sandbox_call, bd_sandbox_run, bd_sandbox_list_modules, bd_sandbox_save_module,
+      bd_sandbox_pick_and_save_module, bd_sandbox_delete_module, bd_sandbox_remove_module, bd_sandbox_paths, bd_sandbox_clear_all,
+      bd_sandbox_cleanup_on_boot, bd_sandbox_list_active, bd_sandbox_sweep, bd_sandbox_set_concurrency_limit, bd_sandbox_get_concurrency,
+      bd_sandbox_set_ttl_minutes, bd_sandbox_get_ttl_minutes,
       // test commands (only in dev)
       #[cfg(debug_assertions)]
       bd_logs_test_record_n,
