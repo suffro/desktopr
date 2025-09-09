@@ -16751,6 +16751,19 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
+  // ../src-ts/modules/sandbox/_helpers.ts
+  var normalizeModuleName = (name6) => {
+    const sanitizeWasmExtensions = name6.replaceAll(".wasm", "");
+    const addWasmExtensions = `${sanitizeWasmExtensions}.wasm`;
+    return addWasmExtensions;
+  };
+  var normalizeModuleInput = (input) => {
+    let finalInput = input;
+    const modulePath = input.module_path;
+    finalInput.module_path = normalizeModuleName(modulePath);
+    return finalInput;
+  };
+
   // ../src-ts/_helpers.ts
   var tauriReadyCheck = () => typeof window !== "undefined" && window.__TAURI__ && window.Bubbledesk;
   var waitTauri = async () => {
@@ -17077,19 +17090,20 @@ This typically indicates that your device does not have a healthy Internet conne
   // ../src-ts/modules/sandbox/_main.ts
   function buildSandbox(core) {
     return {
-      run: (input) => core.invoke("bd_sandbox_run", { input }),
+      call: (input) => core.invoke("bd_sandbox_call", { input: normalizeModuleInput(input) }),
       modules: {
         list: () => core.invoke("bd_sandbox_list_modules"),
-        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: name6 }),
-        addFromBytes: (name6, contents) => core.invoke("bd_sandbox_save_module", { name: name6, contents }),
-        add: (name6, maxBytes) => core.invoke("bd_sandbox_pick_and_save_module", { maxBytes, defaultName: name6 })
+        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: normalizeModuleName(name6) }),
+        addFromBytes: (name6, contents) => core.invoke("bd_sandbox_save_module", { name: normalizeModuleName(name6), contents }),
+        add: (name6, maxBytes) => core.invoke("bd_sandbox_pick_and_save_module", { maxBytes, defaultName: normalizeModuleName(name6) })
       },
       clearAll: () => core.invoke("bd_sandbox_clear_all"),
+      paths: () => core.invoke("bd_sandbox_paths"),
       activeJobs: () => core.invoke("bd_sandbox_list_active"),
       ttl: {
         sweep: () => core.invoke("bd_sandbox_sweep"),
         set: (minutes) => core.invoke("bd_sandbox_set_ttl_minutes", { minutes }),
-        get: () => core.invoke("bd_sandbox_set_ttl_minutes")
+        get: () => core.invoke("bd_sandbox_get_ttl_minutes")
       },
       concurrency: {
         setLimit: (limit) => core.invoke("bd_sandbox_set_concurrency_limit", { limit }),

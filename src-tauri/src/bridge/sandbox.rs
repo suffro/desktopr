@@ -163,6 +163,43 @@ fn resolve_module_path(app: &AppHandle, module_path: &str) -> Result<PathBuf> {
     Ok(final_path)
 }
 
+// ---- WASM validators -------------------------------------------------------
+const WASM_MAGIC: [u8; 4] = [0x00, 0x61, 0x73, 0x6D]; // "\0asm"
+
+fn is_wasm_extension(path: &Path) -> bool {
+    path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.eq_ignore_ascii_case("wasm"))
+        .unwrap_or(false)
+}
+
+fn validate_wasm_file(path: &Path) -> Result<()> {
+    if !is_wasm_extension(path) {
+        return Err(anyhow!(
+            "invalid module: expected .wasm file (got {})",
+            path.display()
+        ));
+    }
+    let bytes = fs::read(path).with_context(|| format!("cannot read module: {}", path.display()))?;
+    if bytes.len() < 4 || &bytes[..4] != WASM_MAGIC {
+        return Err(anyhow!("invalid module: missing WASM magic header (\\0asm)"));
+    }
+    Ok(())
+}
+
+fn validate_wasm_name_and_bytes(name: &str, bytes: &[u8]) -> Result<()> {
+    // Validate extension using the provided name
+    let as_path = Path::new(name);
+    if !is_wasm_extension(as_path) {
+        return Err(anyhow!("invalid module name: expected .wasm extension"));
+    }
+    if bytes.len() < 4 || &bytes[..4] != WASM_MAGIC {
+        return Err(anyhow!("invalid module: missing WASM magic header (\\0asm)"));
+    }
+    Ok(())
+}
+
 /// ======================================================
 /// Resource limiter (memory)
 /// ======================================================
@@ -415,6 +452,19 @@ pub async fn bd_sandbox_call(app: AppHandle, input: SandboxCallInputJson) -> Res
         eprintln!("[sandbox] janitor start failed: {e}");
     }
 
+    // Validate module type (must be a valid WASM file)
+    let mod_abs = match resolve_module_path(&app, &input.module_path) {
+        Ok(p) => p,
+        Err(e) => {
+            RUNNING_JOBS.fetch_sub(1, Ordering::SeqCst);
+            return Err(e.to_string());
+        }
+    };
+    if let Err(e) = validate_wasm_file(&mod_abs) {
+        RUNNING_JOBS.fetch_sub(1, Ordering::SeqCst);
+        return Err(e.to_string());
+    }
+
     // Create job workspace
     let job_id = gen_job_id();
     let work_abs = job_sandbox_dir(&app, &job_id).map_err(|e| e.to_string())?;
@@ -496,6 +546,12 @@ pub fn bd_sandbox_list_modules(app: AppHandle) -> Result<Vec<String>, String> {
 pub fn bd_sandbox_save_module(app: AppHandle, name: String, contents: Vec<u8>) -> Result<bool, String> {
     let base = external_modules_dir(&app).map_err(|e| e.to_string())?;
     if name.contains(std::path::is_separator) { return Err("Invalid module name".into()); }
+
+    // Validate module kind before saving
+    if let Err(e) = validate_wasm_name_and_bytes(&name, &contents) {
+        return Err(e.to_string());
+    }
+
     let target = base.join(&name);
     if let Some(parent) = target.parent() { fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
     fs::write(&target, &contents).map_err(|e| e.to_string())?;

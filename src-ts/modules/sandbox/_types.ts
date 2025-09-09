@@ -1,7 +1,28 @@
 import { U64, U8 } from "suffro-lib";
 
+
+export type SandboxCaps = {
+  timeout_ms?: number;     // execution timeout in ms
+  memory_mb?: number;      // max linear memory in MB
+  cpu_fuel?: number;       // optional (may be ignored in some runtimes)
+  stdout_max_kb?: number;  // max stdout captured, in KB
+};
+
+export type SandboxCallPayload = {
+  fn: string;     // execution timeout in ms
+  args: number[];      // max linear memory in MB
+  [key: string]: any;       // optional (may be ignored in some runtimes)
+};
+
+export type SandboxCallInput = {
+  module_path: string;            // e.g. "bd_math_module.wasm"
+  payload: SandboxCallPayload;    // payload passed to stdin
+  caps?: SandboxCaps;             // optional execution caps
+  env?: Record<string, string>;   // optional environment variables
+};
+
 export interface SandboxInterface {
-    call: (input: string) => Promise<string>;
+    call: (input: SandboxCallInput) => Promise<string>;
     modules: {
         list: () => Promise<string[]>;
         remove: (name: string) => Promise<boolean>;
