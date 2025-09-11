@@ -66,6 +66,12 @@ export function buildFs(core: { invoke: BubbledeskAPI["invoke"] }): FsInterface 
       exists: async (rel: string = "") => core.invoke<boolean>("bd_fs_diagnostics_exists", { rel }),
       readText: async (rel: string) => core.invoke<string>("bd_fs_diagnostics_read_text", { rel }),
       readBytes: async (rel: string) => core.invoke<string>("bd_fs_diagnostics_read_bytes", { rel }),
+    },
+    sandbox: {
+      readText: async (jobId: string, rel: string): Promise<string> => core.invoke("bd_fs_sandbox_read_text", {jobId, rel}),
+      getStdin: async (jobId: string): Promise<string> => core.invoke("bd_fs_sandbox_read_stdin", {jobId}),
+      getMeta: async (jobId: string): Promise<string> => core.invoke("bd_fs_sandbox_read_meta", {jobId}),
+      listContent: async (jobId: string, rel: string = "") => core.invoke<FsEntry[]>("bd_fs_sandbox_list_dir", { jobId, rel }),
     }
   };
 }

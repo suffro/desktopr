@@ -301,15 +301,27 @@ fn run_wasi_module(app: &AppHandle, job_id: &str, input: SandboxRunInput) -> Res
         w
     };
 
+    // Debug artifacts: save stdin and metadata into the job workspace
+    let _ = fs::write(work_abs.join("_stdin.json"), input.stdin.clone().unwrap_or_default());
+    let _ = fs::write(
+        work_abs.join("_meta.txt"),
+        format!(
+            "module_path={}\nargs={:?}\nenv-keys={:?}\n",
+            module_path.display(),
+            input.args,
+            input.env.as_ref().map(|m| m.keys().cloned().collect::<Vec<_>>())
+        ),
+    );
+
     // Stdio pipes
     let stdin_bytes = Bytes::from(input.stdin.clone().unwrap_or_default().into_bytes());
     let stdin_pipe  = MemoryInputPipe::new(stdin_bytes);
-    let stdout_pipe = MemoryOutputPipe::new(1024 * 1024); // 1 MiB
-    let stderr_pipe = MemoryOutputPipe::new(512 * 1024);  // 512 KiB
+    let stdout_pipe = MemoryOutputPipe::new(4 * 1024 * 1024); // 4 MiB (avoid backpressure stalls)
+    let stderr_pipe = MemoryOutputPipe::new(1 * 1024 * 1024); // 1 MiB
 
-    // Wasmtime config
+    // Wasmtime config (fuel disabled; we rely on epoch interruption for timeouts)
     let mut cfg = Config::new();
-    cfg.consume_fuel(true);
+    // cfg.consume_fuel(true); // disabled: no fuel accounting in this build
     cfg.wasm_multi_value(true);
     cfg.epoch_interruption(true);
 
@@ -348,7 +360,10 @@ fn run_wasi_module(app: &AppHandle, job_id: &str, input: SandboxRunInput) -> Res
 
     // Store + memory limiter
     let mut store = Store::new(&engine, StoreState { wasi: wasi_ctx, limiter: None });
-    // NOTE: to avoid version-gating issues, we omit `store.add_fuel(...)` here.
+    // Ensure epoch interruption actually interrupts by setting a small deadline.
+    // The engine thread will increment the epoch after `timeout_ms`.
+    store.set_epoch_deadline(1);
+
     if let Some(mb) = caps.memory_mb {
         let maxb = mb.saturating_mul(1024 * 1024);
         store.data_mut().limiter = Some(StoreLimiter { max_memory_bytes: maxb });
@@ -364,7 +379,11 @@ fn run_wasi_module(app: &AppHandle, job_id: &str, input: SandboxRunInput) -> Res
         let engine_clone = engine.clone();
         thread::spawn(move || {
             thread::sleep(Duration::from_millis(ms));
-            engine_clone.increment_epoch();
+            // Nudge the engine multiple times to ensure the trap is observed
+            for _ in 0..8 {
+                engine_clone.increment_epoch();
+                thread::sleep(Duration::from_millis(2));
+            }
         });
     }
 
@@ -470,8 +489,16 @@ pub async fn bd_sandbox_call(app: AppHandle, input: SandboxCallInputJson) -> Res
     let work_abs = job_sandbox_dir(&app, &job_id).map_err(|e| e.to_string())?;
     let _ = fs::write(work_abs.join(".RUNNING"), b"");
 
+    let payload = if let Some(s) = input.payload.as_str() {
+        // try to parse if it's a string containing JSON
+        serde_json::from_str::<serde_json::Value>(s).unwrap_or(input.payload.clone())
+    } else {
+        input.payload.clone()
+    };
+
     // Build SandboxRunInput from JSON payload
-    let stdin_str = serde_json::to_string(&input.payload).map_err(|e| e.to_string())?;
+    let stdin_str = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
+
     let run_input = SandboxRunInput {
         module_path: input.module_path.clone(),
         args: Some(vec![]),

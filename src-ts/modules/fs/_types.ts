@@ -64,4 +64,10 @@ export type FsEntry = {
       readText: (rel: string) => Promise<string>;
       readBytes: (rel: string) => Promise<string>;
     };
+    sandbox: {
+        readText: (jobId: string, rel: string) => Promise<string>;
+        getStdin: (jobId: string) => Promise<string>;
+        getMeta: (jobId: string) => Promise<string>;
+        listContent: (jobId: string, rel?: string) => Promise<FsEntry[]>;
+    };
   };

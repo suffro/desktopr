@@ -194,6 +194,7 @@ fn main() {
       // fs diagnostics
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
+      bd_fs_sandbox_read_stdin, bd_fs_sandbox_read_meta, bd_fs_sandbox_read_text,
       // menu
       bd_menu_set_enabled, bd_menu_set_checked,
       // diagnostics

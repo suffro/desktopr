@@ -4,7 +4,7 @@ import { U64, U8 } from "suffro-lib";
 export type SandboxCaps = {
   timeout_ms?: number;     // execution timeout in ms
   memory_mb?: number;      // max linear memory in MB
-  cpu_fuel?: number;       // optional (may be ignored in some runtimes)
+  // cpu_fuel?: number;       // optional (may be ignored in some runtimes) [DEPRECATED]
   stdout_max_kb?: number;  // max stdout captured, in KB
 };
 
@@ -47,16 +47,4 @@ export interface SandboxInterface {
             running: number;
         }>;
     };
-}
-
-export type ModuleMethodInput = {
-  "modulePath": string,
-  "export": string,                // nome della funzione esportata
-  "args": any[],                // argomenti
-  "argTypes": string[],     // tipi: i32 | i64 | f32 | f64
-  "env"?: any,        // opzionale
-  "caps": {                       // opzionale: timeout/mem
-    "timeoutMs": 5000,
-    "memoryMb": 64
-  }
 }

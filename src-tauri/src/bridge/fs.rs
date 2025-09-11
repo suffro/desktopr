@@ -806,3 +806,92 @@ pub fn bd_fs_diagnostics_exists(app: AppHandle, rel: String) -> Result<bool, Str
   let p = safe_join(&diag, &rel)?;
   Ok(p.exists())
 }
+
+
+/* =========================
+   SANBOX: helper e comandi
+   ========================= */
+
+// Directory _sandbox a pari livello di data e cache.
+// Implementazione: prendo la data dir e uso il suo parent per creare "_sandbox".
+fn sandbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
+  let data = ensure_base_exists(app, true)?;
+  let parent = data.parent()
+    .ok_or_else(|| "Impossibile calcolare la directory parent per _sandbox".to_string())?;
+  let sandbox_dir_base = parent.join("_sandbox");
+  if !sandbox_dir_base.exists() {
+    std::fs::create_dir_all(&sandbox_dir_base).map_err(|e| e.to_string())?;
+  }
+  Ok(sandbox_dir_base)
+}
+
+// Read text nel contesto _sanbox
+#[tauri::command]
+pub fn bd_fs_sandbox_read_text(app: AppHandle, job_id: String, rel: String) -> Result<String, String> {
+  let sandbox_dir_base = sandbox_dir(&app)?;
+  let rel_path = format!("{}/{}", job_id, rel);
+  let p = safe_join(&sandbox_dir_base, &rel_path)?;
+  if !p.exists() {
+    return Err("No such file or directory in sandbox".into());
+  }
+  if p.is_dir() {
+    return Err("Path is a directory".into());
+  }
+  std::fs::read_to_string(p).map_err(|e| e.to_string())
+}
+
+// Read meta.txt nel contesto _sanbox
+#[tauri::command]
+pub fn bd_fs_sandbox_read_meta(app: AppHandle, job_id: String) -> Result<String, String> {
+  let sandbox_dir_base = sandbox_dir(&app)?;
+  let rel = format!("{}/{}", job_id, ("_meta.txt".to_string()));
+  let p = safe_join(&sandbox_dir_base, &rel)?;
+  if !p.exists() {
+    return Err("No such file or directory in sandbox".into());
+  }
+  if p.is_dir() {
+    return Err("Path is a directory".into());
+  }
+  std::fs::read_to_string(p).map_err(|e| e.to_string())
+}
+
+// Read stdin.json nel contesto _sanbox
+#[tauri::command]
+pub fn bd_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String, String> {
+  let sandbox_dir_base = sandbox_dir(&app)?;
+  let rel = format!("{}/{}", job_id, ("_stdin.json".to_string()));
+  let p = safe_join(&sandbox_dir_base, &rel)?;
+  if !p.exists() {
+    return Err("No such file or directory in sandbox".into());
+  }
+  if p.is_dir() {
+    return Err("Path is a directory".into());
+  }
+  std::fs::read_to_string(p).map_err(|e| e.to_string())
+}
+
+
+// ---- LIST DIR nel contesto _sandbox ----
+#[tauri::command]
+pub fn bd_fs_sandbox_list_dir(app: AppHandle, job_id: String, rel: String) -> Result<Vec<FsEntry>, String> {
+  let sandbox_dir_base = sandbox_dir(&app)?;
+  let rel_path = format!("{}/{}", job_id, rel);
+  let dir = {
+    let p = safe_join(&sandbox_dir_base, &rel_path)?;
+    if !p.exists() {
+      return Err("No such file or directory in sandbox".into());
+    }
+    p
+  };
+  let mut out = Vec::new();
+  for e in fs::read_dir(&dir).map_err(|e| e.to_string())? {
+      let e = e.map_err(|e| e.to_string())?;
+      let md = e.metadata().map_err(|e| e.to_string())?;
+      let is_dir = md.is_dir();
+      let size = if md.is_file() { Some(md.len()) } else { None };
+      let name = e.file_name().to_string_lossy().into_owned();
+      let path_str = e.path().to_string_lossy().into_owned();
+      out.push(FsEntry { name, path: path_str, is_dir, size });
+  }
+  Ok(out)
+}
