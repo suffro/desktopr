@@ -1,16 +1,27 @@
 {
-    "scripts": {
-        "devconf": "bash scripts/dev-conf.sh",
-        "ts:compile": "npm run ts:compile --prefix src-tauri/",
-        "clean": "npm run clean --prefix src-tauri/",
-        "build": "npm run build --prefix src-tauri/",
-        "dev": "npm run dev --prefix src-tauri/",
-        "build:log": "npm run build:log --prefix src-tauri/",
-        "dev:log": "npm run dev:log --prefix src-tauri/",
-        "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
-    },
-    "dependencies": {
-        "suffro-lib": "git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main",
-        "typescript": "^5.9.2"
-    }
+  "devDependencies": {
+    "esbuild": "^0.20.2"
+  },
+  "scripts": {
+    "devconf": "bash scripts/dev-conf.sh",
+    "ts:compile": "npm run ts:compile --prefix src-tauri/",
+    "build:worker": "npm run build:worker --prefix src-tauri/",
+    "clean": "npm run clean --prefix src-tauri/",
+    "clean:deep": "npm run clean:deep --prefix src-tauri/",
+    "build": "npm install && npm run build --prefix src-tauri/",
+    "dev:keepsandbox": "npm run dev:keepsandbox --prefix src-tauri/",
+    "dev": "npm run dev --prefix src-tauri/",
+    "dev:clean": "npm run dev:clean --prefix src-tauri/",
+    "build:clean": "npm run build:clean --prefix src-tauri/",
+    "build:log": "npm run build:log --prefix src-tauri/",
+    "dev:log": "npm run dev:log --prefix src-tauri/",
+    "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@wasmer/wasi": "^1.2.2",
+    "buffer": "^6.0.3",
+    "suffro-lib": "git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main",
+    "typescript": "^5.9.2"
+  }
 }

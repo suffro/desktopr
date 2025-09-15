@@ -1,0 +1,10 @@
+{
+  "identifier": "bd-worker",
+  "description": "Permessi minimi per la webview nascosta bd-worker",
+  "platforms": ["linux", "macOS", "windows"],
+  "windows": ["bd-worker"],
+  "permissions": [
+    "core:default",
+    "core:event:default"
+  ]
+}

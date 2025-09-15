@@ -16,3 +16,13 @@ export const normalizeModuleInput = (input: SandboxCallInput): SandboxCallInput 
     // console.log("[input]",finalInput);
     return finalInput;
 }
+
+export const joinRelativePathToJob = (jobId: string, rel?: string): string => {
+    const cleanJobId = jobId.replaceAll(" ","");
+    const cleanRel = (rel??"").replaceAll(" ","");
+
+    if(!validate.nonEmptyString(cleanJobId)) throw("Invalid job Id");
+    
+    if(validate.nonEmptyString(cleanRel)) return `${cleanJobId}/${cleanRel}`;
+    else return cleanJobId;
+}

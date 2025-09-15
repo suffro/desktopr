@@ -827,10 +827,9 @@ fn sandbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
 
 // Read text nel contesto _sanbox
 #[tauri::command]
-pub fn bd_fs_sandbox_read_text(app: AppHandle, job_id: String, rel: String) -> Result<String, String> {
+pub fn bd_fs_sandbox_read_text(app: AppHandle, rel: String) -> Result<String, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
-  let rel_path = format!("{}/{}", job_id, rel);
-  let p = safe_join(&sandbox_dir_base, &rel_path)?;
+  let p = safe_join(&sandbox_dir_base, &rel)?;
   if !p.exists() {
     return Err("No such file or directory in sandbox".into());
   }
@@ -873,11 +872,10 @@ pub fn bd_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String
 
 // ---- LIST DIR nel contesto _sandbox ----
 #[tauri::command]
-pub fn bd_fs_sandbox_list_dir(app: AppHandle, job_id: String, rel: String) -> Result<Vec<FsEntry>, String> {
+pub fn bd_fs_sandbox_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
-  let rel_path = format!("{}/{}", job_id, rel);
   let dir = {
-    let p = safe_join(&sandbox_dir_base, &rel_path)?;
+    let p = safe_join(&sandbox_dir_base, &rel)?;
     if !p.exists() {
       return Err("No such file or directory in sandbox".into());
     }

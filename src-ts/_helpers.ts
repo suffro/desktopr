@@ -14,7 +14,8 @@ export * from "./modules/diagnostics/_helpers";
 export * from "./modules/network/_helpers";
 export * from "./modules/autostart/_helpers";
 export * from "./modules/badge/_helpers";
-export * from "./modules/sandbox/_helpers";
+export * from "./modules/worker/_helpers";
+export * from "./modules/contextMenu/_helpers";
 
 import { wait } from "suffro-lib";
 

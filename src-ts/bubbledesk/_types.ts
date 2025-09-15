@@ -10,7 +10,8 @@ import type {
   MenuInterface,
   DiagnosticsInterface,
   BadgeInterface,
-  SandboxInterface,
+  WorkerInterface,
+  ContextMenuInterface,
 } from "@types";
 import { AutostartInterface } from "modules/autostart/_types";
 import { NetworkInterface } from "modules/network/_types";
@@ -36,7 +37,8 @@ export type BubbledeskAPI = {
   network: NetworkInterface;
   autostart: AutostartInterface;
   badge: BadgeInterface;
-  sandbox: SandboxInterface;
+  worker: WorkerInterface;
+  contextMenu: ContextMenuInterface;
 };
 
 export interface BubbledeskInstanceInterface {

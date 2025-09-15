@@ -5554,7 +5554,7 @@ var Bridge = (() => {
           }
           const name6 = getCookieName(key);
           if (window.cookieStore) {
-            const cb = ((event) => {
+            const cb = (event) => {
               const changedCookie = event.changed.find((change) => change.name === name6);
               if (changedCookie) {
                 listener(changedCookie.value);
@@ -5563,7 +5563,7 @@ var Bridge = (() => {
               if (deletedCookie) {
                 listener(null);
               }
-            });
+            };
             const unsubscribe2 = () => window.cookieStore.removeEventListener("change", cb);
             this.listenerUnsubscribes.set(listener, unsubscribe2);
             return window.cookieStore.addEventListener("change", cb);
@@ -6704,14 +6704,17 @@ var Bridge = (() => {
 
   // ../src-ts/core/_helpers.ts
   function extractCore(source) {
-    if (!source) return null;
+    if (!source)
+      return null;
     if (typeof source === "object" && "invoke" in source) {
       const core = source;
-      if (typeof core.invoke === "function") return core;
+      if (typeof core.invoke === "function")
+        return core;
     }
     if (typeof source === "object" && "core" in source) {
       const maybe = source.core;
-      if (maybe && typeof maybe.invoke === "function") return maybe;
+      if (maybe && typeof maybe.invoke === "function")
+        return maybe;
     }
     return null;
   }
@@ -6719,8 +6722,10 @@ var Bridge = (() => {
     const deadline = Date.now() + 1e4;
     (function tick() {
       const core = extractCore(window?.__TAURI__);
-      if (core) return resolve(core);
-      if (Date.now() > deadline) return reject(new Error("Tauri core.invoke not available"));
+      if (core)
+        return resolve(core);
+      if (Date.now() > deadline)
+        return reject(new Error("Tauri core.invoke not available"));
       requestAnimationFrame(tick);
     })();
   });
@@ -6729,7 +6734,8 @@ var Bridge = (() => {
   var listenForEvent = async (event, handler) => {
     const tauri = window.__TAURI__;
     const eventApi = tauri?.event;
-    if (!eventApi?.listen) throw new Error("Tauri event API not available");
+    if (!eventApi?.listen)
+      throw new Error("Tauri event API not available");
     const unlisten = await eventApi.listen(event, (e) => handler(e?.payload));
     return () => unlisten();
   };
@@ -6737,7 +6743,8 @@ var Bridge = (() => {
   // ../src-ts/modules/shortcuts/_helpers.ts
   var tauriGlobalShortcut = () => {
     const g = window.__TAURI__?.globalShortcut;
-    if (!g) throw new Error("Global Shortcut plugin not available");
+    if (!g)
+      throw new Error("Global Shortcut plugin not available");
     return g;
   };
 
@@ -7511,7 +7518,8 @@ ${this.customData.serverResponse}`;
       f.prototype = new c();
       f.prototype.constructor = f;
       f.C = function(d, e, g) {
-        for (var b = Array(arguments.length - 2), r = 2; r < arguments.length; r++) b[r - 2] = arguments[r];
+        for (var b = Array(arguments.length - 2), r = 2; r < arguments.length; r++)
+          b[r - 2] = arguments[r];
         return a.prototype[e].apply(d, b);
       };
     }
@@ -7537,8 +7545,12 @@ ${this.customData.serverResponse}`;
     function n(f, a, c) {
       c || (c = 0);
       var d = Array(16);
-      if ("string" === typeof a) for (var e = 0; 16 > e; ++e) d[e] = a.charCodeAt(c++) | a.charCodeAt(c++) << 8 | a.charCodeAt(c++) << 16 | a.charCodeAt(c++) << 24;
-      else for (e = 0; 16 > e; ++e) d[e] = a[c++] | a[c++] << 8 | a[c++] << 16 | a[c++] << 24;
+      if ("string" === typeof a)
+        for (var e = 0; 16 > e; ++e)
+          d[e] = a.charCodeAt(c++) | a.charCodeAt(c++) << 8 | a.charCodeAt(c++) << 16 | a.charCodeAt(c++) << 24;
+      else
+        for (e = 0; 16 > e; ++e)
+          d[e] = a[c++] | a[c++] << 8 | a[c++] << 16 | a[c++] << 24;
       a = f.g[0];
       c = f.g[1];
       e = f.g[2];
@@ -7678,19 +7690,24 @@ ${this.customData.serverResponse}`;
     m.prototype.u = function(f, a) {
       void 0 === a && (a = f.length);
       for (var c = a - this.blockSize, d = this.B, e = this.h, g = 0; g < a; ) {
-        if (0 == e) for (; g <= c; ) n(this, f, g), g += this.blockSize;
-        if ("string" === typeof f) for (; g < a; ) {
-          if (d[e++] = f.charCodeAt(g++), e == this.blockSize) {
-            n(this, d);
-            e = 0;
-            break;
+        if (0 == e)
+          for (; g <= c; )
+            n(this, f, g), g += this.blockSize;
+        if ("string" === typeof f)
+          for (; g < a; ) {
+            if (d[e++] = f.charCodeAt(g++), e == this.blockSize) {
+              n(this, d);
+              e = 0;
+              break;
+            }
           }
-        }
-        else for (; g < a; ) if (d[e++] = f[g++], e == this.blockSize) {
-          n(this, d);
-          e = 0;
-          break;
-        }
+        else
+          for (; g < a; )
+            if (d[e++] = f[g++], e == this.blockSize) {
+              n(this, d);
+              e = 0;
+              break;
+            }
       }
       this.h = e;
       this.o += a;
@@ -7698,12 +7715,16 @@ ${this.customData.serverResponse}`;
     m.prototype.v = function() {
       var f = Array((56 > this.h ? this.blockSize : 2 * this.blockSize) - this.h);
       f[0] = 128;
-      for (var a = 1; a < f.length - 8; ++a) f[a] = 0;
+      for (var a = 1; a < f.length - 8; ++a)
+        f[a] = 0;
       var c = 8 * this.o;
-      for (a = f.length - 8; a < f.length; ++a) f[a] = c & 255, c /= 256;
+      for (a = f.length - 8; a < f.length; ++a)
+        f[a] = c & 255, c /= 256;
       this.u(f);
       f = Array(16);
-      for (a = c = 0; 4 > a; ++a) for (var d = 0; 32 > d; d += 8) f[c++] = this.g[a] >>> d & 255;
+      for (a = c = 0; 4 > a; ++a)
+        for (var d = 0; 32 > d; d += 8)
+          f[c++] = this.g[a] >>> d & 255;
       return f;
     };
     function p(f, a) {
@@ -7725,17 +7746,24 @@ ${this.customData.serverResponse}`;
       }) : new t([f | 0], 0 > f ? -1 : 0);
     }
     function v(f) {
-      if (isNaN(f) || !isFinite(f)) return w;
-      if (0 > f) return x2(v(-f));
-      for (var a = [], c = 1, d = 0; f >= c; d++) a[d] = f / c | 0, c *= 4294967296;
+      if (isNaN(f) || !isFinite(f))
+        return w;
+      if (0 > f)
+        return x2(v(-f));
+      for (var a = [], c = 1, d = 0; f >= c; d++)
+        a[d] = f / c | 0, c *= 4294967296;
       return new t(a, 0);
     }
     function y(f, a) {
-      if (0 == f.length) throw Error("number format error: empty string");
+      if (0 == f.length)
+        throw Error("number format error: empty string");
       a = a || 10;
-      if (2 > a || 36 < a) throw Error("radix out of range: " + a);
-      if ("-" == f.charAt(0)) return x2(y(f.substring(1), a));
-      if (0 <= f.indexOf("-")) throw Error('number format error: interior "-" character');
+      if (2 > a || 36 < a)
+        throw Error("radix out of range: " + a);
+      if ("-" == f.charAt(0))
+        return x2(y(f.substring(1), a));
+      if (0 <= f.indexOf("-"))
+        throw Error('number format error: interior "-" character');
       for (var c = v(Math.pow(a, 8)), d = w, e = 0; e < f.length; e += 8) {
         var g = Math.min(8, f.length - e), b = parseInt(f.substring(e, e + g), a);
         8 > g ? (g = v(Math.pow(a, g)), d = d.j(g).add(v(b))) : (d = d.j(c), d = d.add(v(b)));
@@ -7745,7 +7773,8 @@ ${this.customData.serverResponse}`;
     var w = u(0), z = u(1), A = u(16777216);
     h = t.prototype;
     h.m = function() {
-      if (B2(this)) return -x2(this).m();
+      if (B2(this))
+        return -x2(this).m();
       for (var f = 0, a = 1, c = 0; c < this.g.length; c++) {
         var d = this.i(c);
         f += (0 <= d ? d : 4294967296 + d) * a;
@@ -7755,16 +7784,21 @@ ${this.customData.serverResponse}`;
     };
     h.toString = function(f) {
       f = f || 10;
-      if (2 > f || 36 < f) throw Error("radix out of range: " + f);
-      if (C(this)) return "0";
-      if (B2(this)) return "-" + x2(this).toString(f);
+      if (2 > f || 36 < f)
+        throw Error("radix out of range: " + f);
+      if (C(this))
+        return "0";
+      if (B2(this))
+        return "-" + x2(this).toString(f);
       for (var a = v(Math.pow(f, 6)), c = this, d = ""; ; ) {
         var e = D(c, a).g;
         c = F2(c, e.j(a));
         var g = ((0 < c.g.length ? c.g[0] : c.h) >>> 0).toString(f);
         c = e;
-        if (C(c)) return g + d;
-        for (; 6 > g.length; ) g = "0" + g;
+        if (C(c))
+          return g + d;
+        for (; 6 > g.length; )
+          g = "0" + g;
         d = g + d;
       }
     };
@@ -7772,8 +7806,11 @@ ${this.customData.serverResponse}`;
       return 0 > f ? 0 : f < this.g.length ? this.g[f] : this.h;
     };
     function C(f) {
-      if (0 != f.h) return false;
-      for (var a = 0; a < f.g.length; a++) if (0 != f.g[a]) return false;
+      if (0 != f.h)
+        return false;
+      for (var a = 0; a < f.g.length; a++)
+        if (0 != f.g[a])
+          return false;
       return true;
     }
     function B2(f) {
@@ -7784,7 +7821,8 @@ ${this.customData.serverResponse}`;
       return B2(f) ? -1 : C(f) ? 0 : 1;
     };
     function x2(f) {
-      for (var a = f.g.length, c = [], d = 0; d < a; d++) c[d] = ~f.g[d];
+      for (var a = f.g.length, c = [], d = 0; d < a; d++)
+        c[d] = ~f.g[d];
       return new t(c, ~f.h).add(z);
     }
     h.abs = function() {
@@ -7804,41 +7842,56 @@ ${this.customData.serverResponse}`;
       return f.add(x2(a));
     }
     h.j = function(f) {
-      if (C(this) || C(f)) return w;
-      if (B2(this)) return B2(f) ? x2(this).j(x2(f)) : x2(x2(this).j(f));
-      if (B2(f)) return x2(this.j(x2(f)));
-      if (0 > this.l(A) && 0 > f.l(A)) return v(this.m() * f.m());
-      for (var a = this.g.length + f.g.length, c = [], d = 0; d < 2 * a; d++) c[d] = 0;
-      for (d = 0; d < this.g.length; d++) for (var e = 0; e < f.g.length; e++) {
-        var g = this.i(d) >>> 16, b = this.i(d) & 65535, r = f.i(e) >>> 16, E = f.i(e) & 65535;
-        c[2 * d + 2 * e] += b * E;
-        G(c, 2 * d + 2 * e);
-        c[2 * d + 2 * e + 1] += g * E;
-        G(c, 2 * d + 2 * e + 1);
-        c[2 * d + 2 * e + 1] += b * r;
-        G(c, 2 * d + 2 * e + 1);
-        c[2 * d + 2 * e + 2] += g * r;
-        G(c, 2 * d + 2 * e + 2);
-      }
-      for (d = 0; d < a; d++) c[d] = c[2 * d + 1] << 16 | c[2 * d];
-      for (d = a; d < 2 * a; d++) c[d] = 0;
+      if (C(this) || C(f))
+        return w;
+      if (B2(this))
+        return B2(f) ? x2(this).j(x2(f)) : x2(x2(this).j(f));
+      if (B2(f))
+        return x2(this.j(x2(f)));
+      if (0 > this.l(A) && 0 > f.l(A))
+        return v(this.m() * f.m());
+      for (var a = this.g.length + f.g.length, c = [], d = 0; d < 2 * a; d++)
+        c[d] = 0;
+      for (d = 0; d < this.g.length; d++)
+        for (var e = 0; e < f.g.length; e++) {
+          var g = this.i(d) >>> 16, b = this.i(d) & 65535, r = f.i(e) >>> 16, E = f.i(e) & 65535;
+          c[2 * d + 2 * e] += b * E;
+          G(c, 2 * d + 2 * e);
+          c[2 * d + 2 * e + 1] += g * E;
+          G(c, 2 * d + 2 * e + 1);
+          c[2 * d + 2 * e + 1] += b * r;
+          G(c, 2 * d + 2 * e + 1);
+          c[2 * d + 2 * e + 2] += g * r;
+          G(c, 2 * d + 2 * e + 2);
+        }
+      for (d = 0; d < a; d++)
+        c[d] = c[2 * d + 1] << 16 | c[2 * d];
+      for (d = a; d < 2 * a; d++)
+        c[d] = 0;
       return new t(c, 0);
     };
     function G(f, a) {
-      for (; (f[a] & 65535) != f[a]; ) f[a + 1] += f[a] >>> 16, f[a] &= 65535, a++;
+      for (; (f[a] & 65535) != f[a]; )
+        f[a + 1] += f[a] >>> 16, f[a] &= 65535, a++;
     }
     function H2(f, a) {
       this.g = f;
       this.h = a;
     }
     function D(f, a) {
-      if (C(a)) throw Error("division by zero");
-      if (C(f)) return new H2(w, w);
-      if (B2(f)) return a = D(x2(f), a), new H2(x2(a.g), x2(a.h));
-      if (B2(a)) return a = D(f, x2(a)), new H2(x2(a.g), a.h);
+      if (C(a))
+        throw Error("division by zero");
+      if (C(f))
+        return new H2(w, w);
+      if (B2(f))
+        return a = D(x2(f), a), new H2(x2(a.g), x2(a.h));
+      if (B2(a))
+        return a = D(f, x2(a)), new H2(x2(a.g), a.h);
       if (30 < f.g.length) {
-        if (B2(f) || B2(a)) throw Error("slowDivide_ only works with positive integers.");
-        for (var c = z, d = a; 0 >= d.l(f); ) c = I(c), d = I(d);
+        if (B2(f) || B2(a))
+          throw Error("slowDivide_ only works with positive integers.");
+        for (var c = z, d = a; 0 >= d.l(f); )
+          c = I(c), d = I(d);
         var e = J(c, 1), g = J(d, 1);
         d = J(d, 2);
         for (c = J(c, 2); !C(d); ) {
@@ -7855,7 +7908,8 @@ ${this.customData.serverResponse}`;
         d = Math.ceil(Math.log(c) / Math.LN2);
         d = 48 >= d ? 1 : Math.pow(2, d - 48);
         g = v(c);
-        for (b = g.j(a); B2(b) || 0 < b.l(f); ) c -= d, g = v(c), b = g.j(a);
+        for (b = g.j(a); B2(b) || 0 < b.l(f); )
+          c -= d, g = v(c), b = g.j(a);
         C(g) && (g = z);
         e = e.add(g);
         f = F2(f, b);
@@ -7866,25 +7920,30 @@ ${this.customData.serverResponse}`;
       return D(this, f).h;
     };
     h.and = function(f) {
-      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++) c[d] = this.i(d) & f.i(d);
+      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++)
+        c[d] = this.i(d) & f.i(d);
       return new t(c, this.h & f.h);
     };
     h.or = function(f) {
-      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++) c[d] = this.i(d) | f.i(d);
+      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++)
+        c[d] = this.i(d) | f.i(d);
       return new t(c, this.h | f.h);
     };
     h.xor = function(f) {
-      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++) c[d] = this.i(d) ^ f.i(d);
+      for (var a = Math.max(this.g.length, f.g.length), c = [], d = 0; d < a; d++)
+        c[d] = this.i(d) ^ f.i(d);
       return new t(c, this.h ^ f.h);
     };
     function I(f) {
-      for (var a = f.g.length + 1, c = [], d = 0; d < a; d++) c[d] = f.i(d) << 1 | f.i(d - 1) >>> 31;
+      for (var a = f.g.length + 1, c = [], d = 0; d < a; d++)
+        c[d] = f.i(d) << 1 | f.i(d - 1) >>> 31;
       return new t(c, f.h);
     }
     function J(f, a) {
       var c = a >> 5;
       a %= 32;
-      for (var d = f.g.length - c, e = [], g = 0; g < d; g++) e[g] = 0 < a ? f.i(g + c) >>> a | f.i(g + c + 1) << 32 - a : f.i(g + c);
+      for (var d = f.g.length - c, e = [], g = 0; g < d; g++)
+        e[g] = 0 < a ? f.i(g + c) >>> a | f.i(g + c + 1) << 32 - a : f.i(g + c);
       return new t(e, f.h);
     }
     m.prototype.digest = m.prototype.v;
@@ -7917,7 +7976,8 @@ ${this.customData.serverResponse}`;
   var createWebChannelTransport;
   (function() {
     var h, aa = "function" == typeof Object.defineProperties ? Object.defineProperty : function(a, b, c) {
-      if (a == Array.prototype || a == Object.prototype) return a;
+      if (a == Array.prototype || a == Object.prototype)
+        return a;
       a[b] = c.value;
       return a;
     };
@@ -7925,25 +7985,28 @@ ${this.customData.serverResponse}`;
       a = ["object" == typeof globalThis && globalThis, a, "object" == typeof window && window, "object" == typeof self && self, "object" == typeof commonjsGlobal2 && commonjsGlobal2];
       for (var b = 0; b < a.length; ++b) {
         var c = a[b];
-        if (c && c.Math == Math) return c;
+        if (c && c.Math == Math)
+          return c;
       }
       throw Error("Cannot find global object");
     }
     var ca = ba(this);
     function da(a, b) {
-      if (b) a: {
-        var c = ca;
-        a = a.split(".");
-        for (var d = 0; d < a.length - 1; d++) {
-          var e = a[d];
-          if (!(e in c)) break a;
-          c = c[e];
+      if (b)
+        a: {
+          var c = ca;
+          a = a.split(".");
+          for (var d = 0; d < a.length - 1; d++) {
+            var e = a[d];
+            if (!(e in c))
+              break a;
+            c = c[e];
+          }
+          a = a[a.length - 1];
+          d = c[a];
+          b = b(d);
+          b != d && null != b && aa(c, a, { configurable: true, writable: true, value: b });
         }
-        a = a[a.length - 1];
-        d = c[a];
-        b = b(d);
-        b != d && null != b && aa(c, a, { configurable: true, writable: true, value: b });
-      }
     }
     function ea(a, b) {
       a instanceof String && (a += "");
@@ -7981,7 +8044,8 @@ ${this.customData.serverResponse}`;
       return a.call.apply(a.bind, arguments);
     }
     function ja(a, b, c) {
-      if (!a) throw Error();
+      if (!a)
+        throw Error();
       if (2 < arguments.length) {
         var d = Array.prototype.slice.call(arguments, 2);
         return function() {
@@ -8014,7 +8078,8 @@ ${this.customData.serverResponse}`;
       a.prototype = new c();
       a.prototype.constructor = a;
       a.Qb = function(d, e, f) {
-        for (var g = Array(arguments.length - 2), m = 2; m < arguments.length; m++) g[m - 2] = arguments[m];
+        for (var g = Array(arguments.length - 2), m = 2; m < arguments.length; m++)
+          g[m - 2] = arguments[m];
         return b.prototype[e].apply(d, g);
       };
     }
@@ -8022,7 +8087,8 @@ ${this.customData.serverResponse}`;
       const b = a.length;
       if (0 < b) {
         const c = Array(b);
-        for (let d = 0; d < b; d++) c[d] = a[d];
+        for (let d = 0; d < b; d++)
+          c[d] = a[d];
         return c;
       }
       return [];
@@ -8033,8 +8099,10 @@ ${this.customData.serverResponse}`;
         if (ha(d)) {
           const e = a.length || 0, f = d.length || 0;
           a.length = e + f;
-          for (let g = 0; g < f; g++) a[e + g] = d[g];
-        } else a.push(d);
+          for (let g = 0; g < f; g++)
+            a[e + g] = d[g];
+        } else
+          a.push(d);
       }
     }
     class na {
@@ -8065,14 +8133,17 @@ ${this.customData.serverResponse}`;
     };
     var pa = -1 != u().indexOf("Gecko") && !(-1 != u().toLowerCase().indexOf("webkit") && -1 == u().indexOf("Edge")) && !(-1 != u().indexOf("Trident") || -1 != u().indexOf("MSIE")) && -1 == u().indexOf("Edge");
     function qa(a, b, c) {
-      for (const d in a) b.call(c, a[d], d, a);
+      for (const d in a)
+        b.call(c, a[d], d, a);
     }
     function ra(a, b) {
-      for (const c in a) b.call(void 0, a[c], c, a);
+      for (const c in a)
+        b.call(void 0, a[c], c, a);
     }
     function sa(a) {
       const b = {};
-      for (const c in a) b[c] = a[c];
+      for (const c in a)
+        b[c] = a[c];
       return b;
     }
     const ta = "constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");
@@ -8080,15 +8151,18 @@ ${this.customData.serverResponse}`;
       let c, d;
       for (let e = 1; e < arguments.length; e++) {
         d = arguments[e];
-        for (c in d) a[c] = d[c];
-        for (let f = 0; f < ta.length; f++) c = ta[f], Object.prototype.hasOwnProperty.call(d, c) && (a[c] = d[c]);
+        for (c in d)
+          a[c] = d[c];
+        for (let f = 0; f < ta.length; f++)
+          c = ta[f], Object.prototype.hasOwnProperty.call(d, c) && (a[c] = d[c]);
       }
     }
     function va(a) {
       var b = 1;
       a = a.split(":");
       const c = [];
-      for (; 0 < b && a.length; ) c.push(a.shift()), b--;
+      for (; 0 < b && a.length; )
+        c.push(a.shift()), b--;
       a.length && c.push(a.join(":"));
       return c;
     }
@@ -8156,7 +8230,9 @@ ${this.customData.serverResponse}`;
       this.s || (this.s = true, this.N());
     };
     z.prototype.N = function() {
-      if (this.C) for (; this.C.length; ) this.C.shift()();
+      if (this.C)
+        for (; this.C.length; )
+          this.C.shift()();
     };
     function A(a, b) {
       this.type = a;
@@ -8166,8 +8242,9 @@ ${this.customData.serverResponse}`;
     A.prototype.h = function() {
       this.defaultPrevented = true;
     };
-    var Fa = (function() {
-      if (!k2.addEventListener || !Object.defineProperty) return false;
+    var Fa = function() {
+      if (!k2.addEventListener || !Object.defineProperty)
+        return false;
       var a = false, b = Object.defineProperty({}, "passive", { get: function() {
         a = true;
       } });
@@ -8179,7 +8256,7 @@ ${this.customData.serverResponse}`;
       } catch (c) {
       }
       return a;
-    })();
+    }();
     function C(a, b) {
       A.call(this, a ? a.type : "");
       this.relatedTarget = this.g = this.target = null;
@@ -8207,7 +8284,8 @@ ${this.customData.serverResponse}`;
             }
             e || (b = null);
           }
-        } else "mouseover" == c ? b = a.fromElement : "mouseout" == c && (b = a.toElement);
+        } else
+          "mouseover" == c ? b = a.fromElement : "mouseout" == c && (b = a.toElement);
         this.relatedTarget = b;
         d ? (this.clientX = void 0 !== d.clientX ? d.clientX : d.pageX, this.clientY = void 0 !== d.clientY ? d.clientY : d.pageY, this.screenX = d.screenX || 0, this.screenY = d.screenY || 0) : (this.clientX = void 0 !== a.clientX ? a.clientX : a.pageX, this.clientY = void 0 !== a.clientY ? a.clientY : a.pageY, this.screenX = a.screenX || 0, this.screenY = a.screenY || 0);
         this.button = a.button;
@@ -8273,34 +8351,43 @@ ${this.customData.serverResponse}`;
     function La(a, b, c, d) {
       for (var e = 0; e < a.length; ++e) {
         var f = a[e];
-        if (!f.da && f.listener == b && f.capture == !!c && f.ha == d) return e;
+        if (!f.da && f.listener == b && f.capture == !!c && f.ha == d)
+          return e;
       }
       return -1;
     }
     var Na = "closure_lm_" + (1e6 * Math.random() | 0), Oa = {};
     function Qa(a, b, c, d, e) {
-      if (d && d.once) return Ra(a, b, c, d, e);
+      if (d && d.once)
+        return Ra(a, b, c, d, e);
       if (Array.isArray(b)) {
-        for (var f = 0; f < b.length; f++) Qa(a, b[f], c, d, e);
+        for (var f = 0; f < b.length; f++)
+          Qa(a, b[f], c, d, e);
         return null;
       }
       c = Sa(c);
       return a && a[D] ? a.K(b, c, n(d) ? !!d.capture : !!d, e) : Ta(a, b, c, false, d, e);
     }
     function Ta(a, b, c, d, e, f) {
-      if (!b) throw Error("Invalid event type");
+      if (!b)
+        throw Error("Invalid event type");
       var g = n(e) ? !!e.capture : !!e, m = Ua(a);
       m || (a[Na] = m = new Ka(a));
       c = m.add(b, c, d, g, f);
-      if (c.proxy) return c;
+      if (c.proxy)
+        return c;
       d = Va();
       c.proxy = d;
       d.src = a;
       d.listener = c;
-      if (a.addEventListener) Fa || (e = g), void 0 === e && (e = false), a.addEventListener(b.toString(), d, e);
-      else if (a.attachEvent) a.attachEvent(Wa(b.toString()), d);
-      else if (a.addListener && a.removeListener) a.addListener(d);
-      else throw Error("addEventListener and attachEvent are unavailable.");
+      if (a.addEventListener)
+        Fa || (e = g), void 0 === e && (e = false), a.addEventListener(b.toString(), d, e);
+      else if (a.attachEvent)
+        a.attachEvent(Wa(b.toString()), d);
+      else if (a.addListener && a.removeListener)
+        a.addListener(d);
+      else
+        throw Error("addEventListener and attachEvent are unavailable.");
       return c;
     }
     function Va() {
@@ -8312,20 +8399,25 @@ ${this.customData.serverResponse}`;
     }
     function Ra(a, b, c, d, e) {
       if (Array.isArray(b)) {
-        for (var f = 0; f < b.length; f++) Ra(a, b[f], c, d, e);
+        for (var f = 0; f < b.length; f++)
+          Ra(a, b[f], c, d, e);
         return null;
       }
       c = Sa(c);
       return a && a[D] ? a.L(b, c, n(d) ? !!d.capture : !!d, e) : Ta(a, b, c, true, d, e);
     }
     function Ya(a, b, c, d, e) {
-      if (Array.isArray(b)) for (var f = 0; f < b.length; f++) Ya(a, b[f], c, d, e);
-      else (d = n(d) ? !!d.capture : !!d, c = Sa(c), a && a[D]) ? (a = a.i, b = String(b).toString(), b in a.g && (f = a.g[b], c = La(f, c, d, e), -1 < c && (Ja(f[c]), Array.prototype.splice.call(f, c, 1), 0 == f.length && (delete a.g[b], a.h--)))) : a && (a = Ua(a)) && (b = a.g[b.toString()], a = -1, b && (a = La(b, c, d, e)), (c = -1 < a ? b[a] : null) && Za(c));
+      if (Array.isArray(b))
+        for (var f = 0; f < b.length; f++)
+          Ya(a, b[f], c, d, e);
+      else
+        (d = n(d) ? !!d.capture : !!d, c = Sa(c), a && a[D]) ? (a = a.i, b = String(b).toString(), b in a.g && (f = a.g[b], c = La(f, c, d, e), -1 < c && (Ja(f[c]), Array.prototype.splice.call(f, c, 1), 0 == f.length && (delete a.g[b], a.h--)))) : a && (a = Ua(a)) && (b = a.g[b.toString()], a = -1, b && (a = La(b, c, d, e)), (c = -1 < a ? b[a] : null) && Za(c));
     }
     function Za(a) {
       if ("number" !== typeof a && a && !a.da) {
         var b = a.src;
-        if (b && b[D]) Ma(b.i, a);
+        if (b && b[D])
+          Ma(b.i, a);
         else {
           var c = a.type, d = a.proxy;
           b.removeEventListener ? b.removeEventListener(c, d, a.capture) : b.detachEvent ? b.detachEvent(Wa(c), d) : b.addListener && b.removeListener && b.removeListener(d);
@@ -8337,7 +8429,8 @@ ${this.customData.serverResponse}`;
       return a in Oa ? Oa[a] : Oa[a] = "on" + a;
     }
     function Xa(a, b) {
-      if (a.da) a = true;
+      if (a.da)
+        a = true;
       else {
         b = new C(b, this);
         var c = a.listener, d = a.ha || a.src;
@@ -8352,7 +8445,8 @@ ${this.customData.serverResponse}`;
     }
     var $a = "__closure_events_fn_" + (1e9 * Math.random() >>> 0);
     function Sa(a) {
-      if ("function" === typeof a) return a;
+      if ("function" === typeof a)
+        return a;
       a[$a] || (a[$a] = function(b) {
         return a.handleEvent(b);
       });
@@ -8371,32 +8465,40 @@ ${this.customData.serverResponse}`;
     };
     function F2(a, b) {
       var c, d = a.F;
-      if (d) for (c = []; d; d = d.F) c.push(d);
+      if (d)
+        for (c = []; d; d = d.F)
+          c.push(d);
       a = a.M;
       d = b.type || b;
-      if ("string" === typeof b) b = new A(b, a);
-      else if (b instanceof A) b.target = b.target || a;
+      if ("string" === typeof b)
+        b = new A(b, a);
+      else if (b instanceof A)
+        b.target = b.target || a;
       else {
         var e = b;
         b = new A(d, a);
         ua(b, e);
       }
       e = true;
-      if (c) for (var f = c.length - 1; 0 <= f; f--) {
-        var g = b.g = c[f];
-        e = ab(g, d, true, b) && e;
-      }
+      if (c)
+        for (var f = c.length - 1; 0 <= f; f--) {
+          var g = b.g = c[f];
+          e = ab(g, d, true, b) && e;
+        }
       g = b.g = a;
       e = ab(g, d, true, b) && e;
       e = ab(g, d, false, b) && e;
-      if (c) for (f = 0; f < c.length; f++) g = b.g = c[f], e = ab(g, d, false, b) && e;
+      if (c)
+        for (f = 0; f < c.length; f++)
+          g = b.g = c[f], e = ab(g, d, false, b) && e;
     }
     E.prototype.N = function() {
       E.aa.N.call(this);
       if (this.i) {
         var a = this.i, c;
         for (c in a.g) {
-          for (var d = a.g[c], e = 0; e < d.length; e++) Ja(d[e]);
+          for (var d = a.g[c], e = 0; e < d.length; e++)
+            Ja(d[e]);
           delete a.g[c];
           a.h--;
         }
@@ -8411,7 +8513,8 @@ ${this.customData.serverResponse}`;
     };
     function ab(a, b, c, d) {
       b = a.i.g[String(b)];
-      if (!b) return true;
+      if (!b)
+        return true;
       b = b.concat();
       for (var e = true, f = 0; f < b.length; ++f) {
         var g = b[f];
@@ -8424,9 +8527,12 @@ ${this.customData.serverResponse}`;
       return e && !d.defaultPrevented;
     }
     function bb(a, b, c) {
-      if ("function" === typeof a) c && (a = p(a, c));
-      else if (a && "function" == typeof a.handleEvent) a = p(a.handleEvent, a);
-      else throw Error("Invalid listener argument");
+      if ("function" === typeof a)
+        c && (a = p(a, c));
+      else if (a && "function" == typeof a.handleEvent)
+        a = p(a.handleEvent, a);
+      else
+        throw Error("Invalid listener argument");
       return 2147483647 < Number(b) ? -1 : k2.setTimeout(a, b || 0);
     }
     function cb(a) {
@@ -8533,7 +8639,8 @@ ${this.customData.serverResponse}`;
     }
     r(tb, A);
     function ub(a, b) {
-      if ("function" !== typeof a) throw Error("Fn must not be null and must be a function");
+      if ("function" !== typeof a)
+        throw Error("Fn must not be null and must be a function");
       return k2.setTimeout(function() {
         a();
       }, b);
@@ -8546,19 +8653,22 @@ ${this.customData.serverResponse}`;
     };
     function wb(a, b, c, d, e, f) {
       a.info(function() {
-        if (a.g) if (f) {
-          var g = "";
-          for (var m = f.split("&"), q2 = 0; q2 < m.length; q2++) {
-            var l = m[q2].split("=");
-            if (1 < l.length) {
-              var v = l[0];
-              l = l[1];
-              var w = v.split("_");
-              g = 2 <= w.length && "type" == w[1] ? g + (v + "=" + l + "&") : g + (v + "=redacted&");
+        if (a.g)
+          if (f) {
+            var g = "";
+            for (var m = f.split("&"), q2 = 0; q2 < m.length; q2++) {
+              var l = m[q2].split("=");
+              if (1 < l.length) {
+                var v = l[0];
+                l = l[1];
+                var w = v.split("_");
+                g = 2 <= w.length && "type" == w[1] ? g + (v + "=" + l + "&") : g + (v + "=redacted&");
+              }
             }
-          }
-        } else g = null;
-        else g = f;
+          } else
+            g = null;
+        else
+          g = f;
         return "XMLHTTP REQ (" + d + ") [attempt " + e + "]: " + b + "\n" + c + "\n" + g;
       });
     }
@@ -8580,21 +8690,26 @@ ${this.customData.serverResponse}`;
     vb.prototype.info = function() {
     };
     function yb(a, b) {
-      if (!a.g) return b;
-      if (!b) return null;
+      if (!a.g)
+        return b;
+      if (!b)
+        return null;
       try {
         var c = JSON.parse(b);
         if (c) {
-          for (a = 0; a < c.length; a++) if (Array.isArray(c[a])) {
-            var d = c[a];
-            if (!(2 > d.length)) {
-              var e = d[1];
-              if (Array.isArray(e) && !(1 > e.length)) {
-                var f = e[0];
-                if ("noop" != f && "stop" != f && "close" != f) for (var g = 1; g < e.length; g++) e[g] = "";
+          for (a = 0; a < c.length; a++)
+            if (Array.isArray(c[a])) {
+              var d = c[a];
+              if (!(2 > d.length)) {
+                var e = d[1];
+                if (Array.isArray(e) && !(1 > e.length)) {
+                  var f = e[0];
+                  if ("noop" != f && "stop" != f && "close" != f)
+                    for (var g = 1; g < e.length; g++)
+                      e[g] = "";
+                }
               }
             }
-          }
         }
         return hb(c);
       } catch (m) {
@@ -8667,7 +8782,8 @@ ${this.customData.serverResponse}`;
       Array.isArray(e) || (e && (fb[0] = e.toString()), e = fb);
       for (var f = 0; f < e.length; f++) {
         var g = Qa(c, e[f], d || b.handleEvent, false, b.h || b);
-        if (!g) break;
+        if (!g)
+          break;
         b.g[g.key] = g;
       }
       b = a.H ? sa(a.H) : {};
@@ -8687,87 +8803,97 @@ ${this.customData.serverResponse}`;
     };
     M2.prototype.Y = function(a) {
       try {
-        if (a == this.g) a: {
-          const w = P(this.g);
-          var b = this.g.Ba();
-          const O2 = this.g.Z();
-          if (!(3 > w) && (3 != w || this.g && (this.h.h || this.g.oa() || Nb(this.g)))) {
-            this.J || 4 != w || 7 == b || (8 == b || 0 >= O2 ? J(3) : J(2));
-            Ob(this);
-            var c = this.g.Z();
-            this.X = c;
-            b: if (Pb(this)) {
-              var d = Nb(this.g);
-              a = "";
-              var e = d.length, f = 4 == P(this.g);
-              if (!this.h.i) {
-                if ("undefined" === typeof TextDecoder) {
-                  Q2(this);
-                  Qb(this);
-                  var g = "";
-                  break b;
-                }
-                this.h.i = new k2.TextDecoder();
-              }
-              for (b = 0; b < e; b++) this.h.h = true, a += this.h.i.decode(d[b], { stream: !(f && b == e - 1) });
-              d.length = 0;
-              this.h.g += a;
-              this.C = 0;
-              g = this.h.g;
-            } else g = this.g.oa();
-            this.o = 200 == c;
-            xb(this.i, this.u, this.A, this.l, this.R, w, c);
-            if (this.o) {
-              if (this.T && !this.K) {
-                b: {
-                  if (this.g) {
-                    var m, q2 = this.g;
-                    if ((m = q2.g ? q2.g.getResponseHeader("X-HTTP-Initial-Response") : null) && !t(m)) {
-                      var l = m;
+        if (a == this.g)
+          a: {
+            const w = P(this.g);
+            var b = this.g.Ba();
+            const O2 = this.g.Z();
+            if (!(3 > w) && (3 != w || this.g && (this.h.h || this.g.oa() || Nb(this.g)))) {
+              this.J || 4 != w || 7 == b || (8 == b || 0 >= O2 ? J(3) : J(2));
+              Ob(this);
+              var c = this.g.Z();
+              this.X = c;
+              b:
+                if (Pb(this)) {
+                  var d = Nb(this.g);
+                  a = "";
+                  var e = d.length, f = 4 == P(this.g);
+                  if (!this.h.i) {
+                    if ("undefined" === typeof TextDecoder) {
+                      Q2(this);
+                      Qb(this);
+                      var g = "";
                       break b;
                     }
+                    this.h.i = new k2.TextDecoder();
                   }
-                  l = null;
+                  for (b = 0; b < e; b++)
+                    this.h.h = true, a += this.h.i.decode(d[b], { stream: !(f && b == e - 1) });
+                  d.length = 0;
+                  this.h.g += a;
+                  this.C = 0;
+                  g = this.h.g;
+                } else
+                  g = this.g.oa();
+              this.o = 200 == c;
+              xb(this.i, this.u, this.A, this.l, this.R, w, c);
+              if (this.o) {
+                if (this.T && !this.K) {
+                  b: {
+                    if (this.g) {
+                      var m, q2 = this.g;
+                      if ((m = q2.g ? q2.g.getResponseHeader("X-HTTP-Initial-Response") : null) && !t(m)) {
+                        var l = m;
+                        break b;
+                      }
+                    }
+                    l = null;
+                  }
+                  if (c = l)
+                    L2(this.i, this.l, c, "Initial handshake response via X-HTTP-Initial-Response"), this.K = true, Rb(this, c);
+                  else {
+                    this.o = false;
+                    this.s = 3;
+                    K(12);
+                    Q2(this);
+                    Qb(this);
+                    break a;
+                  }
                 }
-                if (c = l) L2(this.i, this.l, c, "Initial handshake response via X-HTTP-Initial-Response"), this.K = true, Rb(this, c);
-                else {
-                  this.o = false;
-                  this.s = 3;
-                  K(12);
-                  Q2(this);
-                  Qb(this);
-                  break a;
-                }
-              }
-              if (this.P) {
-                c = true;
-                let B2;
-                for (; !this.J && this.C < g.length; ) if (B2 = Sb(this, g), B2 == Gb) {
-                  4 == w && (this.s = 4, K(14), c = false);
-                  L2(this.i, this.l, null, "[Incomplete Response]");
-                  break;
-                } else if (B2 == Fb) {
-                  this.s = 4;
-                  K(15);
-                  L2(this.i, this.l, g, "[Invalid Chunk]");
-                  c = false;
-                  break;
-                } else L2(this.i, this.l, B2, null), Rb(this, B2);
-                Pb(this) && 0 != this.C && (this.h.g = this.h.g.slice(this.C), this.C = 0);
-                4 != w || 0 != g.length || this.h.h || (this.s = 1, K(16), c = false);
-                this.o = this.o && c;
-                if (!c) L2(this.i, this.l, g, "[Invalid Chunked Response]"), Q2(this), Qb(this);
-                else if (0 < g.length && !this.W) {
-                  this.W = true;
-                  var v = this.j;
-                  v.g == this && v.ba && !v.M && (v.j.info("Great, no buffering proxy detected. Bytes received: " + g.length), Tb(v), v.M = true, K(11));
-                }
-              } else L2(this.i, this.l, g, null), Rb(this, g);
-              4 == w && Q2(this);
-              this.o && !this.J && (4 == w ? Ub(this.j, this) : (this.o = false, Kb(this)));
-            } else Vb(this.g), 400 == c && 0 < g.indexOf("Unknown SID") ? (this.s = 3, K(12)) : (this.s = 0, K(13)), Q2(this), Qb(this);
+                if (this.P) {
+                  c = true;
+                  let B2;
+                  for (; !this.J && this.C < g.length; )
+                    if (B2 = Sb(this, g), B2 == Gb) {
+                      4 == w && (this.s = 4, K(14), c = false);
+                      L2(this.i, this.l, null, "[Incomplete Response]");
+                      break;
+                    } else if (B2 == Fb) {
+                      this.s = 4;
+                      K(15);
+                      L2(this.i, this.l, g, "[Invalid Chunk]");
+                      c = false;
+                      break;
+                    } else
+                      L2(this.i, this.l, B2, null), Rb(this, B2);
+                  Pb(this) && 0 != this.C && (this.h.g = this.h.g.slice(this.C), this.C = 0);
+                  4 != w || 0 != g.length || this.h.h || (this.s = 1, K(16), c = false);
+                  this.o = this.o && c;
+                  if (!c)
+                    L2(this.i, this.l, g, "[Invalid Chunked Response]"), Q2(this), Qb(this);
+                  else if (0 < g.length && !this.W) {
+                    this.W = true;
+                    var v = this.j;
+                    v.g == this && v.ba && !v.M && (v.j.info("Great, no buffering proxy detected. Bytes received: " + g.length), Tb(v), v.M = true, K(11));
+                  }
+                } else
+                  L2(this.i, this.l, g, null), Rb(this, g);
+                4 == w && Q2(this);
+                this.o && !this.J && (4 == w ? Ub(this.j, this) : (this.o = false, Kb(this)));
+              } else
+                Vb(this.g), 400 == c && 0 < g.indexOf("Unknown SID") ? (this.s = 3, K(12)) : (this.s = 0, K(13)), Q2(this), Qb(this);
+            }
           }
-        }
       } catch (w) {
       } finally {
       }
@@ -8777,11 +8903,14 @@ ${this.customData.serverResponse}`;
     }
     function Sb(a, b) {
       var c = a.C, d = b.indexOf("\n", c);
-      if (-1 == d) return Gb;
+      if (-1 == d)
+        return Gb;
       c = Number(b.substring(c, d));
-      if (isNaN(c)) return Fb;
+      if (isNaN(c))
+        return Fb;
       d += 1;
-      if (d + c > b.length) return Gb;
+      if (d + c > b.length)
+        return Gb;
       b = b.slice(d, d + c);
       a.C = d + c;
       return b;
@@ -8795,7 +8924,8 @@ ${this.customData.serverResponse}`;
       Wb(a, a.I);
     }
     function Wb(a, b) {
-      if (null != a.B) throw Error("WatchDog timer not null");
+      if (null != a.B)
+        throw Error("WatchDog timer not null");
       a.B = ub(p(a.ba, a), b);
     }
     function Ob(a) {
@@ -8829,15 +8959,20 @@ ${this.customData.serverResponse}`;
             }
             if (Array.isArray(d) && 3 == d.length) {
               var e = d;
-              if (0 == e[0]) a: {
-                if (!c.u) {
-                  if (c.g) if (c.g.F + 3e3 < a.F) Yb(c), Zb(c);
-                  else break a;
-                  $b(c);
-                  K(18);
+              if (0 == e[0])
+                a: {
+                  if (!c.u) {
+                    if (c.g)
+                      if (c.g.F + 3e3 < a.F)
+                        Yb(c), Zb(c);
+                      else
+                        break a;
+                    $b(c);
+                    K(18);
+                  }
                 }
-              }
-              else c.za = e[1], 0 < c.za - c.T && 37500 > e[2] && c.F && 0 == c.v && !c.C && (c.C = ub(p(c.Za, c), 6e3));
+              else
+                c.za = e[1], 0 < c.za - c.T && 37500 > e[2] && c.F && 0 == c.v && !c.C && (c.C = ub(p(c.Za, c), 6e3));
               if (1 >= ac(c.h) && c.ca) {
                 try {
                   c.ca();
@@ -8845,50 +8980,56 @@ ${this.customData.serverResponse}`;
                 }
                 c.ca = void 0;
               }
-            } else R(c, 11);
-          } else if ((a.K || c.g == a) && Yb(c), !t(b)) for (e = c.Da.g.parse(b), b = 0; b < e.length; b++) {
-            let l = e[b];
-            c.T = l[0];
-            l = l[1];
-            if (2 == c.G) if ("c" == l[0]) {
-              c.K = l[1];
-              c.ia = l[2];
-              const v = l[3];
-              null != v && (c.la = v, c.j.info("VER=" + c.la));
-              const w = l[4];
-              null != w && (c.Aa = w, c.j.info("SVER=" + c.Aa));
-              const O2 = l[5];
-              null != O2 && "number" === typeof O2 && 0 < O2 && (d = 1.5 * O2, c.L = d, c.j.info("backChannelRequestTimeoutMs_=" + d));
-              d = c;
-              const B2 = a.g;
-              if (B2) {
-                const ya = B2.g ? B2.g.getResponseHeader("X-Client-Wire-Protocol") : null;
-                if (ya) {
-                  var f = d.h;
-                  f.g || -1 == ya.indexOf("spdy") && -1 == ya.indexOf("quic") && -1 == ya.indexOf("h2") || (f.j = f.l, f.g = /* @__PURE__ */ new Set(), f.h && (bc(f, f.h), f.h = null));
-                }
-                if (d.D) {
-                  const db = B2.g ? B2.g.getResponseHeader("X-HTTP-Session-Id") : null;
-                  db && (d.ya = db, S(d.I, d.D, db));
-                }
-              }
-              c.G = 3;
-              c.l && c.l.ua();
-              c.ba && (c.R = Date.now() - a.F, c.j.info("Handshake RTT: " + c.R + "ms"));
-              d = c;
-              var g = a;
-              d.qa = cc(d, d.J ? d.ia : null, d.W);
-              if (g.K) {
-                dc(d.h, g);
-                var m = g, q2 = d.L;
-                q2 && (m.I = q2);
-                m.B && (Ob(m), Kb(m));
-                d.g = g;
-              } else ec(d);
-              0 < c.i.length && fc(c);
-            } else "stop" != l[0] && "close" != l[0] || R(c, 7);
-            else 3 == c.G && ("stop" == l[0] || "close" == l[0] ? "stop" == l[0] ? R(c, 7) : gc(c) : "noop" != l[0] && c.l && c.l.ta(l), c.v = 0);
-          }
+            } else
+              R(c, 11);
+          } else if ((a.K || c.g == a) && Yb(c), !t(b))
+            for (e = c.Da.g.parse(b), b = 0; b < e.length; b++) {
+              let l = e[b];
+              c.T = l[0];
+              l = l[1];
+              if (2 == c.G)
+                if ("c" == l[0]) {
+                  c.K = l[1];
+                  c.ia = l[2];
+                  const v = l[3];
+                  null != v && (c.la = v, c.j.info("VER=" + c.la));
+                  const w = l[4];
+                  null != w && (c.Aa = w, c.j.info("SVER=" + c.Aa));
+                  const O2 = l[5];
+                  null != O2 && "number" === typeof O2 && 0 < O2 && (d = 1.5 * O2, c.L = d, c.j.info("backChannelRequestTimeoutMs_=" + d));
+                  d = c;
+                  const B2 = a.g;
+                  if (B2) {
+                    const ya = B2.g ? B2.g.getResponseHeader("X-Client-Wire-Protocol") : null;
+                    if (ya) {
+                      var f = d.h;
+                      f.g || -1 == ya.indexOf("spdy") && -1 == ya.indexOf("quic") && -1 == ya.indexOf("h2") || (f.j = f.l, f.g = /* @__PURE__ */ new Set(), f.h && (bc(f, f.h), f.h = null));
+                    }
+                    if (d.D) {
+                      const db = B2.g ? B2.g.getResponseHeader("X-HTTP-Session-Id") : null;
+                      db && (d.ya = db, S(d.I, d.D, db));
+                    }
+                  }
+                  c.G = 3;
+                  c.l && c.l.ua();
+                  c.ba && (c.R = Date.now() - a.F, c.j.info("Handshake RTT: " + c.R + "ms"));
+                  d = c;
+                  var g = a;
+                  d.qa = cc(d, d.J ? d.ia : null, d.W);
+                  if (g.K) {
+                    dc(d.h, g);
+                    var m = g, q2 = d.L;
+                    q2 && (m.I = q2);
+                    m.B && (Ob(m), Kb(m));
+                    d.g = g;
+                  } else
+                    ec(d);
+                  0 < c.i.length && fc(c);
+                } else
+                  "stop" != l[0] && "close" != l[0] || R(c, 7);
+              else
+                3 == c.G && ("stop" == l[0] || "close" == l[0] ? "stop" == l[0] ? R(c, 7) : gc(c) : "noop" != l[0] && c.l && c.l.ta(l), c.v = 0);
+            }
         }
         J(4);
       } catch (l) {
@@ -8926,56 +9067,73 @@ ${this.customData.serverResponse}`;
     }
     ic.prototype.cancel = function() {
       this.i = kc(this);
-      if (this.h) this.h.cancel(), this.h = null;
+      if (this.h)
+        this.h.cancel(), this.h = null;
       else if (this.g && 0 !== this.g.size) {
-        for (const a of this.g.values()) a.cancel();
+        for (const a of this.g.values())
+          a.cancel();
         this.g.clear();
       }
     };
     function kc(a) {
-      if (null != a.h) return a.i.concat(a.h.D);
+      if (null != a.h)
+        return a.i.concat(a.h.D);
       if (null != a.g && 0 !== a.g.size) {
         let b = a.i;
-        for (const c of a.g.values()) b = b.concat(c.D);
+        for (const c of a.g.values())
+          b = b.concat(c.D);
         return b;
       }
       return la(a.i);
     }
     function lc(a) {
-      if (a.V && "function" == typeof a.V) return a.V();
-      if ("undefined" !== typeof Map && a instanceof Map || "undefined" !== typeof Set && a instanceof Set) return Array.from(a.values());
-      if ("string" === typeof a) return a.split("");
+      if (a.V && "function" == typeof a.V)
+        return a.V();
+      if ("undefined" !== typeof Map && a instanceof Map || "undefined" !== typeof Set && a instanceof Set)
+        return Array.from(a.values());
+      if ("string" === typeof a)
+        return a.split("");
       if (ha(a)) {
-        for (var b = [], c = a.length, d = 0; d < c; d++) b.push(a[d]);
+        for (var b = [], c = a.length, d = 0; d < c; d++)
+          b.push(a[d]);
         return b;
       }
       b = [];
       c = 0;
-      for (d in a) b[c++] = a[d];
+      for (d in a)
+        b[c++] = a[d];
       return b;
     }
     function mc(a) {
-      if (a.na && "function" == typeof a.na) return a.na();
+      if (a.na && "function" == typeof a.na)
+        return a.na();
       if (!a.V || "function" != typeof a.V) {
-        if ("undefined" !== typeof Map && a instanceof Map) return Array.from(a.keys());
+        if ("undefined" !== typeof Map && a instanceof Map)
+          return Array.from(a.keys());
         if (!("undefined" !== typeof Set && a instanceof Set)) {
           if (ha(a) || "string" === typeof a) {
             var b = [];
             a = a.length;
-            for (var c = 0; c < a; c++) b.push(c);
+            for (var c = 0; c < a; c++)
+              b.push(c);
             return b;
           }
           b = [];
           c = 0;
-          for (const d in a) b[c++] = d;
+          for (const d in a)
+            b[c++] = d;
           return b;
         }
       }
     }
     function nc(a, b) {
-      if (a.forEach && "function" == typeof a.forEach) a.forEach(b, void 0);
-      else if (ha(a) || "string" === typeof a) Array.prototype.forEach.call(a, b, void 0);
-      else for (var c = mc(a), d = lc(a), e = d.length, f = 0; f < e; f++) b.call(void 0, d[f], c && c[f], a);
+      if (a.forEach && "function" == typeof a.forEach)
+        a.forEach(b, void 0);
+      else if (ha(a) || "string" === typeof a)
+        Array.prototype.forEach.call(a, b, void 0);
+      else
+        for (var c = mc(a), d = lc(a), e = d.length, f = 0; f < e; f++)
+          b.call(void 0, d[f], c && c[f], a);
     }
     var oc = RegExp("^(?:([^:/?#.]+):)?(?://(?:([^\\\\/?#]*)@)?([^\\\\/?#]*?)(?::([0-9]+))?(?=[\\\\/?#]|$))?([^?#]+)?(?:\\?([^#]*))?(?:#([\\s\\S]*))?$");
     function pc(a, b) {
@@ -8986,7 +9144,8 @@ ${this.customData.serverResponse}`;
           if (0 <= d) {
             var f = a[c].substring(0, d);
             e = a[c].substring(d + 1);
-          } else f = a[c];
+          } else
+            f = a[c];
           b(f, e ? decodeURIComponent(e.replace(/\+/g, " ")) : "");
         }
       }
@@ -9009,14 +9168,17 @@ ${this.customData.serverResponse}`;
         b.g && (c.g = new Map(b.g), c.h = b.h);
         tc(this, c);
         this.m = a.m;
-      } else a && (b = String(a).match(oc)) ? (this.h = false, qc(this, b[1] || "", true), this.o = uc(b[2] || ""), this.g = uc(b[3] || "", true), rc(this, b[4]), this.l = uc(b[5] || "", true), tc(this, b[6] || "", true), this.m = uc(b[7] || "")) : (this.h = false, this.i = new sc(null, this.h));
+      } else
+        a && (b = String(a).match(oc)) ? (this.h = false, qc(this, b[1] || "", true), this.o = uc(b[2] || ""), this.g = uc(b[3] || "", true), rc(this, b[4]), this.l = uc(b[5] || "", true), tc(this, b[6] || "", true), this.m = uc(b[7] || "")) : (this.h = false, this.i = new sc(null, this.h));
     }
     T.prototype.toString = function() {
       var a = [], b = this.j;
       b && a.push(vc(b, wc, true), ":");
       var c = this.g;
-      if (c || "file" == b) a.push("//"), (b = this.o) && a.push(vc(b, wc, true), "@"), a.push(encodeURIComponent(String(c)).replace(/%25([0-9a-fA-F]{2})/g, "%$1")), c = this.s, null != c && a.push(":", String(c));
-      if (c = this.l) this.g && "/" != c.charAt(0) && a.push("/"), a.push(vc(c, "/" == c.charAt(0) ? xc : yc, true));
+      if (c || "file" == b)
+        a.push("//"), (b = this.o) && a.push(vc(b, wc, true), "@"), a.push(encodeURIComponent(String(c)).replace(/%25([0-9a-fA-F]{2})/g, "%$1")), c = this.s, null != c && a.push(":", String(c));
+      if (c = this.l)
+        this.g && "/" != c.charAt(0) && a.push("/"), a.push(vc(c, "/" == c.charAt(0) ? xc : yc, true));
       (c = this.i.toString()) && a.push("?", c);
       (c = this.m) && a.push("#", vc(c, zc));
       return a.join("");
@@ -9031,9 +9193,11 @@ ${this.customData.serverResponse}`;
     function rc(a, b) {
       if (b) {
         b = Number(b);
-        if (isNaN(b) || 0 > b) throw Error("Bad port number " + b);
+        if (isNaN(b) || 0 > b)
+          throw Error("Bad port number " + b);
         a.s = b;
-      } else a.s = null;
+      } else
+        a.s = null;
     }
     function tc(a, b, c) {
       b instanceof sc ? (a.i = b, Ac(a.i, a.h)) : (c || (b = vc(b, Bc)), a.i = new sc(b, a.h));
@@ -9100,17 +9264,20 @@ ${this.customData.serverResponse}`;
       const a = Array.from(this.g.values()), b = Array.from(this.g.keys()), c = [];
       for (let d = 0; d < b.length; d++) {
         const e = a[d];
-        for (let f = 0; f < e.length; f++) c.push(b[d]);
+        for (let f = 0; f < e.length; f++)
+          c.push(b[d]);
       }
       return c;
     };
     h.V = function(a) {
       U2(this);
       let b = [];
-      if ("string" === typeof a) Ec(this, a) && (b = b.concat(this.g.get(V(this, a))));
+      if ("string" === typeof a)
+        Ec(this, a) && (b = b.concat(this.g.get(V(this, a))));
       else {
         a = Array.from(this.g.values());
-        for (let c = 0; c < a.length; c++) b = b.concat(a[c]);
+        for (let c = 0; c < a.length; c++)
+          b = b.concat(a[c]);
       }
       return b;
     };
@@ -9124,7 +9291,8 @@ ${this.customData.serverResponse}`;
       return this;
     };
     h.get = function(a, b) {
-      if (!a) return b;
+      if (!a)
+        return b;
       a = this.V(a);
       return 0 < a.length ? String(a[0]) : b;
     };
@@ -9133,8 +9301,10 @@ ${this.customData.serverResponse}`;
       0 < c.length && (a.i = null, a.g.set(V(a, b), la(c)), a.h += c.length);
     }
     h.toString = function() {
-      if (this.i) return this.i;
-      if (!this.g) return "";
+      if (this.i)
+        return this.i;
+      if (!this.g)
+        return "";
       const a = [], b = Array.from(this.g.keys());
       for (var c = 0; c < b.length; c++) {
         var d = b[c];
@@ -9168,10 +9338,12 @@ ${this.customData.serverResponse}`;
         d.onabort = ka(W, c, "TestLoadImage: abort", false, b, d);
         d.ontimeout = ka(W, c, "TestLoadImage: timeout", false, b, d);
         k2.setTimeout(function() {
-          if (d.ontimeout) d.ontimeout();
+          if (d.ontimeout)
+            d.ontimeout();
         }, 1e4);
         d.src = a;
-      } else b(false);
+      } else
+        b(false);
     }
     function Gc(a, b) {
       const c = new vb(), d = new AbortController(), e = setTimeout(() => {
@@ -9215,11 +9387,11 @@ ${this.customData.serverResponse}`;
     Jc.prototype.g = function() {
       return new Kc(this.l, this.j);
     };
-    Jc.prototype.i = /* @__PURE__ */ (function(a) {
+    Jc.prototype.i = /* @__PURE__ */ function(a) {
       return function() {
         return a;
       };
-    })({});
+    }({});
     function Kc(a, b) {
       E.call(this);
       this.D = a;
@@ -9238,14 +9410,16 @@ ${this.customData.serverResponse}`;
     r(Kc, E);
     h = Kc.prototype;
     h.open = function(a, b) {
-      if (0 != this.readyState) throw this.abort(), Error("Error reopening a connection");
+      if (0 != this.readyState)
+        throw this.abort(), Error("Error reopening a connection");
       this.B = a;
       this.A = b;
       this.readyState = 1;
       Lc(this);
     };
     h.send = function(a) {
-      if (1 != this.readyState) throw this.abort(), Error("need to call open() first. ");
+      if (1 != this.readyState)
+        throw this.abort(), Error("need to call open() first. ");
       this.g = true;
       const b = { headers: this.u, method: this.B, credentials: this.m, cache: void 0 };
       a && (b.body = a);
@@ -9261,25 +9435,32 @@ ${this.customData.serverResponse}`;
       this.readyState = 0;
     };
     h.Sa = function(a) {
-      if (this.g && (this.l = a, this.h || (this.status = this.l.status, this.statusText = this.l.statusText, this.h = a.headers, this.readyState = 2, Lc(this)), this.g && (this.readyState = 3, Lc(this), this.g))) if ("arraybuffer" === this.responseType) a.arrayBuffer().then(this.Qa.bind(this), this.ga.bind(this));
-      else if ("undefined" !== typeof k2.ReadableStream && "body" in a) {
-        this.j = a.body.getReader();
-        if (this.o) {
-          if (this.responseType) throw Error('responseType must be empty for "streamBinaryChunks" mode responses.');
-          this.response = [];
-        } else this.response = this.responseText = "", this.v = new TextDecoder();
-        Nc(this);
-      } else a.text().then(this.Ra.bind(this), this.ga.bind(this));
+      if (this.g && (this.l = a, this.h || (this.status = this.l.status, this.statusText = this.l.statusText, this.h = a.headers, this.readyState = 2, Lc(this)), this.g && (this.readyState = 3, Lc(this), this.g)))
+        if ("arraybuffer" === this.responseType)
+          a.arrayBuffer().then(this.Qa.bind(this), this.ga.bind(this));
+        else if ("undefined" !== typeof k2.ReadableStream && "body" in a) {
+          this.j = a.body.getReader();
+          if (this.o) {
+            if (this.responseType)
+              throw Error('responseType must be empty for "streamBinaryChunks" mode responses.');
+            this.response = [];
+          } else
+            this.response = this.responseText = "", this.v = new TextDecoder();
+          Nc(this);
+        } else
+          a.text().then(this.Ra.bind(this), this.ga.bind(this));
     };
     function Nc(a) {
       a.j.read().then(a.Pa.bind(a)).catch(a.ga.bind(a));
     }
     h.Pa = function(a) {
       if (this.g) {
-        if (this.o && a.value) this.response.push(a.value);
+        if (this.o && a.value)
+          this.response.push(a.value);
         else if (!this.o) {
           var b = a.value ? a.value : new Uint8Array(0);
-          if (b = this.v.decode(b, { stream: !a.done })) this.response = this.responseText += b;
+          if (b = this.v.decode(b, { stream: !a.done }))
+            this.response = this.responseText += b;
         }
         a.done ? Mc(this) : Lc(this);
         3 == this.readyState && Nc(this);
@@ -9308,9 +9489,11 @@ ${this.customData.serverResponse}`;
       return this.h ? this.h.get(a.toLowerCase()) || "" : "";
     };
     h.getAllResponseHeaders = function() {
-      if (!this.h) return "";
+      if (!this.h)
+        return "";
       const a = [], b = this.h.entries();
-      for (var c = b.next(); !c.done; ) c = c.value, a.push(c[0] + ": " + c[1]), c = b.next();
+      for (var c = b.next(); !c.done; )
+        c = c.value, a.push(c[0] + ": " + c[1]), c = b.next();
       return a.join("\r\n");
     };
     function Lc(a) {
@@ -9362,7 +9545,8 @@ ${this.customData.serverResponse}`;
       this.J = a;
     };
     h.ea = function(a, b, c, d) {
-      if (this.g) throw Error("[goog.net.XhrIo] Object is active with another request=" + this.D + "; newUri=" + a);
+      if (this.g)
+        throw Error("[goog.net.XhrIo] Object is active with another request=" + this.D + "; newUri=" + a);
       b = b ? b.toUpperCase() : "GET";
       this.D = a;
       this.l = "";
@@ -9380,13 +9564,20 @@ ${this.customData.serverResponse}`;
       }
       a = c || "";
       c = new Map(this.headers);
-      if (d) if (Object.getPrototypeOf(d) === Object.prototype) for (var e in d) c.set(e, d[e]);
-      else if ("function" === typeof d.keys && "function" === typeof d.get) for (const f of d.keys()) c.set(f, d.get(f));
-      else throw Error("Unknown input type for opt_headers: " + String(d));
+      if (d)
+        if (Object.getPrototypeOf(d) === Object.prototype)
+          for (var e in d)
+            c.set(e, d[e]);
+        else if ("function" === typeof d.keys && "function" === typeof d.get)
+          for (const f of d.keys())
+            c.set(f, d.get(f));
+        else
+          throw Error("Unknown input type for opt_headers: " + String(d));
       d = Array.from(c.keys()).find((f) => "content-type" == f.toLowerCase());
       e = k2.FormData && a instanceof k2.FormData;
       !(0 <= Array.prototype.indexOf.call(Rc, b, void 0)) || d || e || c.set("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
-      for (const [f, g] of c) this.g.setRequestHeader(f, g);
+      for (const [f, g] of c)
+        this.g.setRequestHeader(f, g);
       this.H && (this.g.responseType = this.H);
       "withCredentials" in this.g && this.g.withCredentials !== this.J && (this.g.withCredentials = this.J);
       try {
@@ -9421,24 +9612,26 @@ ${this.customData.serverResponse}`;
     };
     function Wc(a) {
       if (a.h && "undefined" != typeof fa && (!a.v[1] || 4 != P(a) || 2 != a.Z())) {
-        if (a.u && 4 == P(a)) bb(a.Ea, 0, a);
+        if (a.u && 4 == P(a))
+          bb(a.Ea, 0, a);
         else if (F2(a, "readystatechange"), 4 == P(a)) {
           a.h = false;
           try {
             const g = a.Z();
-            a: switch (g) {
-              case 200:
-              case 201:
-              case 202:
-              case 204:
-              case 206:
-              case 304:
-              case 1223:
-                var b = true;
-                break a;
-              default:
-                b = false;
-            }
+            a:
+              switch (g) {
+                case 200:
+                case 201:
+                case 202:
+                case 204:
+                case 206:
+                case 304:
+                case 1223:
+                  var b = true;
+                  break a;
+                default:
+                  b = false;
+              }
             var c;
             if (!(c = b)) {
               var d;
@@ -9449,7 +9642,8 @@ ${this.customData.serverResponse}`;
               }
               c = d;
             }
-            if (c) F2(a, "complete"), F2(a, "success");
+            if (c)
+              F2(a, "complete"), F2(a, "success");
             else {
               a.m = 6;
               try {
@@ -9512,14 +9706,17 @@ ${this.customData.serverResponse}`;
     };
     function Nb(a) {
       try {
-        if (!a.g) return null;
-        if ("response" in a.g) return a.g.response;
+        if (!a.g)
+          return null;
+        if ("response" in a.g)
+          return a.g.response;
         switch (a.H) {
           case "":
           case "text":
             return a.g.responseText;
           case "arraybuffer":
-            if ("mozResponseArrayBuffer" in a.g) return a.g.mozResponseArrayBuffer;
+            if ("mozResponseArrayBuffer" in a.g)
+              return a.g.mozResponseArrayBuffer;
         }
         return null;
       } catch (b) {
@@ -9530,11 +9727,13 @@ ${this.customData.serverResponse}`;
       const b = {};
       a = (a.g && 2 <= P(a) ? a.g.getAllResponseHeaders() || "" : "").split("\r\n");
       for (let d = 0; d < a.length; d++) {
-        if (t(a[d])) continue;
+        if (t(a[d]))
+          continue;
         var c = va(a[d]);
         const e = c[0];
         c = c[1];
-        if ("string" !== typeof c) continue;
+        if ("string" !== typeof c)
+          continue;
         c = c.trim();
         const f = b[e] || [];
         b[e] = f;
@@ -9614,10 +9813,11 @@ ${this.customData.serverResponse}`;
         b.L = 2;
         b.v = Ib(N2(c));
         c = false;
-        if (k2.navigator && k2.navigator.sendBeacon) try {
-          c = k2.navigator.sendBeacon(b.v.toString(), "");
-        } catch (d) {
-        }
+        if (k2.navigator && k2.navigator.sendBeacon)
+          try {
+            c = k2.navigator.sendBeacon(b.v.toString(), "");
+          } catch (d) {
+          }
         !c && k2.Image && (new Image().src = b.v, c = true);
         c || (b.g = Mb(b.j, null), b.g.ea(b.v));
         b.F = Date.now();
@@ -9646,60 +9846,68 @@ ${this.customData.serverResponse}`;
       }
     }
     function bd(a, b) {
-      if (ac(a.h) >= a.h.j - (a.s ? 1 : 0)) return false;
-      if (a.s) return a.i = b.D.concat(a.i), true;
-      if (1 == a.G || 2 == a.G || a.B >= (a.Va ? 0 : a.Wa)) return false;
+      if (ac(a.h) >= a.h.j - (a.s ? 1 : 0))
+        return false;
+      if (a.s)
+        return a.i = b.D.concat(a.i), true;
+      if (1 == a.G || 2 == a.G || a.B >= (a.Va ? 0 : a.Wa))
+        return false;
       a.s = ub(p(a.Ga, a, b), cd(a, a.B));
       a.B++;
       return true;
     }
     h.Ga = function(a) {
-      if (this.s) if (this.s = null, 1 == this.G) {
-        if (!a) {
-          this.U = Math.floor(1e5 * Math.random());
-          a = this.U++;
-          const e = new M2(this, this.j, a);
-          let f = this.o;
-          this.S && (f ? (f = sa(f), ua(f, this.S)) : f = this.S);
-          null !== this.m || this.O || (e.H = f, f = null);
-          if (this.P) a: {
-            var b = 0;
-            for (var c = 0; c < this.i.length; c++) {
-              b: {
-                var d = this.i[c];
-                if ("__data__" in d.map && (d = d.map.__data__, "string" === typeof d)) {
-                  d = d.length;
-                  break b;
+      if (this.s)
+        if (this.s = null, 1 == this.G) {
+          if (!a) {
+            this.U = Math.floor(1e5 * Math.random());
+            a = this.U++;
+            const e = new M2(this, this.j, a);
+            let f = this.o;
+            this.S && (f ? (f = sa(f), ua(f, this.S)) : f = this.S);
+            null !== this.m || this.O || (e.H = f, f = null);
+            if (this.P)
+              a: {
+                var b = 0;
+                for (var c = 0; c < this.i.length; c++) {
+                  b: {
+                    var d = this.i[c];
+                    if ("__data__" in d.map && (d = d.map.__data__, "string" === typeof d)) {
+                      d = d.length;
+                      break b;
+                    }
+                    d = void 0;
+                  }
+                  if (void 0 === d)
+                    break;
+                  b += d;
+                  if (4096 < b) {
+                    b = c;
+                    break a;
+                  }
+                  if (4096 === b || c === this.i.length - 1) {
+                    b = c + 1;
+                    break a;
+                  }
                 }
-                d = void 0;
+                b = 1e3;
               }
-              if (void 0 === d) break;
-              b += d;
-              if (4096 < b) {
-                b = c;
-                break a;
-              }
-              if (4096 === b || c === this.i.length - 1) {
-                b = c + 1;
-                break a;
-              }
-            }
-            b = 1e3;
+            else
+              b = 1e3;
+            b = dd(this, e, b);
+            c = N2(this.I);
+            S(c, "RID", a);
+            S(c, "CVER", 22);
+            this.D && S(c, "X-HTTP-Session-Id", this.D);
+            $c(this, c);
+            f && (this.O ? b = "headers=" + encodeURIComponent(String(Oc(f))) + "&" + b : this.m && Pc(c, this.m, f));
+            bc(this.h, e);
+            this.Ua && S(c, "TYPE", "init");
+            this.P ? (S(c, "$req", b), S(c, "SID", "null"), e.T = true, Hb(e, c, null)) : Hb(e, c, b);
+            this.G = 2;
           }
-          else b = 1e3;
-          b = dd(this, e, b);
-          c = N2(this.I);
-          S(c, "RID", a);
-          S(c, "CVER", 22);
-          this.D && S(c, "X-HTTP-Session-Id", this.D);
-          $c(this, c);
-          f && (this.O ? b = "headers=" + encodeURIComponent(String(Oc(f))) + "&" + b : this.m && Pc(c, this.m, f));
-          bc(this.h, e);
-          this.Ua && S(c, "TYPE", "init");
-          this.P ? (S(c, "$req", b), S(c, "SID", "null"), e.T = true, Hb(e, c, null)) : Hb(e, c, b);
-          this.G = 2;
-        }
-      } else 3 == this.G && (a ? ed(this, a) : 0 == this.i.length || jc(this.h) || ed(this));
+        } else
+          3 == this.G && (a ? ed(this, a) : 0 == this.i.length || jc(this.h) || ed(this));
     };
     function ed(a, b) {
       var c;
@@ -9740,12 +9948,14 @@ ${this.customData.serverResponse}`;
             let l = e[q2].g;
             const v = e[q2].map;
             l -= f;
-            if (0 > l) f = Math.max(0, e[q2].g - 100), m = false;
-            else try {
-              Ic(v, g, "req" + l + "_");
-            } catch (w) {
-              d && d(v);
-            }
+            if (0 > l)
+              f = Math.max(0, e[q2].g - 100), m = false;
+            else
+              try {
+                Ic(v, g, "req" + l + "_");
+              } catch (w) {
+                d && d(v);
+              }
           }
           if (m) {
             d = g.join("&");
@@ -9768,7 +9978,8 @@ ${this.customData.serverResponse}`;
       }
     }
     function $b(a) {
-      if (a.g || a.u || 3 <= a.v) return false;
+      if (a.g || a.u || 3 <= a.v)
+        return false;
       a.Y++;
       a.u = ub(p(a.Fa, a), cd(a, a.v));
       a.v++;
@@ -9824,30 +10035,35 @@ ${this.customData.serverResponse}`;
         Tb(a);
         a.g = null;
         var d = 2;
-      } else if (Xb(a.h, b)) c = b.D, dc(a.h, b), d = 1;
-      else return;
+      } else if (Xb(a.h, b))
+        c = b.D, dc(a.h, b), d = 1;
+      else
+        return;
       if (0 != a.G) {
-        if (b.o) if (1 == d) {
-          c = b.m ? b.m.length : 0;
-          b = Date.now() - b.F;
-          var e = a.B;
-          d = qb();
-          F2(d, new tb(d, c));
-          fc(a);
-        } else ec(a);
-        else if (e = b.s, 3 == e || 0 == e && 0 < b.X || !(1 == d && bd(a, b) || 2 == d && $b(a))) switch (c && 0 < c.length && (b = a.h, b.i = b.i.concat(c)), e) {
-          case 1:
-            R(a, 5);
-            break;
-          case 4:
-            R(a, 10);
-            break;
-          case 3:
-            R(a, 6);
-            break;
-          default:
-            R(a, 2);
-        }
+        if (b.o)
+          if (1 == d) {
+            c = b.m ? b.m.length : 0;
+            b = Date.now() - b.F;
+            var e = a.B;
+            d = qb();
+            F2(d, new tb(d, c));
+            fc(a);
+          } else
+            ec(a);
+        else if (e = b.s, 3 == e || 0 == e && 0 < b.X || !(1 == d && bd(a, b) || 2 == d && $b(a)))
+          switch (c && 0 < c.length && (b = a.h, b.i = b.i.concat(c)), e) {
+            case 1:
+              R(a, 5);
+              break;
+            case 4:
+              R(a, 10);
+              break;
+            case 3:
+              R(a, 6);
+              break;
+            default:
+              R(a, 2);
+          }
       }
     }
     function cd(a, b) {
@@ -9864,7 +10080,8 @@ ${this.customData.serverResponse}`;
         k2.location && "http" == k2.location.protocol || qc(d, "https");
         Ib(d);
         e ? Fc(d.toString(), c) : Gc(d.toString(), c);
-      } else K(2);
+      } else
+        K(2);
       a.G = 0;
       a.l && a.l.sa(b);
       ad(a);
@@ -9878,13 +10095,15 @@ ${this.customData.serverResponse}`;
       a.ka = [];
       if (a.l) {
         const b = kc(a.h);
-        if (0 != b.length || 0 != a.i.length) ma(a.ka, b), ma(a.ka, a.i), a.h.i.length = 0, la(a.i), a.i.length = 0;
+        if (0 != b.length || 0 != a.i.length)
+          ma(a.ka, b), ma(a.ka, a.i), a.h.i.length = 0, la(a.i), a.i.length = 0;
         a.l.ra();
       }
     }
     function cc(a, b, c) {
       var d = c instanceof T ? N2(c) : new T(c);
-      if ("" != d.g) b && (d.g = b + "." + d.g), rc(d, d.s);
+      if ("" != d.g)
+        b && (d.g = b + "." + d.g), rc(d, d.s);
       else {
         var e = k2.location;
         d = e.protocol;
@@ -9905,7 +10124,8 @@ ${this.customData.serverResponse}`;
       return d;
     }
     function Mb(a, b, c) {
-      if (b && !a.J) throw Error("Can't create secondary domain capable XhrIo object.");
+      if (b && !a.J)
+        throw Error("Can't create secondary domain capable XhrIo object.");
       b = a.Ca && !a.pa ? new X2(new Jc({ eb: c })) : new X2(a.pa);
       b.Ha(a.J);
       return b;
@@ -9967,7 +10187,8 @@ ${this.customData.serverResponse}`;
         var c = {};
         c.__data__ = a;
         a = c;
-      } else this.u && (c = {}, c.__data__ = hb(a), a = c);
+      } else
+        this.u && (c = {}, c.__data__ = hb(a), a = c);
       b.i.push(new hc(b.Ya++, a));
       3 == b.G && fc(b);
     };
@@ -9990,9 +10211,11 @@ ${this.customData.serverResponse}`;
           }
           a = void 0;
         }
-        if (this.i = a) a = this.i, b = null !== b && a in b ? b[a] : void 0;
+        if (this.i = a)
+          a = this.i, b = null !== b && a in b ? b[a] : void 0;
         this.data = b;
-      } else this.data = a;
+      } else
+        this.data = a;
     }
     r(id, nb);
     function jd() {
@@ -10101,11 +10324,12 @@ ${this.customData.serverResponse}`;
     }
   }
   function __PRIVATE_argToString(e) {
-    if ("string" == typeof e) return e;
+    if ("string" == typeof e)
+      return e;
     try {
-      return (function __PRIVATE_formatJSON(e2) {
+      return function __PRIVATE_formatJSON(e2) {
         return JSON.stringify(e2);
-      })(e);
+      }(e);
     } catch (t) {
       return e;
     }
@@ -10116,11 +10340,12 @@ ${this.customData.serverResponse}`;
   }
   function __PRIVATE__fail(e, t, n) {
     let r = `FIRESTORE (${x}) INTERNAL ASSERTION FAILED: ${t} (ID: ${e.toString(16)})`;
-    if (void 0 !== n) try {
-      r += " CONTEXT: " + JSON.stringify(n);
-    } catch (e2) {
-      r += " CONTEXT: " + n;
-    }
+    if (void 0 !== n)
+      try {
+        r += " CONTEXT: " + JSON.stringify(n);
+      } catch (e2) {
+        r += " CONTEXT: " + n;
+      }
     throw __PRIVATE_logError(r), new Error(r);
   }
   function __PRIVATE_hardAssert(e, t, n, r) {
@@ -10253,9 +10478,9 @@ ${this.customData.serverResponse}`;
   };
   var __PRIVATE_Deferred = class {
     constructor() {
-      this.promise = new Promise(((e, t) => {
+      this.promise = new Promise((e, t) => {
         this.resolve = e, this.reject = t;
-      }));
+      });
     }
   };
   var __PRIVATE_OAuthToken = class {
@@ -10270,7 +10495,7 @@ ${this.customData.serverResponse}`;
     invalidateToken() {
     }
     start(e, t) {
-      e.enqueueRetryable((() => t(User.UNAUTHENTICATED)));
+      e.enqueueRetryable(() => t(User.UNAUTHENTICATED));
     }
     shutdown() {
     }
@@ -10290,20 +10515,20 @@ ${this.customData.serverResponse}`;
       const __PRIVATE_guardedChangeListener = (e2) => this.i !== n ? (n = this.i, t(e2)) : Promise.resolve();
       let r = new __PRIVATE_Deferred();
       this.o = () => {
-        this.i++, this.currentUser = this.u(), r.resolve(), r = new __PRIVATE_Deferred(), e.enqueueRetryable((() => __PRIVATE_guardedChangeListener(this.currentUser)));
+        this.i++, this.currentUser = this.u(), r.resolve(), r = new __PRIVATE_Deferred(), e.enqueueRetryable(() => __PRIVATE_guardedChangeListener(this.currentUser));
       };
       const __PRIVATE_awaitNextToken = () => {
         const t2 = r;
-        e.enqueueRetryable((async () => {
+        e.enqueueRetryable(async () => {
           await t2.promise, await __PRIVATE_guardedChangeListener(this.currentUser);
-        }));
+        });
       }, __PRIVATE_registerAuth = (e2) => {
         __PRIVATE_logDebug("FirebaseAuthCredentialsProvider", "Auth detected"), this.auth = e2, this.o && (this.auth.addAuthTokenListener(this.o), __PRIVATE_awaitNextToken());
       };
-      this.t.onInit(((e2) => __PRIVATE_registerAuth(e2))), // Our users can initialize Auth right after Firestore, so we give it
+      this.t.onInit((e2) => __PRIVATE_registerAuth(e2)), // Our users can initialize Auth right after Firestore, so we give it
       // a chance to register itself with the component framework before we
       // determine whether to start up in unauthenticated mode.
-      setTimeout((() => {
+      setTimeout(() => {
         if (!this.auth) {
           const e2 = this.t.getImmediate({
             optional: true
@@ -10313,18 +10538,18 @@ ${this.customData.serverResponse}`;
             (__PRIVATE_logDebug("FirebaseAuthCredentialsProvider", "Auth not yet detected"), r.resolve(), r = new __PRIVATE_Deferred())
           );
         }
-      }), 0), __PRIVATE_awaitNextToken();
+      }, 0), __PRIVATE_awaitNextToken();
     }
     getToken() {
       const e = this.i, t = this.forceRefresh;
-      return this.forceRefresh = false, this.auth ? this.auth.getToken(t).then(((t2) => (
+      return this.forceRefresh = false, this.auth ? this.auth.getToken(t).then((t2) => (
         // Cancel the request since the token changed while the request was
         // outstanding so the response is potentially for a previous user (which
         // user, we can't be sure).
         this.i !== e ? (__PRIVATE_logDebug("FirebaseAuthCredentialsProvider", "getToken aborted due to token change."), this.getToken()) : t2 ? (__PRIVATE_hardAssert("string" == typeof t2.accessToken, 31837, {
           l: t2
         }), new __PRIVATE_OAuthToken(t2.accessToken, this.currentUser)) : null
-      ))) : Promise.resolve(null);
+      )) : Promise.resolve(null);
     }
     invalidateToken() {
       this.forceRefresh = true;
@@ -10368,7 +10593,7 @@ ${this.customData.serverResponse}`;
       return Promise.resolve(new __PRIVATE_FirstPartyToken(this.P, this.T, this.I));
     }
     start(e, t) {
-      e.enqueueRetryable((() => t(User.FIRST_PARTY)));
+      e.enqueueRetryable(() => t(User.FIRST_PARTY));
     }
     shutdown() {
     }
@@ -10392,14 +10617,14 @@ ${this.customData.serverResponse}`;
         return this.m = e2.token, __PRIVATE_logDebug("FirebaseAppCheckTokenProvider", `Received ${n ? "new" : "existing"} token.`), n ? t(e2.token) : Promise.resolve();
       };
       this.o = (t2) => {
-        e.enqueueRetryable((() => onTokenChanged(t2)));
+        e.enqueueRetryable(() => onTokenChanged(t2));
       };
       const __PRIVATE_registerAppCheck = (e2) => {
         __PRIVATE_logDebug("FirebaseAppCheckTokenProvider", "AppCheck detected"), this.appCheck = e2, this.o && this.appCheck.addTokenListener(this.o);
       };
-      this.V.onInit(((e2) => __PRIVATE_registerAppCheck(e2))), // Our users can initialize AppCheck after Firestore, so we give it
+      this.V.onInit((e2) => __PRIVATE_registerAppCheck(e2)), // Our users can initialize AppCheck after Firestore, so we give it
       // a chance to register itself with the component framework.
-      setTimeout((() => {
+      setTimeout(() => {
         if (!this.appCheck) {
           const e2 = this.V.getImmediate({
             optional: true
@@ -10409,14 +10634,15 @@ ${this.customData.serverResponse}`;
             __PRIVATE_logDebug("FirebaseAppCheckTokenProvider", "AppCheck not yet detected")
           );
         }
-      }), 0);
+      }, 0);
     }
     getToken() {
-      if (this.p) return Promise.resolve(new AppCheckToken(this.p));
+      if (this.p)
+        return Promise.resolve(new AppCheckToken(this.p));
       const e = this.forceRefresh;
-      return this.forceRefresh = false, this.appCheck ? this.appCheck.getToken(e).then(((e2) => e2 ? (__PRIVATE_hardAssert("string" == typeof e2.token, 44558, {
+      return this.forceRefresh = false, this.appCheck ? this.appCheck.getToken(e).then((e2) => e2 ? (__PRIVATE_hardAssert("string" == typeof e2.token, 44558, {
         tokenResult: e2
-      }), this.m = e2.token, new AppCheckToken(e2.token)) : null)) : Promise.resolve(null);
+      }), this.m = e2.token, new AppCheckToken(e2.token)) : null) : Promise.resolve(null);
     }
     invalidateToken() {
       this.forceRefresh = true;
@@ -10430,9 +10656,11 @@ ${this.customData.serverResponse}`;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       "undefined" != typeof self && (self.crypto || self.msCrypto)
     ), n = new Uint8Array(e);
-    if (t && "function" == typeof t.getRandomValues) t.getRandomValues(n);
+    if (t && "function" == typeof t.getRandomValues)
+      t.getRandomValues(n);
     else
-      for (let t2 = 0; t2 < e; t2++) n[t2] = Math.floor(256 * Math.random());
+      for (let t2 = 0; t2 < e; t2++)
+        n[t2] = Math.floor(256 * Math.random());
     return n;
   }
   var __PRIVATE_AutoId = class {
@@ -10454,7 +10682,8 @@ ${this.customData.serverResponse}`;
     const n = Math.min(e.length, t.length);
     for (let r = 0; r < n; r++) {
       const n2 = e.charAt(r), i = t.charAt(r);
-      if (n2 !== i) return __PRIVATE_isSurrogate(n2) === __PRIVATE_isSurrogate(i) ? __PRIVATE_primitiveComparator(n2, i) : __PRIVATE_isSurrogate(n2) ? 1 : -1;
+      if (n2 !== i)
+        return __PRIVATE_isSurrogate(n2) === __PRIVATE_isSurrogate(i) ? __PRIVATE_primitiveComparator(n2, i) : __PRIVATE_isSurrogate(n2) ? 1 : -1;
     }
     return __PRIVATE_primitiveComparator(e.length, t.length);
   }
@@ -10465,7 +10694,7 @@ ${this.customData.serverResponse}`;
     return t >= B && t <= L;
   }
   function __PRIVATE_arrayEquals(e, t, n) {
-    return e.length === t.length && e.every(((e2, r) => n(e2, t[r])));
+    return e.length === t.length && e.every((e2, r) => n(e2, t[r]));
   }
   var k = "__name__";
   var BasePath = class _BasePath {
@@ -10486,9 +10715,9 @@ ${this.customData.serverResponse}`;
     }
     child(e) {
       const t = this.segments.slice(this.offset, this.limit());
-      return e instanceof _BasePath ? e.forEach(((e2) => {
+      return e instanceof _BasePath ? e.forEach((e2) => {
         t.push(e2);
-      })) : t.push(e), this.construct(t);
+      }) : t.push(e), this.construct(t);
     }
     /** The index of one past the last segment of the path. */
     limit() {
@@ -10513,17 +10742,24 @@ ${this.customData.serverResponse}`;
       return 0 === this.length;
     }
     isPrefixOf(e) {
-      if (e.length < this.length) return false;
-      for (let t = 0; t < this.length; t++) if (this.get(t) !== e.get(t)) return false;
+      if (e.length < this.length)
+        return false;
+      for (let t = 0; t < this.length; t++)
+        if (this.get(t) !== e.get(t))
+          return false;
       return true;
     }
     isImmediateParentOf(e) {
-      if (this.length + 1 !== e.length) return false;
-      for (let t = 0; t < this.length; t++) if (this.get(t) !== e.get(t)) return false;
+      if (this.length + 1 !== e.length)
+        return false;
+      for (let t = 0; t < this.length; t++)
+        if (this.get(t) !== e.get(t))
+          return false;
       return true;
     }
     forEach(e) {
-      for (let t = this.offset, n = this.limit(); t < n; t++) e(this.segments[t]);
+      for (let t = this.offset, n = this.limit(); t < n; t++)
+        e(this.segments[t]);
     }
     toArray() {
       return this.segments.slice(this.offset, this.limit());
@@ -10537,7 +10773,8 @@ ${this.customData.serverResponse}`;
       const n = Math.min(e.length, t.length);
       for (let r = 0; r < n; r++) {
         const n2 = _BasePath.compareSegments(e.get(r), t.get(r));
-        if (0 !== n2) return n2;
+        if (0 !== n2)
+          return n2;
       }
       return __PRIVATE_primitiveComparator(e.length, t.length);
     }
@@ -10579,8 +10816,9 @@ ${this.customData.serverResponse}`;
     static fromString(...e) {
       const t = [];
       for (const n of e) {
-        if (n.indexOf("//") >= 0) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid segment (${n}). Paths must not contain // in them.`);
-        t.push(...n.split("/").filter(((e2) => e2.length > 0)));
+        if (n.indexOf("//") >= 0)
+          throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid segment (${n}). Paths must not contain // in them.`);
+        t.push(...n.split("/").filter((e2) => e2.length > 0));
       }
       return new _ResourcePath(t);
     }
@@ -10601,7 +10839,7 @@ ${this.customData.serverResponse}`;
       return q.test(e);
     }
     canonicalString() {
-      return this.toArray().map(((e) => (e = e.replace(/\\/g, "\\\\").replace(/`/g, "\\`"), _FieldPath$1.isValidIdentifier(e) || (e = "`" + e + "`"), e))).join(".");
+      return this.toArray().map((e) => (e = e.replace(/\\/g, "\\\\").replace(/`/g, "\\`"), _FieldPath$1.isValidIdentifier(e) || (e = "`" + e + "`"), e)).join(".");
     }
     toString() {
       return this.canonicalString();
@@ -10632,20 +10870,25 @@ ${this.customData.serverResponse}`;
       const t = [];
       let n = "", r = 0;
       const __PRIVATE_addCurrentSegment = () => {
-        if (0 === n.length) throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid field path (${e}). Paths must not be empty, begin with '.', end with '.', or contain '..'`);
+        if (0 === n.length)
+          throw new FirestoreError(N.INVALID_ARGUMENT, `Invalid field path (${e}). Paths must not be empty, begin with '.', end with '.', or contain '..'`);
         t.push(n), n = "";
       };
       let i = false;
       for (; r < e.length; ) {
         const t2 = e[r];
         if ("\\" === t2) {
-          if (r + 1 === e.length) throw new FirestoreError(N.INVALID_ARGUMENT, "Path has trailing escape character: " + e);
+          if (r + 1 === e.length)
+            throw new FirestoreError(N.INVALID_ARGUMENT, "Path has trailing escape character: " + e);
           const t3 = e[r + 1];
-          if ("\\" !== t3 && "." !== t3 && "`" !== t3) throw new FirestoreError(N.INVALID_ARGUMENT, "Path has invalid escape sequence: " + e);
+          if ("\\" !== t3 && "." !== t3 && "`" !== t3)
+            throw new FirestoreError(N.INVALID_ARGUMENT, "Path has invalid escape sequence: " + e);
           n += t3, r += 2;
-        } else "`" === t2 ? (i = !i, r++) : "." !== t2 || i ? (n += t2, r++) : (__PRIVATE_addCurrentSegment(), r++);
+        } else
+          "`" === t2 ? (i = !i, r++) : "." !== t2 || i ? (n += t2, r++) : (__PRIVATE_addCurrentSegment(), r++);
       }
-      if (__PRIVATE_addCurrentSegment(), i) throw new FirestoreError(N.INVALID_ARGUMENT, "Unterminated ` in path: " + e);
+      if (__PRIVATE_addCurrentSegment(), i)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Unterminated ` in path: " + e);
       return new _FieldPath$1(t);
     }
     static emptyPath() {
@@ -10703,7 +10946,8 @@ ${this.customData.serverResponse}`;
     }
   };
   function __PRIVATE_validateIsNotUsedTogether(e, t, n, r) {
-    if (true === t && true === r) throw new FirestoreError(N.INVALID_ARGUMENT, `${e} and ${n} cannot be used together.`);
+    if (true === t && true === r)
+      throw new FirestoreError(N.INVALID_ARGUMENT, `${e} and ${n} cannot be used together.`);
   }
   function __PRIVATE_isPlainObject(e) {
     return "object" == typeof e && null !== e && (Object.getPrototypeOf(e) === Object.prototype || null === Object.getPrototypeOf(e));
@@ -10715,27 +10959,30 @@ ${this.customData.serverResponse}`;
     return t && (n.value = t), n;
   }
   function __PRIVATE_validateJSON(e, t) {
-    if (!__PRIVATE_isPlainObject(e)) throw new FirestoreError(N.INVALID_ARGUMENT, "JSON must be an object");
+    if (!__PRIVATE_isPlainObject(e))
+      throw new FirestoreError(N.INVALID_ARGUMENT, "JSON must be an object");
     let n;
-    for (const r in t) if (t[r]) {
-      const i = t[r].typeString, s = "value" in t[r] ? {
-        value: t[r].value
-      } : void 0;
-      if (!(r in e)) {
-        n = `JSON missing required field: '${r}'`;
-        break;
+    for (const r in t)
+      if (t[r]) {
+        const i = t[r].typeString, s = "value" in t[r] ? {
+          value: t[r].value
+        } : void 0;
+        if (!(r in e)) {
+          n = `JSON missing required field: '${r}'`;
+          break;
+        }
+        const o = e[r];
+        if (i && typeof o !== i) {
+          n = `JSON field '${r}' must be a ${i}.`;
+          break;
+        }
+        if (void 0 !== s && o !== s.value) {
+          n = `Expected '${r}' field to equal '${s.value}'`;
+          break;
+        }
       }
-      const o = e[r];
-      if (i && typeof o !== i) {
-        n = `JSON field '${r}' must be a ${i}.`;
-        break;
-      }
-      if (void 0 !== s && o !== s.value) {
-        n = `Expected '${r}' field to equal '${s.value}'`;
-        break;
-      }
-    }
-    if (n) throw new FirestoreError(N.INVALID_ARGUMENT, n);
+    if (n)
+      throw new FirestoreError(N.INVALID_ARGUMENT, n);
     return true;
   }
   var Q = -62135596800;
@@ -10783,10 +11030,14 @@ ${this.customData.serverResponse}`;
      *     from 0 to 999,999,999 inclusive.
      */
     constructor(e, t) {
-      if (this.seconds = e, this.nanoseconds = t, t < 0) throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
-      if (t >= 1e9) throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
-      if (e < Q) throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
-      if (e >= 253402300800) throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
+      if (this.seconds = e, this.nanoseconds = t, t < 0)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
+      if (t >= 1e9)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp nanoseconds out of range: " + t);
+      if (e < Q)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
+      if (e >= 253402300800)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Timestamp seconds out of range: " + e);
     }
     /**
      * Converts a `Timestamp` to a JavaScript `Date` object. This conversion
@@ -10839,7 +11090,8 @@ ${this.customData.serverResponse}`;
      * Builds a `Timestamp` instance from a JSON object created by {@link Timestamp.toJSON}.
      */
     static fromJSON(e) {
-      if (__PRIVATE_validateJSON(e, _Timestamp._jsonSchema)) return new _Timestamp(e.seconds, e.nanoseconds);
+      if (__PRIVATE_validateJSON(e, _Timestamp._jsonSchema))
+        return new _Timestamp(e.seconds, e.nanoseconds);
     }
     /**
      * Converts this object to a primitive string, which allows `Timestamp` objects
@@ -10924,7 +11176,7 @@ ${this.customData.serverResponse}`;
       this.onCommittedListeners.push(e);
     }
     raiseOnCommittedEvent() {
-      this.onCommittedListeners.forEach(((e) => e()));
+      this.onCommittedListeners.forEach((e) => e());
     }
   };
   var PersistencePromise = class _PersistencePromise {
@@ -10932,30 +11184,30 @@ ${this.customData.serverResponse}`;
       this.nextCallback = null, this.catchCallback = null, // When the operation resolves, we'll set result or error and mark isDone.
       this.result = void 0, this.error = void 0, this.isDone = false, // Set to true when .then() or .catch() are called and prevents additional
       // chaining.
-      this.callbackAttached = false, e(((e2) => {
+      this.callbackAttached = false, e((e2) => {
         this.isDone = true, this.result = e2, this.nextCallback && // value should be defined unless T is Void, but we can't express
         // that in the type system.
         this.nextCallback(e2);
-      }), ((e2) => {
+      }, (e2) => {
         this.isDone = true, this.error = e2, this.catchCallback && this.catchCallback(e2);
-      }));
+      });
     }
     catch(e) {
       return this.next(void 0, e);
     }
     next(e, t) {
-      return this.callbackAttached && fail(59440), this.callbackAttached = true, this.isDone ? this.error ? this.wrapFailure(t, this.error) : this.wrapSuccess(e, this.result) : new _PersistencePromise(((n, r) => {
+      return this.callbackAttached && fail(59440), this.callbackAttached = true, this.isDone ? this.error ? this.wrapFailure(t, this.error) : this.wrapSuccess(e, this.result) : new _PersistencePromise((n, r) => {
         this.nextCallback = (t2) => {
           this.wrapSuccess(e, t2).next(n, r);
         }, this.catchCallback = (e2) => {
           this.wrapFailure(t, e2).next(n, r);
         };
-      }));
+      });
     }
     toPromise() {
-      return new Promise(((e, t) => {
+      return new Promise((e, t) => {
         this.next(e, t);
-      }));
+      });
     }
     wrapUserFunction(e) {
       try {
@@ -10966,30 +11218,30 @@ ${this.customData.serverResponse}`;
       }
     }
     wrapSuccess(e, t) {
-      return e ? this.wrapUserFunction((() => e(t))) : _PersistencePromise.resolve(t);
+      return e ? this.wrapUserFunction(() => e(t)) : _PersistencePromise.resolve(t);
     }
     wrapFailure(e, t) {
-      return e ? this.wrapUserFunction((() => e(t))) : _PersistencePromise.reject(t);
+      return e ? this.wrapUserFunction(() => e(t)) : _PersistencePromise.reject(t);
     }
     static resolve(e) {
-      return new _PersistencePromise(((t, n) => {
+      return new _PersistencePromise((t, n) => {
         t(e);
-      }));
+      });
     }
     static reject(e) {
-      return new _PersistencePromise(((t, n) => {
+      return new _PersistencePromise((t, n) => {
         n(e);
-      }));
+      });
     }
     static waitFor(e) {
-      return new _PersistencePromise(((t, n) => {
+      return new _PersistencePromise((t, n) => {
         let r = 0, i = 0, s = false;
-        e.forEach(((e2) => {
-          ++r, e2.next((() => {
+        e.forEach((e2) => {
+          ++r, e2.next(() => {
             ++i, s && i === r && t();
-          }), ((e3) => n(e3)));
-        })), s = true, i === r && t();
-      }));
+          }, (e3) => n(e3));
+        }), s = true, i === r && t();
+      });
     }
     /**
      * Given an array of predicate functions that asynchronously evaluate to a
@@ -10999,29 +11251,30 @@ ${this.customData.serverResponse}`;
      */
     static or(e) {
       let t = _PersistencePromise.resolve(false);
-      for (const n of e) t = t.next(((e2) => e2 ? _PersistencePromise.resolve(e2) : n()));
+      for (const n of e)
+        t = t.next((e2) => e2 ? _PersistencePromise.resolve(e2) : n());
       return t;
     }
     static forEach(e, t) {
       const n = [];
-      return e.forEach(((e2, r) => {
+      return e.forEach((e2, r) => {
         n.push(t.call(this, e2, r));
-      })), this.waitFor(n);
+      }), this.waitFor(n);
     }
     /**
      * Concurrently map all array elements through asynchronous function.
      */
     static mapArray(e, t) {
-      return new _PersistencePromise(((n, r) => {
+      return new _PersistencePromise((n, r) => {
         const i = e.length, s = new Array(i);
         let o = 0;
         for (let _ = 0; _ < i; _++) {
           const a = _;
-          t(e[a]).next(((e2) => {
+          t(e[a]).next((e2) => {
             s[a] = e2, ++o, o === i && n(s);
-          }), ((e2) => r(e2)));
+          }, (e2) => r(e2));
         }
-      }));
+      });
     }
     /**
      * An alternative to recursive PersistencePromise calls, that avoids
@@ -11030,14 +11283,14 @@ ${this.customData.serverResponse}`;
      * The `action` will be called repeatedly while `condition` is true.
      */
     static doWhile(e, t) {
-      return new _PersistencePromise(((n, r) => {
+      return new _PersistencePromise((n, r) => {
         const process2 = () => {
-          true === e() ? t().next((() => {
+          true === e() ? t().next(() => {
             process2();
-          }), r) : n();
+          }, r) : n();
         };
         process2();
-      }));
+      });
     }
   };
   function __PRIVATE_getAndroidVersion(e) {
@@ -11094,14 +11347,18 @@ ${this.customData.serverResponse}`;
   var it = [...nt, He];
   function __PRIVATE_objectSize(e) {
     let t = 0;
-    for (const n in e) Object.prototype.hasOwnProperty.call(e, n) && t++;
+    for (const n in e)
+      Object.prototype.hasOwnProperty.call(e, n) && t++;
     return t;
   }
   function forEach(e, t) {
-    for (const n in e) Object.prototype.hasOwnProperty.call(e, n) && t(n, e[n]);
+    for (const n in e)
+      Object.prototype.hasOwnProperty.call(e, n) && t(n, e[n]);
   }
   function isEmpty2(e) {
-    for (const t in e) if (Object.prototype.hasOwnProperty.call(e, t)) return false;
+    for (const t in e)
+      if (Object.prototype.hasOwnProperty.call(e, t))
+        return false;
     return true;
   }
   var SortedMap = class _SortedMap {
@@ -11121,7 +11378,8 @@ ${this.customData.serverResponse}`;
       let t = this.root;
       for (; !t.isEmpty(); ) {
         const n = this.comparator(e, t.key);
-        if (0 === n) return t.value;
+        if (0 === n)
+          return t.value;
         n < 0 ? t = t.left : n > 0 && (t = t.right);
       }
       return null;
@@ -11132,7 +11390,8 @@ ${this.customData.serverResponse}`;
       let t = 0, n = this.root;
       for (; !n.isEmpty(); ) {
         const r = this.comparator(e, n.key);
-        if (0 === r) return t + n.left.size;
+        if (0 === r)
+          return t + n.left.size;
         r < 0 ? n = n.left : (
           // Count all nodes left of the node plus the node itself
           (t += n.left.size + 1, n = n.right)
@@ -11163,11 +11422,11 @@ ${this.customData.serverResponse}`;
       return this.root.inorderTraversal(e);
     }
     forEach(e) {
-      this.inorderTraversal(((t, n) => (e(t, n), false)));
+      this.inorderTraversal((t, n) => (e(t, n), false));
     }
     toString() {
       const e = [];
-      return this.inorderTraversal(((t, n) => (e.push(`${t}:${n}`), false))), `{${e.join(", ")}}`;
+      return this.inorderTraversal((t, n) => (e.push(`${t}:${n}`), false)), `{${e.join(", ")}}`;
     }
     // Traverses the map in reverse key order and calls the specified action
     // function for each key/value pair. If action returns true, traversal is
@@ -11195,16 +11454,17 @@ ${this.customData.serverResponse}`;
     constructor(e, t, n, r) {
       this.isReverse = r, this.nodeStack = [];
       let i = 1;
-      for (; !e.isEmpty(); ) if (i = t ? n(e.key, t) : 1, // flip the comparison if we're going in reverse
-      t && r && (i *= -1), i < 0)
-        e = this.isReverse ? e.left : e.right;
-      else {
-        if (0 === i) {
-          this.nodeStack.push(e);
-          break;
+      for (; !e.isEmpty(); )
+        if (i = t ? n(e.key, t) : 1, // flip the comparison if we're going in reverse
+        t && r && (i *= -1), i < 0)
+          e = this.isReverse ? e.left : e.right;
+        else {
+          if (0 === i) {
+            this.nodeStack.push(e);
+            break;
+          }
+          this.nodeStack.push(e), e = this.isReverse ? e.right : e.left;
         }
-        this.nodeStack.push(e), e = this.isReverse ? e.right : e.left;
-      }
     }
     getNext() {
       let e = this.nodeStack.pop();
@@ -11212,15 +11472,20 @@ ${this.customData.serverResponse}`;
         key: e.key,
         value: e.value
       };
-      if (this.isReverse) for (e = e.left; !e.isEmpty(); ) this.nodeStack.push(e), e = e.right;
-      else for (e = e.right; !e.isEmpty(); ) this.nodeStack.push(e), e = e.left;
+      if (this.isReverse)
+        for (e = e.left; !e.isEmpty(); )
+          this.nodeStack.push(e), e = e.right;
+      else
+        for (e = e.right; !e.isEmpty(); )
+          this.nodeStack.push(e), e = e.left;
       return t;
     }
     hasNext() {
       return this.nodeStack.length > 0;
     }
     peek() {
-      if (0 === this.nodeStack.length) return null;
+      if (0 === this.nodeStack.length)
+        return null;
       const e = this.nodeStack[this.nodeStack.length - 1];
       return {
         key: e.key,
@@ -11272,17 +11537,20 @@ ${this.customData.serverResponse}`;
       return r = i < 0 ? r.copy(null, null, null, r.left.insert(e, t, n), null) : 0 === i ? r.copy(null, t, null, null, null) : r.copy(null, null, null, null, r.right.insert(e, t, n)), r.fixUp();
     }
     removeMin() {
-      if (this.left.isEmpty()) return _LLRBNode.EMPTY;
+      if (this.left.isEmpty())
+        return _LLRBNode.EMPTY;
       let e = this;
       return e.left.isRed() || e.left.left.isRed() || (e = e.moveRedLeft()), e = e.copy(null, null, null, e.left.removeMin(), null), e.fixUp();
     }
     // Returns new tree, with the specified item removed.
     remove(e, t) {
       let n, r = this;
-      if (t(e, r.key) < 0) r.left.isEmpty() || r.left.isRed() || r.left.left.isRed() || (r = r.moveRedLeft()), r = r.copy(null, null, null, r.left.remove(e, t), null);
+      if (t(e, r.key) < 0)
+        r.left.isEmpty() || r.left.isRed() || r.left.left.isRed() || (r = r.moveRedLeft()), r = r.copy(null, null, null, r.left.remove(e, t), null);
       else {
         if (r.left.isRed() && (r = r.rotateRight()), r.right.isEmpty() || r.right.isRed() || r.right.left.isRed() || (r = r.moveRedRight()), 0 === t(e, r.key)) {
-          if (r.right.isEmpty()) return _LLRBNode.EMPTY;
+          if (r.right.isEmpty())
+            return _LLRBNode.EMPTY;
           n = r.right.min(), r = r.copy(n.key, n.value, null, null, r.right.removeMin());
         }
         r = r.copy(null, null, null, null, r.right.remove(e, t));
@@ -11325,16 +11593,19 @@ ${this.customData.serverResponse}`;
     // In a balanced RB tree, the black-depth (number of black nodes) from root to
     // leaves is equal on both sides.  This function verifies that or asserts.
     check() {
-      if (this.isRed() && this.left.isRed()) throw fail(43730, {
-        key: this.key,
-        value: this.value
-      });
-      if (this.right.isRed()) throw fail(14113, {
-        key: this.key,
-        value: this.value
-      });
+      if (this.isRed() && this.left.isRed())
+        throw fail(43730, {
+          key: this.key,
+          value: this.value
+        });
+      if (this.right.isRed())
+        throw fail(14113, {
+          key: this.key,
+          value: this.value
+        });
       const e = this.left.check();
-      if (e !== this.right.check()) throw fail(27949);
+      if (e !== this.right.check())
+        throw fail(27949);
       return e + (this.isRed() ? 0 : 1);
     }
   };
@@ -11418,14 +11689,15 @@ ${this.customData.serverResponse}`;
     }
     /** Iterates elements in order defined by "comparator" */
     forEach(e) {
-      this.data.inorderTraversal(((t, n) => (e(t), false)));
+      this.data.inorderTraversal((t, n) => (e(t), false));
     }
     /** Iterates over `elem`s such that: range[0] &lt;= elem &lt; range[1]. */
     forEachInRange(e, t) {
       const n = this.data.getIteratorFrom(e[0]);
       for (; n.hasNext(); ) {
         const r = n.getNext();
-        if (this.comparator(r.key, e[1]) >= 0) return;
+        if (this.comparator(r.key, e[1]) >= 0)
+          return;
         t(r.key);
       }
     }
@@ -11435,7 +11707,8 @@ ${this.customData.serverResponse}`;
     forEachWhile(e, t) {
       let n;
       for (n = void 0 !== t ? this.data.getIteratorFrom(t) : this.data.getIterator(); n.hasNext(); ) {
-        if (!e(n.getNext().key)) return;
+        if (!e(n.getNext().key))
+          return;
       }
     }
     /** Finds the least element greater than or equal to `elem`. */
@@ -11462,29 +11735,32 @@ ${this.customData.serverResponse}`;
     }
     unionWith(e) {
       let t = this;
-      return t.size < e.size && (t = e, e = this), e.forEach(((e2) => {
+      return t.size < e.size && (t = e, e = this), e.forEach((e2) => {
         t = t.add(e2);
-      })), t;
+      }), t;
     }
     isEqual(e) {
-      if (!(e instanceof _SortedSet)) return false;
-      if (this.size !== e.size) return false;
+      if (!(e instanceof _SortedSet))
+        return false;
+      if (this.size !== e.size)
+        return false;
       const t = this.data.getIterator(), n = e.data.getIterator();
       for (; t.hasNext(); ) {
         const e2 = t.getNext().key, r = n.getNext().key;
-        if (0 !== this.comparator(e2, r)) return false;
+        if (0 !== this.comparator(e2, r))
+          return false;
       }
       return true;
     }
     toArray() {
       const e = [];
-      return this.forEach(((t) => {
+      return this.forEach((t) => {
         e.push(t);
-      })), e;
+      }), e;
     }
     toString() {
       const e = [];
-      return this.forEach(((t) => e.push(t))), "SortedSet(" + e.toString() + ")";
+      return this.forEach((t) => e.push(t)), "SortedSet(" + e.toString() + ")";
     }
     copy(e) {
       const t = new _SortedSet(this.comparator);
@@ -11517,8 +11793,10 @@ ${this.customData.serverResponse}`;
      */
     unionWith(e) {
       let t = new SortedSet(FieldPath$1.comparator);
-      for (const e2 of this.fields) t = t.add(e2);
-      for (const n of e) t = t.add(n);
+      for (const e2 of this.fields)
+        t = t.add(e2);
+      for (const n of e)
+        t = t.add(n);
       return new _FieldMask(t.toArray());
     }
     /**
@@ -11528,11 +11806,13 @@ ${this.customData.serverResponse}`;
      * This is an O(n) operation, where `n` is the size of the field mask.
      */
     covers(e) {
-      for (const t of this.fields) if (t.isPrefixOf(e)) return true;
+      for (const t of this.fields)
+        if (t.isPrefixOf(e))
+          return true;
       return false;
     }
     isEqual(e) {
-      return __PRIVATE_arrayEquals(this.fields, e.fields, ((e2, t) => e2.isEqual(t)));
+      return __PRIVATE_arrayEquals(this.fields, e.fields, (e2, t) => e2.isEqual(t));
     }
   };
   var __PRIVATE_Base64DecodeError = class extends Error {
@@ -11545,13 +11825,13 @@ ${this.customData.serverResponse}`;
       this.binaryString = e;
     }
     static fromBase64String(e) {
-      const t = (function __PRIVATE_decodeBase64(e2) {
+      const t = function __PRIVATE_decodeBase64(e2) {
         try {
           return atob(e2);
         } catch (e3) {
           throw "undefined" != typeof DOMException && e3 instanceof DOMException ? new __PRIVATE_Base64DecodeError("Invalid base64 string: " + e3) : e3;
         }
-      })(e);
+      }(e);
       return new _ByteString(t);
     }
     static fromUint8Array(e) {
@@ -11559,11 +11839,12 @@ ${this.customData.serverResponse}`;
         /**
         * Helper function to convert an Uint8array to a binary string.
         */
-        (function __PRIVATE_binaryStringFromUint8Array(e2) {
+        function __PRIVATE_binaryStringFromUint8Array(e2) {
           let t2 = "";
-          for (let n = 0; n < e2.length; ++n) t2 += String.fromCharCode(e2[n]);
+          for (let n = 0; n < e2.length; ++n)
+            t2 += String.fromCharCode(e2[n]);
           return t2;
-        })(e)
+        }(e)
       );
       return new _ByteString(t);
     }
@@ -11580,16 +11861,17 @@ ${this.customData.serverResponse}`;
       };
     }
     toBase64() {
-      return (function __PRIVATE_encodeBase64(e) {
+      return function __PRIVATE_encodeBase64(e) {
         return btoa(e);
-      })(this.binaryString);
+      }(this.binaryString);
     }
     toUint8Array() {
-      return (function __PRIVATE_uint8ArrayFromBinaryString(e) {
+      return function __PRIVATE_uint8ArrayFromBinaryString(e) {
         const t = new Uint8Array(e.length);
-        for (let n = 0; n < e.length; n++) t[n] = e.charCodeAt(n);
+        for (let n = 0; n < e.length; n++)
+          t[n] = e.charCodeAt(n);
         return t;
-      })(this.binaryString);
+      }(this.binaryString);
     }
     approximateByteSize() {
       return 2 * this.binaryString.length;
@@ -11680,9 +11962,11 @@ ${this.customData.serverResponse}`;
     });
   }
   function __PRIVATE_valueEquals(e, t) {
-    if (e === t) return true;
+    if (e === t)
+      return true;
     const n = __PRIVATE_typeOrder(e);
-    if (n !== __PRIVATE_typeOrder(t)) return false;
+    if (n !== __PRIVATE_typeOrder(t))
+      return false;
     switch (n) {
       case 0:
       case 9007199254740991:
@@ -11692,43 +11976,47 @@ ${this.customData.serverResponse}`;
       case 4:
         return __PRIVATE_getLocalWriteTime(e).isEqual(__PRIVATE_getLocalWriteTime(t));
       case 3:
-        return (function __PRIVATE_timestampEquals(e2, t2) {
+        return function __PRIVATE_timestampEquals(e2, t2) {
           if ("string" == typeof e2.timestampValue && "string" == typeof t2.timestampValue && e2.timestampValue.length === t2.timestampValue.length)
             return e2.timestampValue === t2.timestampValue;
           const n2 = __PRIVATE_normalizeTimestamp(e2.timestampValue), r = __PRIVATE_normalizeTimestamp(t2.timestampValue);
           return n2.seconds === r.seconds && n2.nanos === r.nanos;
-        })(e, t);
+        }(e, t);
       case 5:
         return e.stringValue === t.stringValue;
       case 6:
-        return (function __PRIVATE_blobEquals(e2, t2) {
+        return function __PRIVATE_blobEquals(e2, t2) {
           return __PRIVATE_normalizeByteString(e2.bytesValue).isEqual(__PRIVATE_normalizeByteString(t2.bytesValue));
-        })(e, t);
+        }(e, t);
       case 7:
         return e.referenceValue === t.referenceValue;
       case 8:
-        return (function __PRIVATE_geoPointEquals(e2, t2) {
+        return function __PRIVATE_geoPointEquals(e2, t2) {
           return __PRIVATE_normalizeNumber(e2.geoPointValue.latitude) === __PRIVATE_normalizeNumber(t2.geoPointValue.latitude) && __PRIVATE_normalizeNumber(e2.geoPointValue.longitude) === __PRIVATE_normalizeNumber(t2.geoPointValue.longitude);
-        })(e, t);
+        }(e, t);
       case 2:
-        return (function __PRIVATE_numberEquals(e2, t2) {
-          if ("integerValue" in e2 && "integerValue" in t2) return __PRIVATE_normalizeNumber(e2.integerValue) === __PRIVATE_normalizeNumber(t2.integerValue);
+        return function __PRIVATE_numberEquals(e2, t2) {
+          if ("integerValue" in e2 && "integerValue" in t2)
+            return __PRIVATE_normalizeNumber(e2.integerValue) === __PRIVATE_normalizeNumber(t2.integerValue);
           if ("doubleValue" in e2 && "doubleValue" in t2) {
             const n2 = __PRIVATE_normalizeNumber(e2.doubleValue), r = __PRIVATE_normalizeNumber(t2.doubleValue);
             return n2 === r ? __PRIVATE_isNegativeZero(n2) === __PRIVATE_isNegativeZero(r) : isNaN(n2) && isNaN(r);
           }
           return false;
-        })(e, t);
+        }(e, t);
       case 9:
         return __PRIVATE_arrayEquals(e.arrayValue.values || [], t.arrayValue.values || [], __PRIVATE_valueEquals);
       case 10:
       case 11:
-        return (function __PRIVATE_objectEquals(e2, t2) {
+        return function __PRIVATE_objectEquals(e2, t2) {
           const n2 = e2.mapValue.fields || {}, r = t2.mapValue.fields || {};
-          if (__PRIVATE_objectSize(n2) !== __PRIVATE_objectSize(r)) return false;
-          for (const e3 in n2) if (n2.hasOwnProperty(e3) && (void 0 === r[e3] || !__PRIVATE_valueEquals(n2[e3], r[e3]))) return false;
+          if (__PRIVATE_objectSize(n2) !== __PRIVATE_objectSize(r))
+            return false;
+          for (const e3 in n2)
+            if (n2.hasOwnProperty(e3) && (void 0 === r[e3] || !__PRIVATE_valueEquals(n2[e3], r[e3])))
+              return false;
           return true;
-        })(e, t);
+        }(e, t);
       default:
         return fail(52216, {
           left: e
@@ -11736,12 +12024,14 @@ ${this.customData.serverResponse}`;
     }
   }
   function __PRIVATE_arrayValueContains(e, t) {
-    return void 0 !== (e.values || []).find(((e2) => __PRIVATE_valueEquals(e2, t)));
+    return void 0 !== (e.values || []).find((e2) => __PRIVATE_valueEquals(e2, t));
   }
   function __PRIVATE_valueCompare(e, t) {
-    if (e === t) return 0;
+    if (e === t)
+      return 0;
     const n = __PRIVATE_typeOrder(e), r = __PRIVATE_typeOrder(t);
-    if (n !== r) return __PRIVATE_primitiveComparator(n, r);
+    if (n !== r)
+      return __PRIVATE_primitiveComparator(n, r);
     switch (n) {
       case 0:
       case 9007199254740991:
@@ -11749,13 +12039,13 @@ ${this.customData.serverResponse}`;
       case 1:
         return __PRIVATE_primitiveComparator(e.booleanValue, t.booleanValue);
       case 2:
-        return (function __PRIVATE_compareNumbers(e2, t2) {
+        return function __PRIVATE_compareNumbers(e2, t2) {
           const n2 = __PRIVATE_normalizeNumber(e2.integerValue || e2.doubleValue), r2 = __PRIVATE_normalizeNumber(t2.integerValue || t2.doubleValue);
           return n2 < r2 ? -1 : n2 > r2 ? 1 : n2 === r2 ? 0 : (
             // one or both are NaN.
             isNaN(n2) ? isNaN(r2) ? 0 : -1 : 1
           );
-        })(e, t);
+        }(e, t);
       case 3:
         return __PRIVATE_compareTimestamps(e.timestampValue, t.timestampValue);
       case 4:
@@ -11763,48 +12053,56 @@ ${this.customData.serverResponse}`;
       case 5:
         return __PRIVATE_compareUtf8Strings(e.stringValue, t.stringValue);
       case 6:
-        return (function __PRIVATE_compareBlobs(e2, t2) {
+        return function __PRIVATE_compareBlobs(e2, t2) {
           const n2 = __PRIVATE_normalizeByteString(e2), r2 = __PRIVATE_normalizeByteString(t2);
           return n2.compareTo(r2);
-        })(e.bytesValue, t.bytesValue);
+        }(e.bytesValue, t.bytesValue);
       case 7:
-        return (function __PRIVATE_compareReferences(e2, t2) {
+        return function __PRIVATE_compareReferences(e2, t2) {
           const n2 = e2.split("/"), r2 = t2.split("/");
           for (let e3 = 0; e3 < n2.length && e3 < r2.length; e3++) {
             const t3 = __PRIVATE_primitiveComparator(n2[e3], r2[e3]);
-            if (0 !== t3) return t3;
+            if (0 !== t3)
+              return t3;
           }
           return __PRIVATE_primitiveComparator(n2.length, r2.length);
-        })(e.referenceValue, t.referenceValue);
+        }(e.referenceValue, t.referenceValue);
       case 8:
-        return (function __PRIVATE_compareGeoPoints(e2, t2) {
+        return function __PRIVATE_compareGeoPoints(e2, t2) {
           const n2 = __PRIVATE_primitiveComparator(__PRIVATE_normalizeNumber(e2.latitude), __PRIVATE_normalizeNumber(t2.latitude));
-          if (0 !== n2) return n2;
+          if (0 !== n2)
+            return n2;
           return __PRIVATE_primitiveComparator(__PRIVATE_normalizeNumber(e2.longitude), __PRIVATE_normalizeNumber(t2.longitude));
-        })(e.geoPointValue, t.geoPointValue);
+        }(e.geoPointValue, t.geoPointValue);
       case 9:
         return __PRIVATE_compareArrays(e.arrayValue, t.arrayValue);
       case 10:
-        return (function __PRIVATE_compareVectors(e2, t2) {
+        return function __PRIVATE_compareVectors(e2, t2) {
           const n2 = e2.fields || {}, r2 = t2.fields || {}, i = n2[Et]?.arrayValue, s = r2[Et]?.arrayValue, o = __PRIVATE_primitiveComparator(i?.values?.length || 0, s?.values?.length || 0);
-          if (0 !== o) return o;
+          if (0 !== o)
+            return o;
           return __PRIVATE_compareArrays(i, s);
-        })(e.mapValue, t.mapValue);
+        }(e.mapValue, t.mapValue);
       case 11:
-        return (function __PRIVATE_compareMaps(e2, t2) {
-          if (e2 === Tt.mapValue && t2 === Tt.mapValue) return 0;
-          if (e2 === Tt.mapValue) return 1;
-          if (t2 === Tt.mapValue) return -1;
+        return function __PRIVATE_compareMaps(e2, t2) {
+          if (e2 === Tt.mapValue && t2 === Tt.mapValue)
+            return 0;
+          if (e2 === Tt.mapValue)
+            return 1;
+          if (t2 === Tt.mapValue)
+            return -1;
           const n2 = e2.fields || {}, r2 = Object.keys(n2), i = t2.fields || {}, s = Object.keys(i);
           r2.sort(), s.sort();
           for (let e3 = 0; e3 < r2.length && e3 < s.length; ++e3) {
             const t3 = __PRIVATE_compareUtf8Strings(r2[e3], s[e3]);
-            if (0 !== t3) return t3;
+            if (0 !== t3)
+              return t3;
             const o = __PRIVATE_valueCompare(n2[r2[e3]], i[s[e3]]);
-            if (0 !== o) return o;
+            if (0 !== o)
+              return o;
           }
           return __PRIVATE_primitiveComparator(r2.length, s.length);
-        })(e.mapValue, t.mapValue);
+        }(e.mapValue, t.mapValue);
       default:
         throw fail(23264, {
           he: n
@@ -11812,7 +12110,8 @@ ${this.customData.serverResponse}`;
     }
   }
   function __PRIVATE_compareTimestamps(e, t) {
-    if ("string" == typeof e && "string" == typeof t && e.length === t.length) return __PRIVATE_primitiveComparator(e, t);
+    if ("string" == typeof e && "string" == typeof t && e.length === t.length)
+      return __PRIVATE_primitiveComparator(e, t);
     const n = __PRIVATE_normalizeTimestamp(e), r = __PRIVATE_normalizeTimestamp(t), i = __PRIVATE_primitiveComparator(n.seconds, r.seconds);
     return 0 !== i ? i : __PRIVATE_primitiveComparator(n.nanos, r.nanos);
   }
@@ -11820,7 +12119,8 @@ ${this.customData.serverResponse}`;
     const n = e.values || [], r = t.values || [];
     for (let e2 = 0; e2 < n.length && e2 < r.length; ++e2) {
       const t2 = __PRIVATE_valueCompare(n[e2], r[e2]);
-      if (t2) return t2;
+      if (t2)
+        return t2;
     }
     return __PRIVATE_primitiveComparator(n.length, r.length);
   }
@@ -11828,25 +12128,27 @@ ${this.customData.serverResponse}`;
     return __PRIVATE_canonifyValue(e);
   }
   function __PRIVATE_canonifyValue(e) {
-    return "nullValue" in e ? "null" : "booleanValue" in e ? "" + e.booleanValue : "integerValue" in e ? "" + e.integerValue : "doubleValue" in e ? "" + e.doubleValue : "timestampValue" in e ? (function __PRIVATE_canonifyTimestamp(e2) {
+    return "nullValue" in e ? "null" : "booleanValue" in e ? "" + e.booleanValue : "integerValue" in e ? "" + e.integerValue : "doubleValue" in e ? "" + e.doubleValue : "timestampValue" in e ? function __PRIVATE_canonifyTimestamp(e2) {
       const t = __PRIVATE_normalizeTimestamp(e2);
       return `time(${t.seconds},${t.nanos})`;
-    })(e.timestampValue) : "stringValue" in e ? e.stringValue : "bytesValue" in e ? (function __PRIVATE_canonifyByteString(e2) {
+    }(e.timestampValue) : "stringValue" in e ? e.stringValue : "bytesValue" in e ? function __PRIVATE_canonifyByteString(e2) {
       return __PRIVATE_normalizeByteString(e2).toBase64();
-    })(e.bytesValue) : "referenceValue" in e ? (function __PRIVATE_canonifyReference(e2) {
+    }(e.bytesValue) : "referenceValue" in e ? function __PRIVATE_canonifyReference(e2) {
       return DocumentKey.fromName(e2).toString();
-    })(e.referenceValue) : "geoPointValue" in e ? (function __PRIVATE_canonifyGeoPoint(e2) {
+    }(e.referenceValue) : "geoPointValue" in e ? function __PRIVATE_canonifyGeoPoint(e2) {
       return `geo(${e2.latitude},${e2.longitude})`;
-    })(e.geoPointValue) : "arrayValue" in e ? (function __PRIVATE_canonifyArray(e2) {
+    }(e.geoPointValue) : "arrayValue" in e ? function __PRIVATE_canonifyArray(e2) {
       let t = "[", n = true;
-      for (const r of e2.values || []) n ? n = false : t += ",", t += __PRIVATE_canonifyValue(r);
+      for (const r of e2.values || [])
+        n ? n = false : t += ",", t += __PRIVATE_canonifyValue(r);
       return t + "]";
-    })(e.arrayValue) : "mapValue" in e ? (function __PRIVATE_canonifyMap(e2) {
+    }(e.arrayValue) : "mapValue" in e ? function __PRIVATE_canonifyMap(e2) {
       const t = Object.keys(e2.fields || {}).sort();
       let n = "{", r = true;
-      for (const i of t) r ? r = false : n += ",", n += `${i}:${__PRIVATE_canonifyValue(e2.fields[i])}`;
+      for (const i of t)
+        r ? r = false : n += ",", n += `${i}:${__PRIVATE_canonifyValue(e2.fields[i])}`;
       return n + "}";
-    })(e.mapValue) : fail(61005, {
+    }(e.mapValue) : fail(61005, {
       value: e
     });
   }
@@ -11864,23 +12166,25 @@ ${this.customData.serverResponse}`;
     return t === It;
   }
   function __PRIVATE_deepClone(e) {
-    if (e.geoPointValue) return {
-      geoPointValue: {
-        ...e.geoPointValue
-      }
-    };
-    if (e.timestampValue && "object" == typeof e.timestampValue) return {
-      timestampValue: {
-        ...e.timestampValue
-      }
-    };
+    if (e.geoPointValue)
+      return {
+        geoPointValue: {
+          ...e.geoPointValue
+        }
+      };
+    if (e.timestampValue && "object" == typeof e.timestampValue)
+      return {
+        timestampValue: {
+          ...e.timestampValue
+        }
+      };
     if (e.mapValue) {
       const t = {
         mapValue: {
           fields: {}
         }
       };
-      return forEach(e.mapValue.fields, ((e2, n) => t.mapValue.fields[e2] = __PRIVATE_deepClone(n))), t;
+      return forEach(e.mapValue.fields, (e2, n) => t.mapValue.fields[e2] = __PRIVATE_deepClone(n)), t;
     }
     if (e.arrayValue) {
       const t = {
@@ -11888,7 +12192,8 @@ ${this.customData.serverResponse}`;
           values: []
         }
       };
-      for (let n = 0; n < (e.arrayValue.values || []).length; ++n) t.arrayValue.values[n] = __PRIVATE_deepClone(e.arrayValue.values[n]);
+      for (let n = 0; n < (e.arrayValue.values || []).length; ++n)
+        t.arrayValue.values[n] = __PRIVATE_deepClone(e.arrayValue.values[n]);
       return t;
     }
     return {
@@ -11926,10 +12231,13 @@ ${this.customData.serverResponse}`;
      * @returns The value at the path or null if the path is not set.
      */
     field(e) {
-      if (e.isEmpty()) return this.value;
+      if (e.isEmpty())
+        return this.value;
       {
         let t = this.value;
-        for (let n = 0; n < e.length - 1; ++n) if (t = (t.mapValue.fields || {})[e.get(n)], !__PRIVATE_isMapValue(t)) return null;
+        for (let n = 0; n < e.length - 1; ++n)
+          if (t = (t.mapValue.fields || {})[e.get(n)], !__PRIVATE_isMapValue(t))
+            return null;
         return t = (t.mapValue.fields || {})[e.lastSegment()], t || null;
       }
     }
@@ -11949,13 +12257,13 @@ ${this.customData.serverResponse}`;
      */
     setAll(e) {
       let t = FieldPath$1.emptyPath(), n = {}, r = [];
-      e.forEach(((e2, i2) => {
+      e.forEach((e2, i2) => {
         if (!t.isImmediateParentOf(i2)) {
           const e3 = this.getFieldsMap(t);
           this.applyChanges(e3, n, r), n = {}, r = [], t = i2.popLast();
         }
         e2 ? n[i2.lastSegment()] = __PRIVATE_deepClone(e2) : r.push(i2.lastSegment());
-      }));
+      });
       const i = this.getFieldsMap(t);
       this.applyChanges(i, n, r);
     }
@@ -11996,8 +12304,9 @@ ${this.customData.serverResponse}`;
      * entries.
      */
     applyChanges(e, t, n) {
-      forEach(t, ((t2, n2) => e[t2] = n2));
-      for (const t2 of n) delete e[t2];
+      forEach(t, (t2, n2) => e[t2] = n2);
+      for (const t2 of n)
+        delete e[t2];
     }
     clone() {
       return new _ObjectValue(__PRIVATE_deepClone(this.value));
@@ -12152,20 +12461,26 @@ ${this.customData.serverResponse}`;
     let r = 0;
     for (let i = 0; i < e.position.length; i++) {
       const s = t[i], o = e.position[i];
-      if (s.field.isKeyField()) r = DocumentKey.comparator(DocumentKey.fromName(o.referenceValue), n.key);
+      if (s.field.isKeyField())
+        r = DocumentKey.comparator(DocumentKey.fromName(o.referenceValue), n.key);
       else {
         r = __PRIVATE_valueCompare(o, n.data.field(s.field));
       }
-      if ("desc" === s.dir && (r *= -1), 0 !== r) break;
+      if ("desc" === s.dir && (r *= -1), 0 !== r)
+        break;
     }
     return r;
   }
   function __PRIVATE_boundEquals(e, t) {
-    if (null === e) return null === t;
-    if (null === t) return false;
-    if (e.inclusive !== t.inclusive || e.position.length !== t.position.length) return false;
+    if (null === e)
+      return null === t;
+    if (null === t)
+      return false;
+    if (e.inclusive !== t.inclusive || e.position.length !== t.position.length)
+      return false;
     for (let n = 0; n < e.position.length; n++) {
-      if (!__PRIVATE_valueEquals(e.position[n], t.position[n])) return false;
+      if (!__PRIVATE_valueEquals(e.position[n], t.position[n]))
+        return false;
     }
     return true;
   }
@@ -12245,10 +12560,10 @@ ${this.customData.serverResponse}`;
       return new _CompositeFilter(e, t);
     }
     matches(e) {
-      return __PRIVATE_compositeFilterIsConjunction(this) ? void 0 === this.filters.find(((t) => !t.matches(e))) : void 0 !== this.filters.find(((t) => t.matches(e)));
+      return __PRIVATE_compositeFilterIsConjunction(this) ? void 0 === this.filters.find((t) => !t.matches(e)) : void 0 !== this.filters.find((t) => t.matches(e));
     }
     getFlattenedFilters() {
-      return null !== this.Pe || (this.Pe = this.filters.reduce(((e, t) => e.concat(t.getFlattenedFilters())), [])), this.Pe;
+      return null !== this.Pe || (this.Pe = this.filters.reduce((e, t) => e.concat(t.getFlattenedFilters()), [])), this.Pe;
     }
     // Returns a mutable copy of `this.filters`
     getFilters() {
@@ -12262,35 +12577,37 @@ ${this.customData.serverResponse}`;
     return __PRIVATE_compositeFilterIsFlat(e) && __PRIVATE_compositeFilterIsConjunction(e);
   }
   function __PRIVATE_compositeFilterIsFlat(e) {
-    for (const t of e.filters) if (t instanceof CompositeFilter) return false;
+    for (const t of e.filters)
+      if (t instanceof CompositeFilter)
+        return false;
     return true;
   }
   function __PRIVATE_canonifyFilter(e) {
     if (e instanceof FieldFilter)
       return e.field.canonicalString() + e.op.toString() + canonicalId(e.value);
     if (__PRIVATE_compositeFilterIsFlatConjunction(e))
-      return e.filters.map(((e2) => __PRIVATE_canonifyFilter(e2))).join(",");
+      return e.filters.map((e2) => __PRIVATE_canonifyFilter(e2)).join(",");
     {
-      const t = e.filters.map(((e2) => __PRIVATE_canonifyFilter(e2))).join(",");
+      const t = e.filters.map((e2) => __PRIVATE_canonifyFilter(e2)).join(",");
       return `${e.op}(${t})`;
     }
   }
   function __PRIVATE_filterEquals(e, t) {
-    return e instanceof FieldFilter ? (function __PRIVATE_fieldFilterEquals(e2, t2) {
+    return e instanceof FieldFilter ? function __PRIVATE_fieldFilterEquals(e2, t2) {
       return t2 instanceof FieldFilter && e2.op === t2.op && e2.field.isEqual(t2.field) && __PRIVATE_valueEquals(e2.value, t2.value);
-    })(e, t) : e instanceof CompositeFilter ? (function __PRIVATE_compositeFilterEquals(e2, t2) {
+    }(e, t) : e instanceof CompositeFilter ? function __PRIVATE_compositeFilterEquals(e2, t2) {
       if (t2 instanceof CompositeFilter && e2.op === t2.op && e2.filters.length === t2.filters.length) {
-        return e2.filters.reduce(((e3, n, r) => e3 && __PRIVATE_filterEquals(n, t2.filters[r])), true);
+        return e2.filters.reduce((e3, n, r) => e3 && __PRIVATE_filterEquals(n, t2.filters[r]), true);
       }
       return false;
-    })(e, t) : void fail(19439);
+    }(e, t) : void fail(19439);
   }
   function __PRIVATE_stringifyFilter(e) {
-    return e instanceof FieldFilter ? (function __PRIVATE_stringifyFieldFilter(e2) {
+    return e instanceof FieldFilter ? function __PRIVATE_stringifyFieldFilter(e2) {
       return `${e2.field.canonicalString()} ${e2.op} ${canonicalId(e2.value)}`;
-    })(e) : e instanceof CompositeFilter ? (function __PRIVATE_stringifyCompositeFilter(e2) {
+    }(e) : e instanceof CompositeFilter ? function __PRIVATE_stringifyCompositeFilter(e2) {
       return e2.op.toString() + " {" + e2.getFilters().map(__PRIVATE_stringifyFilter).join(" ,") + "}";
-    })(e) : "Filter";
+    }(e) : "Filter";
   }
   var __PRIVATE_KeyFieldFilter = class extends FieldFilter {
     constructor(e, t, n) {
@@ -12306,7 +12623,7 @@ ${this.customData.serverResponse}`;
       super(e, "in", t), this.keys = __PRIVATE_extractDocumentKeysFromArrayValue("in", t);
     }
     matches(e) {
-      return this.keys.some(((t) => t.isEqual(e.key)));
+      return this.keys.some((t) => t.isEqual(e.key));
     }
   };
   var __PRIVATE_KeyFieldNotInFilter = class extends FieldFilter {
@@ -12314,11 +12631,11 @@ ${this.customData.serverResponse}`;
       super(e, "not-in", t), this.keys = __PRIVATE_extractDocumentKeysFromArrayValue("not-in", t);
     }
     matches(e) {
-      return !this.keys.some(((t) => t.isEqual(e.key)));
+      return !this.keys.some((t) => t.isEqual(e.key));
     }
   };
   function __PRIVATE_extractDocumentKeysFromArrayValue(e, t) {
-    return (t.arrayValue?.values || []).map(((e2) => DocumentKey.fromName(e2.referenceValue)));
+    return (t.arrayValue?.values || []).map((e2) => DocumentKey.fromName(e2.referenceValue));
   }
   var __PRIVATE_ArrayContainsFilter = class extends FieldFilter {
     constructor(e, t) {
@@ -12345,7 +12662,8 @@ ${this.customData.serverResponse}`;
     matches(e) {
       if (__PRIVATE_arrayValueContains(this.value.arrayValue, {
         nullValue: "NULL_VALUE"
-      })) return false;
+      }))
+        return false;
       const t = e.data.field(this.field);
       return null !== t && void 0 === t.nullValue && !__PRIVATE_arrayValueContains(this.value.arrayValue, t);
     }
@@ -12356,7 +12674,7 @@ ${this.customData.serverResponse}`;
     }
     matches(e) {
       const t = e.data.field(this.field);
-      return !(!isArray(t) || !t.arrayValue.values) && t.arrayValue.values.some(((e2) => __PRIVATE_arrayValueContains(this.value.arrayValue, e2)));
+      return !(!isArray(t) || !t.arrayValue.values) && t.arrayValue.values.some((e2) => __PRIVATE_arrayValueContains(this.value.arrayValue, e2));
     }
   };
   var __PRIVATE_TargetImpl = class {
@@ -12371,18 +12689,25 @@ ${this.customData.serverResponse}`;
     const t = __PRIVATE_debugCast(e);
     if (null === t.Te) {
       let e2 = t.path.canonicalString();
-      null !== t.collectionGroup && (e2 += "|cg:" + t.collectionGroup), e2 += "|f:", e2 += t.filters.map(((e3) => __PRIVATE_canonifyFilter(e3))).join(","), e2 += "|ob:", e2 += t.orderBy.map(((e3) => (function __PRIVATE_canonifyOrderBy(e4) {
+      null !== t.collectionGroup && (e2 += "|cg:" + t.collectionGroup), e2 += "|f:", e2 += t.filters.map((e3) => __PRIVATE_canonifyFilter(e3)).join(","), e2 += "|ob:", e2 += t.orderBy.map((e3) => function __PRIVATE_canonifyOrderBy(e4) {
         return e4.field.canonicalString() + e4.dir;
-      })(e3))).join(","), __PRIVATE_isNullOrUndefined(t.limit) || (e2 += "|l:", e2 += t.limit), t.startAt && (e2 += "|lb:", e2 += t.startAt.inclusive ? "b:" : "a:", e2 += t.startAt.position.map(((e3) => canonicalId(e3))).join(",")), t.endAt && (e2 += "|ub:", e2 += t.endAt.inclusive ? "a:" : "b:", e2 += t.endAt.position.map(((e3) => canonicalId(e3))).join(",")), t.Te = e2;
+      }(e3)).join(","), __PRIVATE_isNullOrUndefined(t.limit) || (e2 += "|l:", e2 += t.limit), t.startAt && (e2 += "|lb:", e2 += t.startAt.inclusive ? "b:" : "a:", e2 += t.startAt.position.map((e3) => canonicalId(e3)).join(",")), t.endAt && (e2 += "|ub:", e2 += t.endAt.inclusive ? "a:" : "b:", e2 += t.endAt.position.map((e3) => canonicalId(e3)).join(",")), t.Te = e2;
     }
     return t.Te;
   }
   function __PRIVATE_targetEquals(e, t) {
-    if (e.limit !== t.limit) return false;
-    if (e.orderBy.length !== t.orderBy.length) return false;
-    for (let n = 0; n < e.orderBy.length; n++) if (!__PRIVATE_orderByEquals(e.orderBy[n], t.orderBy[n])) return false;
-    if (e.filters.length !== t.filters.length) return false;
-    for (let n = 0; n < e.filters.length; n++) if (!__PRIVATE_filterEquals(e.filters[n], t.filters[n])) return false;
+    if (e.limit !== t.limit)
+      return false;
+    if (e.orderBy.length !== t.orderBy.length)
+      return false;
+    for (let n = 0; n < e.orderBy.length; n++)
+      if (!__PRIVATE_orderByEquals(e.orderBy[n], t.orderBy[n]))
+        return false;
+    if (e.filters.length !== t.filters.length)
+      return false;
+    for (let n = 0; n < e.filters.length; n++)
+      if (!__PRIVATE_filterEquals(e.filters[n], t.filters[n]))
+        return false;
     return e.collectionGroup === t.collectionGroup && (!!e.path.isEqual(t.path) && (!!__PRIVATE_boundEquals(e.startAt, t.startAt) && __PRIVATE_boundEquals(e.endAt, t.endAt)));
   }
   var __PRIVATE_QueryImpl = class {
@@ -12417,18 +12742,19 @@ ${this.customData.serverResponse}`;
     if (null === t.Ie) {
       t.Ie = [];
       const e2 = /* @__PURE__ */ new Set();
-      for (const n2 of t.explicitOrderBy) t.Ie.push(n2), e2.add(n2.field.canonicalString());
-      const n = t.explicitOrderBy.length > 0 ? t.explicitOrderBy[t.explicitOrderBy.length - 1].dir : "asc", r = (function __PRIVATE_getInequalityFilterFields(e3) {
+      for (const n2 of t.explicitOrderBy)
+        t.Ie.push(n2), e2.add(n2.field.canonicalString());
+      const n = t.explicitOrderBy.length > 0 ? t.explicitOrderBy[t.explicitOrderBy.length - 1].dir : "asc", r = function __PRIVATE_getInequalityFilterFields(e3) {
         let t2 = new SortedSet(FieldPath$1.comparator);
-        return e3.filters.forEach(((e4) => {
-          e4.getFlattenedFilters().forEach(((e5) => {
+        return e3.filters.forEach((e4) => {
+          e4.getFlattenedFilters().forEach((e5) => {
             e5.isInequality() && (t2 = t2.add(e5.field));
-          }));
-        })), t2;
-      })(t);
-      r.forEach(((r2) => {
+          });
+        }), t2;
+      }(t);
+      r.forEach((r2) => {
         e2.has(r2.canonicalString()) || r2.isKeyField() || t.Ie.push(new OrderBy(r2, n));
-      })), // Add the document key field to the last if it is not explicitly ordered.
+      }), // Add the document key field to the last if it is not explicitly ordered.
       e2.has(FieldPath$1.keyField().canonicalString()) || t.Ie.push(new OrderBy(FieldPath$1.keyField(), n));
     }
     return t.Ie;
@@ -12438,12 +12764,13 @@ ${this.customData.serverResponse}`;
     return t.Ee || (t.Ee = __PRIVATE__queryToTarget(t, __PRIVATE_queryNormalizedOrderBy(e))), t.Ee;
   }
   function __PRIVATE__queryToTarget(e, t) {
-    if ("F" === e.limitType) return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, e.startAt, e.endAt);
+    if ("F" === e.limitType)
+      return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, e.startAt, e.endAt);
     {
-      t = t.map(((e2) => {
+      t = t.map((e2) => {
         const t2 = "desc" === e2.dir ? "asc" : "desc";
         return new OrderBy(e2.field, t2);
-      }));
+      });
       const n = e.endAt ? new Bound(e.endAt.position, e.endAt.inclusive) : null, r = e.startAt ? new Bound(e.startAt.position, e.startAt.inclusive) : null;
       return __PRIVATE_newTarget(e.path, e.collectionGroup, t, e.filters, e.limit, n, r);
     }
@@ -12458,56 +12785,62 @@ ${this.customData.serverResponse}`;
     return `${__PRIVATE_canonifyTarget(__PRIVATE_queryToTarget(e))}|lt:${e.limitType}`;
   }
   function __PRIVATE_stringifyQuery(e) {
-    return `Query(target=${(function __PRIVATE_stringifyTarget(e2) {
+    return `Query(target=${function __PRIVATE_stringifyTarget(e2) {
       let t = e2.path.canonicalString();
-      return null !== e2.collectionGroup && (t += " collectionGroup=" + e2.collectionGroup), e2.filters.length > 0 && (t += `, filters: [${e2.filters.map(((e3) => __PRIVATE_stringifyFilter(e3))).join(", ")}]`), __PRIVATE_isNullOrUndefined(e2.limit) || (t += ", limit: " + e2.limit), e2.orderBy.length > 0 && (t += `, orderBy: [${e2.orderBy.map(((e3) => (function __PRIVATE_stringifyOrderBy(e4) {
+      return null !== e2.collectionGroup && (t += " collectionGroup=" + e2.collectionGroup), e2.filters.length > 0 && (t += `, filters: [${e2.filters.map((e3) => __PRIVATE_stringifyFilter(e3)).join(", ")}]`), __PRIVATE_isNullOrUndefined(e2.limit) || (t += ", limit: " + e2.limit), e2.orderBy.length > 0 && (t += `, orderBy: [${e2.orderBy.map((e3) => function __PRIVATE_stringifyOrderBy(e4) {
         return `${e4.field.canonicalString()} (${e4.dir})`;
-      })(e3))).join(", ")}]`), e2.startAt && (t += ", startAt: ", t += e2.startAt.inclusive ? "b:" : "a:", t += e2.startAt.position.map(((e3) => canonicalId(e3))).join(",")), e2.endAt && (t += ", endAt: ", t += e2.endAt.inclusive ? "a:" : "b:", t += e2.endAt.position.map(((e3) => canonicalId(e3))).join(",")), `Target(${t})`;
-    })(__PRIVATE_queryToTarget(e))}; limitType=${e.limitType})`;
+      }(e3)).join(", ")}]`), e2.startAt && (t += ", startAt: ", t += e2.startAt.inclusive ? "b:" : "a:", t += e2.startAt.position.map((e3) => canonicalId(e3)).join(",")), e2.endAt && (t += ", endAt: ", t += e2.endAt.inclusive ? "a:" : "b:", t += e2.endAt.position.map((e3) => canonicalId(e3)).join(",")), `Target(${t})`;
+    }(__PRIVATE_queryToTarget(e))}; limitType=${e.limitType})`;
   }
   function __PRIVATE_queryMatches(e, t) {
-    return t.isFoundDocument() && (function __PRIVATE_queryMatchesPathAndCollectionGroup(e2, t2) {
+    return t.isFoundDocument() && function __PRIVATE_queryMatchesPathAndCollectionGroup(e2, t2) {
       const n = t2.key.path;
       return null !== e2.collectionGroup ? t2.key.hasCollectionId(e2.collectionGroup) && e2.path.isPrefixOf(n) : DocumentKey.isDocumentKey(e2.path) ? e2.path.isEqual(n) : e2.path.isImmediateParentOf(n);
-    })(e, t) && (function __PRIVATE_queryMatchesOrderBy(e2, t2) {
+    }(e, t) && function __PRIVATE_queryMatchesOrderBy(e2, t2) {
       for (const n of __PRIVATE_queryNormalizedOrderBy(e2))
-        if (!n.field.isKeyField() && null === t2.data.field(n.field)) return false;
+        if (!n.field.isKeyField() && null === t2.data.field(n.field))
+          return false;
       return true;
-    })(e, t) && (function __PRIVATE_queryMatchesFilters(e2, t2) {
-      for (const n of e2.filters) if (!n.matches(t2)) return false;
+    }(e, t) && function __PRIVATE_queryMatchesFilters(e2, t2) {
+      for (const n of e2.filters)
+        if (!n.matches(t2))
+          return false;
       return true;
-    })(e, t) && (function __PRIVATE_queryMatchesBounds(e2, t2) {
+    }(e, t) && function __PRIVATE_queryMatchesBounds(e2, t2) {
       if (e2.startAt && !/**
       * Returns true if a document sorts before a bound using the provided sort
       * order.
       */
-      (function __PRIVATE_boundSortsBeforeDocument(e3, t3, n) {
+      function __PRIVATE_boundSortsBeforeDocument(e3, t3, n) {
         const r = __PRIVATE_boundCompareToDocument(e3, t3, n);
         return e3.inclusive ? r <= 0 : r < 0;
-      })(e2.startAt, __PRIVATE_queryNormalizedOrderBy(e2), t2)) return false;
-      if (e2.endAt && !(function __PRIVATE_boundSortsAfterDocument(e3, t3, n) {
+      }(e2.startAt, __PRIVATE_queryNormalizedOrderBy(e2), t2))
+        return false;
+      if (e2.endAt && !function __PRIVATE_boundSortsAfterDocument(e3, t3, n) {
         const r = __PRIVATE_boundCompareToDocument(e3, t3, n);
         return e3.inclusive ? r >= 0 : r > 0;
-      })(e2.endAt, __PRIVATE_queryNormalizedOrderBy(e2), t2)) return false;
+      }(e2.endAt, __PRIVATE_queryNormalizedOrderBy(e2), t2))
+        return false;
       return true;
-    })(e, t);
+    }(e, t);
   }
   function __PRIVATE_newQueryComparator(e) {
     return (t, n) => {
       let r = false;
       for (const i of __PRIVATE_queryNormalizedOrderBy(e)) {
         const e2 = __PRIVATE_compareDocs(i, t, n);
-        if (0 !== e2) return e2;
+        if (0 !== e2)
+          return e2;
         r = r || i.field.isKeyField();
       }
       return 0;
     };
   }
   function __PRIVATE_compareDocs(e, t, n) {
-    const r = e.field.isKeyField() ? DocumentKey.comparator(t.key, n.key) : (function __PRIVATE_compareDocumentsByField(e2, t2, n2) {
+    const r = e.field.isKeyField() ? DocumentKey.comparator(t.key, n.key) : function __PRIVATE_compareDocumentsByField(e2, t2, n2) {
       const r2 = t2.data.field(e2), i = n2.data.field(e2);
       return null !== r2 && null !== i ? __PRIVATE_valueCompare(r2, i) : fail(42886);
-    })(e.field, t, n);
+    }(e.field, t, n);
     switch (e.dir) {
       case "asc":
         return r;
@@ -12534,7 +12867,9 @@ ${this.customData.serverResponse}`;
     get(e) {
       const t = this.mapKeyFn(e), n = this.inner[t];
       if (void 0 !== n) {
-        for (const [t2, r] of n) if (this.equalsFn(t2, e)) return r;
+        for (const [t2, r] of n)
+          if (this.equalsFn(t2, e))
+            return r;
       }
     }
     has(e) {
@@ -12543,9 +12878,11 @@ ${this.customData.serverResponse}`;
     /** Put this key and value in the map. */
     set(e, t) {
       const n = this.mapKeyFn(e), r = this.inner[n];
-      if (void 0 === r) return this.inner[n] = [[e, t]], void this.innerSize++;
-      for (let n2 = 0; n2 < r.length; n2++) if (this.equalsFn(r[n2][0], e))
-        return void (r[n2] = [e, t]);
+      if (void 0 === r)
+        return this.inner[n] = [[e, t]], void this.innerSize++;
+      for (let n2 = 0; n2 < r.length; n2++)
+        if (this.equalsFn(r[n2][0], e))
+          return void (r[n2] = [e, t]);
       r.push([e, t]), this.innerSize++;
     }
     /**
@@ -12553,14 +12890,18 @@ ${this.customData.serverResponse}`;
      */
     delete(e) {
       const t = this.mapKeyFn(e), n = this.inner[t];
-      if (void 0 === n) return false;
-      for (let r = 0; r < n.length; r++) if (this.equalsFn(n[r][0], e)) return 1 === n.length ? delete this.inner[t] : n.splice(r, 1), this.innerSize--, true;
+      if (void 0 === n)
+        return false;
+      for (let r = 0; r < n.length; r++)
+        if (this.equalsFn(n[r][0], e))
+          return 1 === n.length ? delete this.inner[t] : n.splice(r, 1), this.innerSize--, true;
       return false;
     }
     forEach(e) {
-      forEach(this.inner, ((t, n) => {
-        for (const [t2, r] of n) e(t2, r);
-      }));
+      forEach(this.inner, (t, n) => {
+        for (const [t2, r] of n)
+          e(t2, r);
+      });
     }
     isEmpty() {
       return isEmpty2(this.inner);
@@ -12576,12 +12917,13 @@ ${this.customData.serverResponse}`;
   var Vt = new SortedMap(DocumentKey.comparator);
   function documentMap(...e) {
     let t = Vt;
-    for (const n of e) t = t.insert(n.key, n);
+    for (const n of e)
+      t = t.insert(n.key, n);
     return t;
   }
   function __PRIVATE_convertOverlayedDocumentMapToDocumentMap(e) {
     let t = Vt;
-    return e.forEach(((e2, n) => t = t.insert(e2, n.overlayedDocument))), t;
+    return e.forEach((e2, n) => t = t.insert(e2, n.overlayedDocument)), t;
   }
   function __PRIVATE_newOverlayMap() {
     return __PRIVATE_newDocumentKeyMap();
@@ -12590,13 +12932,14 @@ ${this.customData.serverResponse}`;
     return __PRIVATE_newDocumentKeyMap();
   }
   function __PRIVATE_newDocumentKeyMap() {
-    return new ObjectMap(((e) => e.toString()), ((e, t) => e.isEqual(t)));
+    return new ObjectMap((e) => e.toString(), (e, t) => e.isEqual(t));
   }
   var mt = new SortedMap(DocumentKey.comparator);
   var ft = new SortedSet(DocumentKey.comparator);
   function __PRIVATE_documentKeySet(...e) {
     let t = ft;
-    for (const n of e) t = t.add(n);
+    for (const n of e)
+      t = t.add(n);
     return t;
   }
   var gt = new SortedSet(__PRIVATE_primitiveComparator);
@@ -12605,15 +12948,18 @@ ${this.customData.serverResponse}`;
   }
   function __PRIVATE_toDouble(e, t) {
     if (e.useProto3Json) {
-      if (isNaN(t)) return {
-        doubleValue: "NaN"
-      };
-      if (t === 1 / 0) return {
-        doubleValue: "Infinity"
-      };
-      if (t === -1 / 0) return {
-        doubleValue: "-Infinity"
-      };
+      if (isNaN(t))
+        return {
+          doubleValue: "NaN"
+        };
+      if (t === 1 / 0)
+        return {
+          doubleValue: "Infinity"
+        };
+      if (t === -1 / 0)
+        return {
+          doubleValue: "-Infinity"
+        };
     }
     return {
       doubleValue: __PRIVATE_isNegativeZero(t) ? "-0" : t
@@ -12630,7 +12976,7 @@ ${this.customData.serverResponse}`;
     }
   };
   function __PRIVATE_applyTransformOperationToLocalView(e, t, n) {
-    return e instanceof __PRIVATE_ServerTimestampTransform ? (function serverTimestamp$1(e2, t2) {
+    return e instanceof __PRIVATE_ServerTimestampTransform ? function serverTimestamp$1(e2, t2) {
       const n2 = {
         fields: {
           [at]: {
@@ -12647,10 +12993,10 @@ ${this.customData.serverResponse}`;
       return t2 && __PRIVATE_isServerTimestamp(t2) && (t2 = __PRIVATE_getPreviousValue(t2)), t2 && (n2.fields[ut] = t2), {
         mapValue: n2
       };
-    })(n, t) : e instanceof __PRIVATE_ArrayUnionTransformOperation ? __PRIVATE_applyArrayUnionTransformOperation(e, t) : e instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_applyArrayRemoveTransformOperation(e, t) : (function __PRIVATE_applyNumericIncrementTransformOperationToLocalView(e2, t2) {
+    }(n, t) : e instanceof __PRIVATE_ArrayUnionTransformOperation ? __PRIVATE_applyArrayUnionTransformOperation(e, t) : e instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_applyArrayRemoveTransformOperation(e, t) : function __PRIVATE_applyNumericIncrementTransformOperationToLocalView(e2, t2) {
       const n2 = __PRIVATE_computeTransformOperationBaseValue(e2, t2), r = asNumber(n2) + asNumber(e2.Ae);
       return isInteger(n2) && isInteger(e2.Ae) ? __PRIVATE_toInteger(r) : __PRIVATE_toDouble(e2.serializer, r);
-    })(e, t);
+    }(e, t);
   }
   function __PRIVATE_applyTransformOperationToRemoteDocument(e, t, n) {
     return e instanceof __PRIVATE_ArrayUnionTransformOperation ? __PRIVATE_applyArrayUnionTransformOperation(e, t) : e instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_applyArrayRemoveTransformOperation(e, t) : n;
@@ -12658,11 +13004,11 @@ ${this.customData.serverResponse}`;
   function __PRIVATE_computeTransformOperationBaseValue(e, t) {
     return e instanceof __PRIVATE_NumericIncrementTransformOperation ? (
       /** Returns true if `value` is either an IntegerValue or a DoubleValue. */
-      (function __PRIVATE_isNumber(e2) {
-        return isInteger(e2) || (function __PRIVATE_isDouble(e3) {
+      function __PRIVATE_isNumber(e2) {
+        return isInteger(e2) || function __PRIVATE_isDouble(e3) {
           return !!e3 && "doubleValue" in e3;
-        })(e2);
-      })(t) ? t : {
+        }(e2);
+      }(t) ? t : {
         integerValue: 0
       }
     ) : null;
@@ -12676,7 +13022,8 @@ ${this.customData.serverResponse}`;
   };
   function __PRIVATE_applyArrayUnionTransformOperation(e, t) {
     const n = __PRIVATE_coercedFieldValuesArray(t);
-    for (const t2 of e.elements) n.some(((e2) => __PRIVATE_valueEquals(e2, t2))) || n.push(t2);
+    for (const t2 of e.elements)
+      n.some((e2) => __PRIVATE_valueEquals(e2, t2)) || n.push(t2);
     return {
       arrayValue: {
         values: n
@@ -12690,7 +13037,8 @@ ${this.customData.serverResponse}`;
   };
   function __PRIVATE_applyArrayRemoveTransformOperation(e, t) {
     let n = __PRIVATE_coercedFieldValuesArray(t);
-    for (const t2 of e.elements) n = n.filter(((e2) => !__PRIVATE_valueEquals(e2, t2)));
+    for (const t2 of e.elements)
+      n = n.filter((e2) => !__PRIVATE_valueEquals(e2, t2));
     return {
       arrayValue: {
         values: n
@@ -12709,9 +13057,9 @@ ${this.customData.serverResponse}`;
     return isArray(e) && e.arrayValue.values ? e.arrayValue.values.slice() : [];
   }
   function __PRIVATE_fieldTransformEquals(e, t) {
-    return e.field.isEqual(t.field) && (function __PRIVATE_transformOperationEquals(e2, t2) {
+    return e.field.isEqual(t.field) && function __PRIVATE_transformOperationEquals(e2, t2) {
       return e2 instanceof __PRIVATE_ArrayUnionTransformOperation && t2 instanceof __PRIVATE_ArrayUnionTransformOperation || e2 instanceof __PRIVATE_ArrayRemoveTransformOperation && t2 instanceof __PRIVATE_ArrayRemoveTransformOperation ? __PRIVATE_arrayEquals(e2.elements, t2.elements, __PRIVATE_valueEquals) : e2 instanceof __PRIVATE_NumericIncrementTransformOperation && t2 instanceof __PRIVATE_NumericIncrementTransformOperation ? __PRIVATE_valueEquals(e2.Ae, t2.Ae) : e2 instanceof __PRIVATE_ServerTimestampTransform && t2 instanceof __PRIVATE_ServerTimestampTransform;
-    })(e.transform, t.transform);
+    }(e.transform, t.transform);
   }
   var Precondition = class _Precondition {
     constructor(e, t) {
@@ -12743,51 +13091,57 @@ ${this.customData.serverResponse}`;
   var Mutation = class {
   };
   function __PRIVATE_calculateOverlayMutation(e, t) {
-    if (!e.hasLocalMutations || t && 0 === t.fields.length) return null;
-    if (null === t) return e.isNoDocument() ? new __PRIVATE_DeleteMutation(e.key, Precondition.none()) : new __PRIVATE_SetMutation(e.key, e.data, Precondition.none());
+    if (!e.hasLocalMutations || t && 0 === t.fields.length)
+      return null;
+    if (null === t)
+      return e.isNoDocument() ? new __PRIVATE_DeleteMutation(e.key, Precondition.none()) : new __PRIVATE_SetMutation(e.key, e.data, Precondition.none());
     {
       const n = e.data, r = ObjectValue.empty();
       let i = new SortedSet(FieldPath$1.comparator);
-      for (let e2 of t.fields) if (!i.has(e2)) {
-        let t2 = n.field(e2);
-        null === t2 && e2.length > 1 && (e2 = e2.popLast(), t2 = n.field(e2)), null === t2 ? r.delete(e2) : r.set(e2, t2), i = i.add(e2);
-      }
+      for (let e2 of t.fields)
+        if (!i.has(e2)) {
+          let t2 = n.field(e2);
+          null === t2 && e2.length > 1 && (e2 = e2.popLast(), t2 = n.field(e2)), null === t2 ? r.delete(e2) : r.set(e2, t2), i = i.add(e2);
+        }
       return new __PRIVATE_PatchMutation(e.key, r, new FieldMask(i.toArray()), Precondition.none());
     }
   }
   function __PRIVATE_mutationApplyToRemoteDocument(e, t, n) {
-    e instanceof __PRIVATE_SetMutation ? (function __PRIVATE_setMutationApplyToRemoteDocument(e2, t2, n2) {
+    e instanceof __PRIVATE_SetMutation ? function __PRIVATE_setMutationApplyToRemoteDocument(e2, t2, n2) {
       const r = e2.value.clone(), i = __PRIVATE_serverTransformResults(e2.fieldTransforms, t2, n2.transformResults);
       r.setAll(i), t2.convertToFoundDocument(n2.version, r).setHasCommittedMutations();
-    })(e, t, n) : e instanceof __PRIVATE_PatchMutation ? (function __PRIVATE_patchMutationApplyToRemoteDocument(e2, t2, n2) {
+    }(e, t, n) : e instanceof __PRIVATE_PatchMutation ? function __PRIVATE_patchMutationApplyToRemoteDocument(e2, t2, n2) {
       if (!__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2))
         return void t2.convertToUnknownDocument(n2.version);
       const r = __PRIVATE_serverTransformResults(e2.fieldTransforms, t2, n2.transformResults), i = t2.data;
       i.setAll(__PRIVATE_getPatch(e2)), i.setAll(r), t2.convertToFoundDocument(n2.version, i).setHasCommittedMutations();
-    })(e, t, n) : (function __PRIVATE_deleteMutationApplyToRemoteDocument(e2, t2, n2) {
+    }(e, t, n) : function __PRIVATE_deleteMutationApplyToRemoteDocument(e2, t2, n2) {
       t2.convertToNoDocument(n2.version).setHasCommittedMutations();
-    })(0, t, n);
+    }(0, t, n);
   }
   function __PRIVATE_mutationApplyToLocalView(e, t, n, r) {
-    return e instanceof __PRIVATE_SetMutation ? (function __PRIVATE_setMutationApplyToLocalView(e2, t2, n2, r2) {
+    return e instanceof __PRIVATE_SetMutation ? function __PRIVATE_setMutationApplyToLocalView(e2, t2, n2, r2) {
       if (!__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2))
         return n2;
       const i = e2.value.clone(), s = __PRIVATE_localTransformResults(e2.fieldTransforms, r2, t2);
       return i.setAll(s), t2.convertToFoundDocument(t2.version, i).setHasLocalMutations(), null;
-    })(e, t, n, r) : e instanceof __PRIVATE_PatchMutation ? (function __PRIVATE_patchMutationApplyToLocalView(e2, t2, n2, r2) {
-      if (!__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2)) return n2;
+    }(e, t, n, r) : e instanceof __PRIVATE_PatchMutation ? function __PRIVATE_patchMutationApplyToLocalView(e2, t2, n2, r2) {
+      if (!__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2))
+        return n2;
       const i = __PRIVATE_localTransformResults(e2.fieldTransforms, r2, t2), s = t2.data;
-      if (s.setAll(__PRIVATE_getPatch(e2)), s.setAll(i), t2.convertToFoundDocument(t2.version, s).setHasLocalMutations(), null === n2) return null;
-      return n2.unionWith(e2.fieldMask.fields).unionWith(e2.fieldTransforms.map(((e3) => e3.field)));
-    })(e, t, n, r) : (function __PRIVATE_deleteMutationApplyToLocalView(e2, t2, n2) {
-      if (__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2)) return t2.convertToNoDocument(t2.version).setHasLocalMutations(), null;
+      if (s.setAll(__PRIVATE_getPatch(e2)), s.setAll(i), t2.convertToFoundDocument(t2.version, s).setHasLocalMutations(), null === n2)
+        return null;
+      return n2.unionWith(e2.fieldMask.fields).unionWith(e2.fieldTransforms.map((e3) => e3.field));
+    }(e, t, n, r) : function __PRIVATE_deleteMutationApplyToLocalView(e2, t2, n2) {
+      if (__PRIVATE_preconditionIsValidForDocument(e2.precondition, t2))
+        return t2.convertToNoDocument(t2.version).setHasLocalMutations(), null;
       return n2;
-    })(e, t, n);
+    }(e, t, n);
   }
   function __PRIVATE_mutationEquals(e, t) {
-    return e.type === t.type && (!!e.key.isEqual(t.key) && (!!e.precondition.isEqual(t.precondition) && (!!(function __PRIVATE_fieldTransformsAreEqual(e2, t2) {
-      return void 0 === e2 && void 0 === t2 || !(!e2 || !t2) && __PRIVATE_arrayEquals(e2, t2, ((e3, t3) => __PRIVATE_fieldTransformEquals(e3, t3)));
-    })(e.fieldTransforms, t.fieldTransforms) && (0 === e.type ? e.value.isEqual(t.value) : 1 !== e.type || e.data.isEqual(t.data) && e.fieldMask.isEqual(t.fieldMask)))));
+    return e.type === t.type && (!!e.key.isEqual(t.key) && (!!e.precondition.isEqual(t.precondition) && (!!function __PRIVATE_fieldTransformsAreEqual(e2, t2) {
+      return void 0 === e2 && void 0 === t2 || !(!e2 || !t2) && __PRIVATE_arrayEquals(e2, t2, (e3, t3) => __PRIVATE_fieldTransformEquals(e3, t3));
+    }(e.fieldTransforms, t.fieldTransforms) && (0 === e.type ? e.value.isEqual(t.value) : 1 !== e.type || e.data.isEqual(t.data) && e.fieldMask.isEqual(t.fieldMask)))));
   }
   var __PRIVATE_SetMutation = class extends Mutation {
     constructor(e, t, n, r = []) {
@@ -12807,12 +13161,12 @@ ${this.customData.serverResponse}`;
   };
   function __PRIVATE_getPatch(e) {
     const t = /* @__PURE__ */ new Map();
-    return e.fieldMask.fields.forEach(((n) => {
+    return e.fieldMask.fields.forEach((n) => {
       if (!n.isEmpty()) {
         const r = e.data.field(n);
         t.set(n, r);
       }
-    })), t;
+    }), t;
   }
   function __PRIVATE_serverTransformResults(e, t, n) {
     const r = /* @__PURE__ */ new Map();
@@ -12883,8 +13237,10 @@ ${this.customData.serverResponse}`;
      * @returns A `FieldMask` representing all the fields that are mutated.
      */
     applyToLocalView(e, t) {
-      for (const n of this.baseMutations) n.key.isEqual(e.key) && (t = __PRIVATE_mutationApplyToLocalView(n, e, t, this.localWriteTime));
-      for (const n of this.mutations) n.key.isEqual(e.key) && (t = __PRIVATE_mutationApplyToLocalView(n, e, t, this.localWriteTime));
+      for (const n of this.baseMutations)
+        n.key.isEqual(e.key) && (t = __PRIVATE_mutationApplyToLocalView(n, e, t, this.localWriteTime));
+      for (const n of this.mutations)
+        n.key.isEqual(e.key) && (t = __PRIVATE_mutationApplyToLocalView(n, e, t, this.localWriteTime));
       return t;
     }
     /**
@@ -12894,19 +13250,19 @@ ${this.customData.serverResponse}`;
      */
     applyToLocalDocumentSet(e, t) {
       const n = __PRIVATE_newMutationMap();
-      return this.mutations.forEach(((r) => {
+      return this.mutations.forEach((r) => {
         const i = e.get(r.key), s = i.overlayedDocument;
         let o = this.applyToLocalView(s, i.mutatedFields);
         o = t.has(r.key) ? null : o;
         const _ = __PRIVATE_calculateOverlayMutation(s, o);
         null !== _ && n.set(r.key, _), s.isValidDocument() || s.convertToNoDocument(SnapshotVersion.min());
-      })), n;
+      }), n;
     }
     keys() {
-      return this.mutations.reduce(((e, t) => e.add(t.key)), __PRIVATE_documentKeySet());
+      return this.mutations.reduce((e, t) => e.add(t.key), __PRIVATE_documentKeySet());
     }
     isEqual(e) {
-      return this.batchId === e.batchId && __PRIVATE_arrayEquals(this.mutations, e.mutations, ((e2, t) => __PRIVATE_mutationEquals(e2, t))) && __PRIVATE_arrayEquals(this.baseMutations, e.baseMutations, ((e2, t) => __PRIVATE_mutationEquals(e2, t)));
+      return this.batchId === e.batchId && __PRIVATE_arrayEquals(this.mutations, e.mutations, (e2, t) => __PRIVATE_mutationEquals(e2, t)) && __PRIVATE_arrayEquals(this.baseMutations, e.baseMutations, (e2, t) => __PRIVATE_mutationEquals(e2, t));
     }
   };
   var Overlay = class {
@@ -12980,15 +13336,15 @@ ${this.customData.serverResponse}`;
     }
   };
   function __PRIVATE_fromVersion(e) {
-    return __PRIVATE_hardAssert(!!e, 49232), SnapshotVersion.fromTimestamp((function fromTimestamp(e2) {
+    return __PRIVATE_hardAssert(!!e, 49232), SnapshotVersion.fromTimestamp(function fromTimestamp(e2) {
       const t = __PRIVATE_normalizeTimestamp(e2);
       return new Timestamp(t.seconds, t.nanos);
-    })(e));
+    }(e));
   }
   function __PRIVATE_toResourcePath(e, t) {
-    const n = (function __PRIVATE_fullyQualifiedPrefixPath(e2) {
+    const n = function __PRIVATE_fullyQualifiedPrefixPath(e2) {
       return new ResourcePath(["projects", e2.projectId, "databases", e2.database]);
-    })(e).child("documents");
+    }(e).child("documents");
     return void 0 === t ? n : n.child(t);
   }
   function __PRIVATE_fromResourceName(e) {
@@ -13016,18 +13372,19 @@ ${this.customData.serverResponse}`;
       e2.allDescendants ? i = e2.collectionId : t = t.child(e2.collectionId);
     }
     let s = [];
-    n.where && (s = (function __PRIVATE_fromFilters(e2) {
+    n.where && (s = function __PRIVATE_fromFilters(e2) {
       const t2 = __PRIVATE_fromFilter(e2);
-      if (t2 instanceof CompositeFilter && __PRIVATE_compositeFilterIsFlatConjunction(t2)) return t2.getFilters();
+      if (t2 instanceof CompositeFilter && __PRIVATE_compositeFilterIsFlatConjunction(t2))
+        return t2.getFilters();
       return [t2];
-    })(n.where));
+    }(n.where));
     let o = [];
-    n.orderBy && (o = (function __PRIVATE_fromOrder(e2) {
-      return e2.map(((e3) => (function __PRIVATE_fromPropertyOrder(e4) {
+    n.orderBy && (o = function __PRIVATE_fromOrder(e2) {
+      return e2.map((e3) => function __PRIVATE_fromPropertyOrder(e4) {
         return new OrderBy(
           __PRIVATE_fromFieldPathReference(e4.field),
           // visible for testing
-          (function __PRIVATE_fromDirection(e5) {
+          function __PRIVATE_fromDirection(e5) {
             switch (e5) {
               case "ASCENDING":
                 return "asc";
@@ -13036,28 +13393,28 @@ ${this.customData.serverResponse}`;
               default:
                 return;
             }
-          })(e4.direction)
+          }(e4.direction)
         );
-      })(e3)));
-    })(n.orderBy));
+      }(e3));
+    }(n.orderBy));
     let _ = null;
-    n.limit && (_ = (function __PRIVATE_fromInt32Proto(e2) {
+    n.limit && (_ = function __PRIVATE_fromInt32Proto(e2) {
       let t2;
       return t2 = "object" == typeof e2 ? e2.value : e2, __PRIVATE_isNullOrUndefined(t2) ? null : t2;
-    })(n.limit));
+    }(n.limit));
     let a = null;
-    n.startAt && (a = (function __PRIVATE_fromStartAtCursor(e2) {
+    n.startAt && (a = function __PRIVATE_fromStartAtCursor(e2) {
       const t2 = !!e2.before, n2 = e2.values || [];
       return new Bound(n2, t2);
-    })(n.startAt));
+    }(n.startAt));
     let u = null;
-    return n.endAt && (u = (function __PRIVATE_fromEndAtCursor(e2) {
+    return n.endAt && (u = function __PRIVATE_fromEndAtCursor(e2) {
       const t2 = !e2.before, n2 = e2.values || [];
       return new Bound(n2, t2);
-    })(n.endAt)), __PRIVATE_newQuery(t, i, o, s, _, "F", a, u);
+    }(n.endAt)), __PRIVATE_newQuery(t, i, o, s, _, "F", a, u);
   }
   function __PRIVATE_fromFilter(e) {
-    return void 0 !== e.unaryFilter ? (function __PRIVATE_fromUnaryFilter(e2) {
+    return void 0 !== e.unaryFilter ? function __PRIVATE_fromUnaryFilter(e2) {
       switch (e2.unaryFilter.op) {
         case "IS_NAN":
           const t = __PRIVATE_fromFieldPathReference(e2.unaryFilter.field);
@@ -13084,8 +13441,8 @@ ${this.customData.serverResponse}`;
         default:
           return fail(60726);
       }
-    })(e) : void 0 !== e.fieldFilter ? (function __PRIVATE_fromFieldFilter(e2) {
-      return FieldFilter.create(__PRIVATE_fromFieldPathReference(e2.fieldFilter.field), (function __PRIVATE_fromOperatorName(e3) {
+    }(e) : void 0 !== e.fieldFilter ? function __PRIVATE_fromFieldFilter(e2) {
+      return FieldFilter.create(__PRIVATE_fromFieldPathReference(e2.fieldFilter.field), function __PRIVATE_fromOperatorName(e3) {
         switch (e3) {
           case "EQUAL":
             return "==";
@@ -13112,9 +13469,9 @@ ${this.customData.serverResponse}`;
           default:
             return fail(50506);
         }
-      })(e2.fieldFilter.op), e2.fieldFilter.value);
-    })(e) : void 0 !== e.compositeFilter ? (function __PRIVATE_fromCompositeFilter(e2) {
-      return CompositeFilter.create(e2.compositeFilter.filters.map(((e3) => __PRIVATE_fromFilter(e3))), (function __PRIVATE_fromCompositeOperatorName(e3) {
+      }(e2.fieldFilter.op), e2.fieldFilter.value);
+    }(e) : void 0 !== e.compositeFilter ? function __PRIVATE_fromCompositeFilter(e2) {
+      return CompositeFilter.create(e2.compositeFilter.filters.map((e3) => __PRIVATE_fromFilter(e3)), function __PRIVATE_fromCompositeOperatorName(e3) {
         switch (e3) {
           case "AND":
             return "and";
@@ -13123,8 +13480,8 @@ ${this.customData.serverResponse}`;
           default:
             return fail(1026);
         }
-      })(e2.compositeFilter.op));
-    })(e) : fail(30097, {
+      }(e2.compositeFilter.op));
+    }(e) : fail(30097, {
       filter: e
     });
   }
@@ -13167,9 +13524,12 @@ ${this.customData.serverResponse}`;
       t.vt();
     }
     Ct(e, t) {
-      if ("nullValue" in e) this.Ft(t, 5);
-      else if ("booleanValue" in e) this.Ft(t, 10), t.Mt(e.booleanValue ? 1 : 0);
-      else if ("integerValue" in e) this.Ft(t, 15), t.Mt(__PRIVATE_normalizeNumber(e.integerValue));
+      if ("nullValue" in e)
+        this.Ft(t, 5);
+      else if ("booleanValue" in e)
+        this.Ft(t, 10), t.Mt(e.booleanValue ? 1 : 0);
+      else if ("integerValue" in e)
+        this.Ft(t, 15), t.Mt(__PRIVATE_normalizeNumber(e.integerValue));
       else if ("doubleValue" in e) {
         const n = __PRIVATE_normalizeNumber(e.doubleValue);
         isNaN(n) ? this.Ft(t, 13) : (this.Ft(t, 15), __PRIVATE_isNegativeZero(n) ? (
@@ -13179,15 +13539,19 @@ ${this.customData.serverResponse}`;
       } else if ("timestampValue" in e) {
         let n = e.timestampValue;
         this.Ft(t, 20), "string" == typeof n && (n = __PRIVATE_normalizeTimestamp(n)), t.xt(`${n.seconds || ""}`), t.Mt(n.nanos || 0);
-      } else if ("stringValue" in e) this.Ot(e.stringValue, t), this.Nt(t);
-      else if ("bytesValue" in e) this.Ft(t, 30), t.Bt(__PRIVATE_normalizeByteString(e.bytesValue)), this.Nt(t);
-      else if ("referenceValue" in e) this.Lt(e.referenceValue, t);
+      } else if ("stringValue" in e)
+        this.Ot(e.stringValue, t), this.Nt(t);
+      else if ("bytesValue" in e)
+        this.Ft(t, 30), t.Bt(__PRIVATE_normalizeByteString(e.bytesValue)), this.Nt(t);
+      else if ("referenceValue" in e)
+        this.Lt(e.referenceValue, t);
       else if ("geoPointValue" in e) {
         const n = e.geoPointValue;
         this.Ft(t, 45), t.Mt(n.latitude || 0), t.Mt(n.longitude || 0);
-      } else "mapValue" in e ? __PRIVATE_isMaxValue(e) ? this.Ft(t, Number.MAX_SAFE_INTEGER) : __PRIVATE_isVectorValue(e) ? this.kt(e.mapValue, t) : (this.qt(e.mapValue, t), this.Nt(t)) : "arrayValue" in e ? (this.Qt(e.arrayValue, t), this.Nt(t)) : fail(19022, {
-        $t: e
-      });
+      } else
+        "mapValue" in e ? __PRIVATE_isMaxValue(e) ? this.Ft(t, Number.MAX_SAFE_INTEGER) : __PRIVATE_isVectorValue(e) ? this.kt(e.mapValue, t) : (this.qt(e.mapValue, t), this.Nt(t)) : "arrayValue" in e ? (this.Qt(e.arrayValue, t), this.Nt(t)) : fail(19022, {
+          $t: e
+        });
     }
     Ot(e, t) {
       this.Ft(t, 25), this.Ut(e, t);
@@ -13198,7 +13562,8 @@ ${this.customData.serverResponse}`;
     qt(e, t) {
       const n = e.fields || {};
       this.Ft(t, 55);
-      for (const e2 of Object.keys(n)) this.Ot(e2, t), this.Ct(n[e2], t);
+      for (const e2 of Object.keys(n))
+        this.Ot(e2, t), this.Ct(n[e2], t);
     }
     kt(e, t) {
       const n = e.fields || {};
@@ -13210,13 +13575,14 @@ ${this.customData.serverResponse}`;
     Qt(e, t) {
       const n = e.values || [];
       this.Ft(t, 50);
-      for (const e2 of n) this.Ct(e2, t);
+      for (const e2 of n)
+        this.Ct(e2, t);
     }
     Lt(e, t) {
       this.Ft(t, 37);
-      DocumentKey.fromName(e).path.forEach(((e2) => {
+      DocumentKey.fromName(e).path.forEach((e2) => {
         this.Ft(t, 60), this.Ut(e2, t);
-      }));
+      });
     }
     Ft(e, t) {
       e.Mt(t);
@@ -13321,7 +13687,7 @@ ${this.customData.serverResponse}`;
   var Bt = 1048576;
   var RemoteDocumentChangeBuffer = class {
     constructor() {
-      this.changes = new ObjectMap(((e) => e.toString()), ((e, t) => e.isEqual(t))), this.changesApplied = false;
+      this.changes = new ObjectMap((e) => e.toString(), (e, t) => e.isEqual(t)), this.changesApplied = false;
     }
     /**
      * Buffers a `RemoteDocumentCache.addEntry()` call.
@@ -13398,7 +13764,7 @@ ${this.customData.serverResponse}`;
      */
     getDocument(e, t) {
       let n = null;
-      return this.documentOverlayCache.getOverlay(e, t).next(((r) => (n = r, this.remoteDocumentCache.getEntry(e, t)))).next(((e2) => (null !== n && __PRIVATE_mutationApplyToLocalView(n.mutation, e2, FieldMask.empty(), Timestamp.now()), e2)));
+      return this.documentOverlayCache.getOverlay(e, t).next((r) => (n = r, this.remoteDocumentCache.getEntry(e, t))).next((e2) => (null !== n && __PRIVATE_mutationApplyToLocalView(n.mutation, e2, FieldMask.empty(), Timestamp.now()), e2));
     }
     /**
      * Gets the local view of the documents identified by `keys`.
@@ -13407,7 +13773,7 @@ ${this.customData.serverResponse}`;
      * be stored for that key in the resulting set.
      */
     getDocuments(e, t) {
-      return this.remoteDocumentCache.getEntries(e, t).next(((t2) => this.getLocalViewOfDocuments(e, t2, __PRIVATE_documentKeySet()).next((() => t2))));
+      return this.remoteDocumentCache.getEntries(e, t).next((t2) => this.getLocalViewOfDocuments(e, t2, __PRIVATE_documentKeySet()).next(() => t2));
     }
     /**
      * Similar to `getDocuments`, but creates the local view from the given
@@ -13421,12 +13787,12 @@ ${this.customData.serverResponse}`;
      */
     getLocalViewOfDocuments(e, t, n = __PRIVATE_documentKeySet()) {
       const r = __PRIVATE_newOverlayMap();
-      return this.populateOverlays(e, r, t).next((() => this.computeViews(e, t, r, n).next(((e2) => {
+      return this.populateOverlays(e, r, t).next(() => this.computeViews(e, t, r, n).next((e2) => {
         let t2 = documentMap();
-        return e2.forEach(((e3, n2) => {
+        return e2.forEach((e3, n2) => {
           t2 = t2.insert(e3, n2.overlayedDocument);
-        })), t2;
-      }))));
+        }), t2;
+      }));
     }
     /**
      * Gets the overlayed documents for the given document map, which will include
@@ -13435,7 +13801,7 @@ ${this.customData.serverResponse}`;
      */
     getOverlayedDocuments(e, t) {
       const n = __PRIVATE_newOverlayMap();
-      return this.populateOverlays(e, n, t).next((() => this.computeViews(e, t, n, __PRIVATE_documentKeySet())));
+      return this.populateOverlays(e, n, t).next(() => this.computeViews(e, t, n, __PRIVATE_documentKeySet()));
     }
     /**
      * Fetches the overlays for {@code docs} and adds them to provided overlay map
@@ -13443,13 +13809,13 @@ ${this.customData.serverResponse}`;
      */
     populateOverlays(e, t, n) {
       const r = [];
-      return n.forEach(((e2) => {
+      return n.forEach((e2) => {
         t.has(e2) || r.push(e2);
-      })), this.documentOverlayCache.getOverlays(e, r).next(((e2) => {
-        e2.forEach(((e3, n2) => {
+      }), this.documentOverlayCache.getOverlays(e, r).next((e2) => {
+        e2.forEach((e3, n2) => {
           t.set(e3, n2);
-        }));
-      }));
+        });
+      });
     }
     /**
      * Computes the local view for the given documents.
@@ -13465,50 +13831,52 @@ ${this.customData.serverResponse}`;
      */
     computeViews(e, t, n, r) {
       let i = __PRIVATE_mutableDocumentMap();
-      const s = __PRIVATE_newDocumentKeyMap(), o = (function __PRIVATE_newOverlayedDocumentMap() {
+      const s = __PRIVATE_newDocumentKeyMap(), o = function __PRIVATE_newOverlayedDocumentMap() {
         return __PRIVATE_newDocumentKeyMap();
-      })();
-      return t.forEach(((e2, t2) => {
+      }();
+      return t.forEach((e2, t2) => {
         const o2 = n.get(t2.key);
         r.has(t2.key) && (void 0 === o2 || o2.mutation instanceof __PRIVATE_PatchMutation) ? i = i.insert(t2.key, t2) : void 0 !== o2 ? (s.set(t2.key, o2.mutation.getFieldMask()), __PRIVATE_mutationApplyToLocalView(o2.mutation, t2, o2.mutation.getFieldMask(), Timestamp.now())) : (
           // no overlay exists
           // Using EMPTY to indicate there is no overlay for the document.
           s.set(t2.key, FieldMask.empty())
         );
-      })), this.recalculateAndSaveOverlays(e, i).next(((e2) => (e2.forEach(((e3, t2) => s.set(e3, t2))), t.forEach(((e3, t2) => o.set(e3, new OverlayedDocument(t2, s.get(e3) ?? null)))), o)));
+      }), this.recalculateAndSaveOverlays(e, i).next((e2) => (e2.forEach((e3, t2) => s.set(e3, t2)), t.forEach((e3, t2) => o.set(e3, new OverlayedDocument(t2, s.get(e3) ?? null))), o));
     }
     recalculateAndSaveOverlays(e, t) {
       const n = __PRIVATE_newDocumentKeyMap();
-      let r = new SortedMap(((e2, t2) => e2 - t2)), i = __PRIVATE_documentKeySet();
-      return this.mutationQueue.getAllMutationBatchesAffectingDocumentKeys(e, t).next(((e2) => {
-        for (const i2 of e2) i2.keys().forEach(((e3) => {
-          const s = t.get(e3);
-          if (null === s) return;
-          let o = n.get(e3) || FieldMask.empty();
-          o = i2.applyToLocalView(s, o), n.set(e3, o);
-          const _ = (r.get(i2.batchId) || __PRIVATE_documentKeySet()).add(e3);
-          r = r.insert(i2.batchId, _);
-        }));
-      })).next((() => {
+      let r = new SortedMap((e2, t2) => e2 - t2), i = __PRIVATE_documentKeySet();
+      return this.mutationQueue.getAllMutationBatchesAffectingDocumentKeys(e, t).next((e2) => {
+        for (const i2 of e2)
+          i2.keys().forEach((e3) => {
+            const s = t.get(e3);
+            if (null === s)
+              return;
+            let o = n.get(e3) || FieldMask.empty();
+            o = i2.applyToLocalView(s, o), n.set(e3, o);
+            const _ = (r.get(i2.batchId) || __PRIVATE_documentKeySet()).add(e3);
+            r = r.insert(i2.batchId, _);
+          });
+      }).next(() => {
         const s = [], o = r.getReverseIterator();
         for (; o.hasNext(); ) {
           const r2 = o.getNext(), _ = r2.key, a = r2.value, u = __PRIVATE_newMutationMap();
-          a.forEach(((e2) => {
+          a.forEach((e2) => {
             if (!i.has(e2)) {
               const r3 = __PRIVATE_calculateOverlayMutation(t.get(e2), n.get(e2));
               null !== r3 && u.set(e2, r3), i = i.add(e2);
             }
-          })), s.push(this.documentOverlayCache.saveOverlays(e, _, u));
+          }), s.push(this.documentOverlayCache.saveOverlays(e, _, u));
         }
         return PersistencePromise.waitFor(s);
-      })).next((() => n));
+      }).next(() => n);
     }
     /**
      * Recalculates overlays by reading the documents from remote document cache
      * first, and saves them after they are calculated.
      */
     recalculateAndSaveOverlaysForDocumentKeys(e, t) {
-      return this.remoteDocumentCache.getEntries(e, t).next(((t2) => this.recalculateAndSaveOverlays(e, t2)));
+      return this.remoteDocumentCache.getEntries(e, t).next((t2) => this.recalculateAndSaveOverlays(e, t2));
     }
     /**
      * Performs a query against the local view of all documents.
@@ -13520,9 +13888,9 @@ ${this.customData.serverResponse}`;
      *   during database local query execution.
      */
     getDocumentsMatchingQuery(e, t, n, r) {
-      return (function __PRIVATE_isDocumentQuery$1(e2) {
+      return function __PRIVATE_isDocumentQuery$1(e2) {
         return DocumentKey.isDocumentKey(e2.path) && null === e2.collectionGroup && 0 === e2.filters.length;
-      })(t) ? this.getDocumentsMatchingDocumentQuery(e, t.path) : __PRIVATE_isCollectionGroupQuery(t) ? this.getDocumentsMatchingCollectionGroupQuery(e, t, n, r) : this.getDocumentsMatchingCollectionQuery(e, t, n, r);
+      }(t) ? this.getDocumentsMatchingDocumentQuery(e, t.path) : __PRIVATE_isCollectionGroupQuery(t) ? this.getDocumentsMatchingCollectionGroupQuery(e, t, n, r) : this.getDocumentsMatchingCollectionQuery(e, t, n, r);
     }
     /**
      * Given a collection group, returns the next documents that follow the provided offset, along
@@ -13540,28 +13908,28 @@ ${this.customData.serverResponse}`;
      * @return A LocalWriteResult with the documents that follow the provided offset and the last processed batch id.
      */
     getNextDocuments(e, t, n, r) {
-      return this.remoteDocumentCache.getAllFromCollectionGroup(e, t, n, r).next(((i) => {
+      return this.remoteDocumentCache.getAllFromCollectionGroup(e, t, n, r).next((i) => {
         const s = r - i.size > 0 ? this.documentOverlayCache.getOverlaysForCollectionGroup(e, t, n.largestBatchId, r - i.size) : PersistencePromise.resolve(__PRIVATE_newOverlayMap());
         let o = U, _ = i;
-        return s.next(((t2) => PersistencePromise.forEach(t2, ((t3, n2) => (o < n2.largestBatchId && (o = n2.largestBatchId), i.get(t3) ? PersistencePromise.resolve() : this.remoteDocumentCache.getEntry(e, t3).next(((e2) => {
+        return s.next((t2) => PersistencePromise.forEach(t2, (t3, n2) => (o < n2.largestBatchId && (o = n2.largestBatchId), i.get(t3) ? PersistencePromise.resolve() : this.remoteDocumentCache.getEntry(e, t3).next((e2) => {
           _ = _.insert(t3, e2);
-        }))))).next((() => this.populateOverlays(e, t2, i))).next((() => this.computeViews(e, _, t2, __PRIVATE_documentKeySet()))).next(((e2) => ({
+        }))).next(() => this.populateOverlays(e, t2, i)).next(() => this.computeViews(e, _, t2, __PRIVATE_documentKeySet())).next((e2) => ({
           batchId: o,
           changes: __PRIVATE_convertOverlayedDocumentMapToDocumentMap(e2)
-        })))));
-      }));
+        })));
+      });
     }
     getDocumentsMatchingDocumentQuery(e, t) {
-      return this.getDocument(e, new DocumentKey(t)).next(((e2) => {
+      return this.getDocument(e, new DocumentKey(t)).next((e2) => {
         let t2 = documentMap();
         return e2.isFoundDocument() && (t2 = t2.insert(e2.key, e2)), t2;
-      }));
+      });
     }
     getDocumentsMatchingCollectionGroupQuery(e, t, n, r) {
       const i = t.collectionGroup;
       let s = documentMap();
-      return this.indexManager.getCollectionParents(e, i).next(((o) => PersistencePromise.forEach(o, ((o2) => {
-        const _ = (function __PRIVATE_asCollectionQueryAtPath(e2, t2) {
+      return this.indexManager.getCollectionParents(e, i).next((o) => PersistencePromise.forEach(o, (o2) => {
+        const _ = function __PRIVATE_asCollectionQueryAtPath(e2, t2) {
           return new __PRIVATE_QueryImpl(
             t2,
             /*collectionGroup=*/
@@ -13573,28 +13941,28 @@ ${this.customData.serverResponse}`;
             e2.startAt,
             e2.endAt
           );
-        })(t, o2.child(i));
-        return this.getDocumentsMatchingCollectionQuery(e, _, n, r).next(((e2) => {
-          e2.forEach(((e3, t2) => {
+        }(t, o2.child(i));
+        return this.getDocumentsMatchingCollectionQuery(e, _, n, r).next((e2) => {
+          e2.forEach((e3, t2) => {
             s = s.insert(e3, t2);
-          }));
-        }));
-      })).next((() => s))));
+          });
+        });
+      }).next(() => s));
     }
     getDocumentsMatchingCollectionQuery(e, t, n, r) {
       let i;
-      return this.documentOverlayCache.getOverlaysForCollection(e, t.path, n.largestBatchId).next(((s) => (i = s, this.remoteDocumentCache.getDocumentsMatchingQuery(e, t, n, i, r)))).next(((e2) => {
-        i.forEach(((t2, n3) => {
+      return this.documentOverlayCache.getOverlaysForCollection(e, t.path, n.largestBatchId).next((s) => (i = s, this.remoteDocumentCache.getDocumentsMatchingQuery(e, t, n, i, r))).next((e2) => {
+        i.forEach((t2, n3) => {
           const r2 = n3.getKey();
           null === e2.get(r2) && (e2 = e2.insert(r2, MutableDocument.newInvalidDocument(r2)));
-        }));
+        });
         let n2 = documentMap();
-        return e2.forEach(((e3, r2) => {
+        return e2.forEach((e3, r2) => {
           const s = i.get(e3);
           void 0 !== s && __PRIVATE_mutationApplyToLocalView(s.mutation, r2, FieldMask.empty(), Timestamp.now()), // Finally, insert the documents that still match the query
           __PRIVATE_queryMatches(t, r2) && (n2 = n2.insert(e3, r2));
-        })), n2;
-      }));
+        }), n2;
+      });
     }
   };
   var __PRIVATE_MemoryBundleCache = class {
@@ -13608,26 +13976,26 @@ ${this.customData.serverResponse}`;
       return this.Lr.set(
         t.id,
         /** Decodes a BundleMetadata proto into a BundleMetadata object. */
-        (function __PRIVATE_fromBundleMetadata(e2) {
+        function __PRIVATE_fromBundleMetadata(e2) {
           return {
             id: e2.id,
             version: e2.version,
             createTime: __PRIVATE_fromVersion(e2.createTime)
           };
-        })(t)
+        }(t)
       ), PersistencePromise.resolve();
     }
     getNamedQuery(e, t) {
       return PersistencePromise.resolve(this.kr.get(t));
     }
     saveNamedQuery(e, t) {
-      return this.kr.set(t.name, (function __PRIVATE_fromProtoNamedQuery(e2) {
+      return this.kr.set(t.name, function __PRIVATE_fromProtoNamedQuery(e2) {
         return {
           name: e2.name,
           query: __PRIVATE_fromBundledQuery(e2.bundledQuery),
           readTime: __PRIVATE_fromVersion(e2.readTime)
         };
-      })(t)), PersistencePromise.resolve();
+      }(t)), PersistencePromise.resolve();
     }
   };
   var __PRIVATE_MemoryDocumentOverlayCache = class {
@@ -13639,30 +14007,31 @@ ${this.customData.serverResponse}`;
     }
     getOverlays(e, t) {
       const n = __PRIVATE_newOverlayMap();
-      return PersistencePromise.forEach(t, ((t2) => this.getOverlay(e, t2).next(((e2) => {
+      return PersistencePromise.forEach(t, (t2) => this.getOverlay(e, t2).next((e2) => {
         null !== e2 && n.set(t2, e2);
-      })))).next((() => n));
+      })).next(() => n);
     }
     saveOverlays(e, t, n) {
-      return n.forEach(((n2, r) => {
+      return n.forEach((n2, r) => {
         this.St(e, t, r);
-      })), PersistencePromise.resolve();
+      }), PersistencePromise.resolve();
     }
     removeOverlaysForBatchId(e, t, n) {
       const r = this.qr.get(n);
-      return void 0 !== r && (r.forEach(((e2) => this.overlays = this.overlays.remove(e2))), this.qr.delete(n)), PersistencePromise.resolve();
+      return void 0 !== r && (r.forEach((e2) => this.overlays = this.overlays.remove(e2)), this.qr.delete(n)), PersistencePromise.resolve();
     }
     getOverlaysForCollection(e, t, n) {
       const r = __PRIVATE_newOverlayMap(), i = t.length + 1, s = new DocumentKey(t.child("")), o = this.overlays.getIteratorFrom(s);
       for (; o.hasNext(); ) {
         const e2 = o.getNext().value, s2 = e2.getKey();
-        if (!t.isPrefixOf(s2.path)) break;
+        if (!t.isPrefixOf(s2.path))
+          break;
         s2.path.length === i && (e2.largestBatchId > n && r.set(e2.getKey(), e2));
       }
       return PersistencePromise.resolve(r);
     }
     getOverlaysForCollectionGroup(e, t, n, r) {
-      let i = new SortedMap(((e2, t2) => e2 - t2));
+      let i = new SortedMap((e2, t2) => e2 - t2);
       const s = this.overlays.getIterator();
       for (; s.hasNext(); ) {
         const e2 = s.getNext().value;
@@ -13673,7 +14042,8 @@ ${this.customData.serverResponse}`;
       }
       const o = __PRIVATE_newOverlayMap(), _ = i.getIterator();
       for (; _.hasNext(); ) {
-        if (_.getNext().value.forEach(((e2, t2) => o.set(e2, t2))), o.size() >= r) break;
+        if (_.getNext().value.forEach((e2, t2) => o.set(e2, t2)), o.size() >= r)
+          break;
       }
       return PersistencePromise.resolve(o);
     }
@@ -13715,7 +14085,7 @@ ${this.customData.serverResponse}`;
     }
     /** Add references to the given document keys for the given ID. */
     Wr(e, t) {
-      e.forEach(((e2) => this.addReference(e2, t)));
+      e.forEach((e2) => this.addReference(e2, t));
     }
     /**
      * Removes a reference to the given document key for the given
@@ -13725,7 +14095,7 @@ ${this.customData.serverResponse}`;
       this.Gr(new __PRIVATE_DocReference(e, t));
     }
     zr(e, t) {
-      e.forEach(((e2) => this.removeReference(e2, t)));
+      e.forEach((e2) => this.removeReference(e2, t));
     }
     /**
      * Clears all references with a given ID. Calls removeRef() for each key
@@ -13733,12 +14103,12 @@ ${this.customData.serverResponse}`;
      */
     jr(e) {
       const t = new DocumentKey(new ResourcePath([])), n = new __PRIVATE_DocReference(t, e), r = new __PRIVATE_DocReference(t, e + 1), i = [];
-      return this.Ur.forEachInRange([n, r], ((e2) => {
+      return this.Ur.forEachInRange([n, r], (e2) => {
         this.Gr(e2), i.push(e2.key);
-      })), i;
+      }), i;
     }
     Jr() {
-      this.Qr.forEach(((e) => this.Gr(e)));
+      this.Qr.forEach((e) => this.Gr(e));
     }
     Gr(e) {
       this.Qr = this.Qr.delete(e), this.Ur = this.Ur.delete(e);
@@ -13746,9 +14116,9 @@ ${this.customData.serverResponse}`;
     Hr(e) {
       const t = new DocumentKey(new ResourcePath([])), n = new __PRIVATE_DocReference(t, e), r = new __PRIVATE_DocReference(t, e + 1);
       let i = __PRIVATE_documentKeySet();
-      return this.Ur.forEachInRange([n, r], ((e2) => {
+      return this.Ur.forEachInRange([n, r], (e2) => {
         i = i.add(e2.key);
-      })), i;
+      }), i;
     }
     containsKey(e) {
       const t = new __PRIVATE_DocReference(e, 0), n = this.Qr.firstAfterOrEqual(t);
@@ -13786,7 +14156,8 @@ ${this.customData.serverResponse}`;
       this.tr++, this.mutationQueue.length > 0 && this.mutationQueue[this.mutationQueue.length - 1];
       const s = new MutationBatch(i, t, n, r);
       this.mutationQueue.push(s);
-      for (const t2 of r) this.Zr = this.Zr.add(new __PRIVATE_DocReference(t2.key, i)), this.indexManager.addToCollectionParentIndex(e, t2.key.path.popLast());
+      for (const t2 of r)
+        this.Zr = this.Zr.add(new __PRIVATE_DocReference(t2.key, i)), this.indexManager.addToCollectionParentIndex(e, t2.key.path.popLast());
       return PersistencePromise.resolve(s);
     }
     lookupMutationBatch(e, t) {
@@ -13804,19 +14175,19 @@ ${this.customData.serverResponse}`;
     }
     getAllMutationBatchesAffectingDocumentKey(e, t) {
       const n = new __PRIVATE_DocReference(t, 0), r = new __PRIVATE_DocReference(t, Number.POSITIVE_INFINITY), i = [];
-      return this.Zr.forEachInRange([n, r], ((e2) => {
+      return this.Zr.forEachInRange([n, r], (e2) => {
         const t2 = this.Xr(e2.Yr);
         i.push(t2);
-      })), PersistencePromise.resolve(i);
+      }), PersistencePromise.resolve(i);
     }
     getAllMutationBatchesAffectingDocumentKeys(e, t) {
       let n = new SortedSet(__PRIVATE_primitiveComparator);
-      return t.forEach(((e2) => {
+      return t.forEach((e2) => {
         const t2 = new __PRIVATE_DocReference(e2, 0), r = new __PRIVATE_DocReference(e2, Number.POSITIVE_INFINITY);
-        this.Zr.forEachInRange([t2, r], ((e3) => {
+        this.Zr.forEachInRange([t2, r], (e3) => {
           n = n.add(e3.Yr);
-        }));
-      })), PersistencePromise.resolve(this.ti(n));
+        });
+      }), PersistencePromise.resolve(this.ti(n));
     }
     getAllMutationBatchesAffectingQuery(e, t) {
       const n = t.path, r = n.length + 1;
@@ -13824,7 +14195,7 @@ ${this.customData.serverResponse}`;
       DocumentKey.isDocumentKey(i) || (i = i.child(""));
       const s = new __PRIVATE_DocReference(new DocumentKey(i), 0);
       let o = new SortedSet(__PRIVATE_primitiveComparator);
-      return this.Zr.forEachWhile(((e2) => {
+      return this.Zr.forEachWhile((e2) => {
         const t2 = e2.key.path;
         return !!n.isPrefixOf(t2) && // Rows with document keys more than one segment longer than the query
         // path can't be matches. For example, a query on 'rooms' can't match
@@ -13832,24 +14203,24 @@ ${this.customData.serverResponse}`;
         // TODO(mcg): we'll need a different scanner when we implement
         // ancestor queries.
         (t2.length === r && (o = o.add(e2.Yr)), true);
-      }), s), PersistencePromise.resolve(this.ti(o));
+      }, s), PersistencePromise.resolve(this.ti(o));
     }
     ti(e) {
       const t = [];
-      return e.forEach(((e2) => {
+      return e.forEach((e2) => {
         const n = this.Xr(e2);
         null !== n && t.push(n);
-      })), t;
+      }), t;
     }
     removeMutationBatch(e, t) {
       __PRIVATE_hardAssert(0 === this.ni(t.batchId, "removed"), 55003), this.mutationQueue.shift();
       let n = this.Zr;
-      return PersistencePromise.forEach(t.mutations, ((r) => {
+      return PersistencePromise.forEach(t.mutations, (r) => {
         const i = new __PRIVATE_DocReference(r.key, t.batchId);
         return n = n.delete(i), this.referenceDelegate.markPotentiallyOrphaned(e, r.key);
-      })).next((() => {
+      }).next(() => {
         this.Zr = n;
-      }));
+      });
     }
     ir(e) {
     }
@@ -13891,7 +14262,8 @@ ${this.customData.serverResponse}`;
      */
     Xr(e) {
       const t = this.ei(e);
-      if (t < 0 || t >= this.mutationQueue.length) return null;
+      if (t < 0 || t >= this.mutationQueue.length)
+        return null;
       return this.mutationQueue[t];
     }
   };
@@ -13903,9 +14275,9 @@ ${this.customData.serverResponse}`;
      */
     constructor(e) {
       this.ri = e, /** Underlying cache of documents and their read times. */
-      this.docs = (function __PRIVATE_documentEntryMap() {
+      this.docs = function __PRIVATE_documentEntryMap() {
         return new SortedMap(DocumentKey.comparator);
-      })(), /** Size of all cached documents. */
+      }(), /** Size of all cached documents. */
       this.size = 0;
     }
     setIndexManager(e) {
@@ -13940,17 +14312,18 @@ ${this.customData.serverResponse}`;
     }
     getEntries(e, t) {
       let n = __PRIVATE_mutableDocumentMap();
-      return t.forEach(((e2) => {
+      return t.forEach((e2) => {
         const t2 = this.docs.get(e2);
         n = n.insert(e2, t2 ? t2.document.mutableCopy() : MutableDocument.newInvalidDocument(e2));
-      })), PersistencePromise.resolve(n);
+      }), PersistencePromise.resolve(n);
     }
     getDocumentsMatchingQuery(e, t, n, r) {
       let i = __PRIVATE_mutableDocumentMap();
       const s = t.path, o = new DocumentKey(s.child("__id-9223372036854775808__")), _ = this.docs.getIteratorFrom(o);
       for (; _.hasNext(); ) {
         const { key: e2, value: { document: o2 } } = _.getNext();
-        if (!s.isPrefixOf(e2.path)) break;
+        if (!s.isPrefixOf(e2.path))
+          break;
         e2.path.length > s.length + 1 || (__PRIVATE_indexOffsetComparator(__PRIVATE_newIndexOffsetFromDocument(o2), n) <= 0 || (r.has(o2.key) || __PRIVATE_queryMatches(t, o2)) && (i = i.insert(o2.key, o2.mutableCopy())));
       }
       return PersistencePromise.resolve(i);
@@ -13959,7 +14332,7 @@ ${this.customData.serverResponse}`;
       fail(9500);
     }
     ii(e, t) {
-      return PersistencePromise.forEach(this.docs, ((e2) => t(e2)));
+      return PersistencePromise.forEach(this.docs, (e2) => t(e2));
     }
     newChangeBuffer(e) {
       return new __PRIVATE_MemoryRemoteDocumentChangeBuffer(this);
@@ -13974,9 +14347,9 @@ ${this.customData.serverResponse}`;
     }
     applyChanges(e) {
       const t = [];
-      return this.changes.forEach(((n, r) => {
+      return this.changes.forEach((n, r) => {
         r.isValidDocument() ? t.push(this.Nr.addEntry(e, r)) : this.Nr.removeEntry(n);
-      })), PersistencePromise.waitFor(t);
+      }), PersistencePromise.waitFor(t);
     }
     getFromCache(e, t) {
       return this.Nr.getEntry(e, t);
@@ -13990,7 +14363,7 @@ ${this.customData.serverResponse}`;
       this.persistence = e, /**
        * Maps a target to the data about that target
        */
-      this.si = new ObjectMap(((e2) => __PRIVATE_canonifyTarget(e2)), __PRIVATE_targetEquals), /** The last received snapshot version. */
+      this.si = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /** The last received snapshot version. */
       this.lastRemoteSnapshotVersion = SnapshotVersion.min(), /** The highest numbered target ID encountered. */
       this.highestTargetId = 0, /** The highest sequence number encountered. */
       this.oi = 0, /**
@@ -14000,7 +14373,7 @@ ${this.customData.serverResponse}`;
       this._i = new __PRIVATE_ReferenceSet(), this.targetCount = 0, this.ai = __PRIVATE_TargetIdGenerator.ur();
     }
     forEachTarget(e, t) {
-      return this.si.forEach(((e2, n) => t(n))), PersistencePromise.resolve();
+      return this.si.forEach((e2, n) => t(n)), PersistencePromise.resolve();
     }
     getLastRemoteSnapshotVersion(e) {
       return PersistencePromise.resolve(this.lastRemoteSnapshotVersion);
@@ -14031,9 +14404,9 @@ ${this.customData.serverResponse}`;
     removeTargets(e, t, n) {
       let r = 0;
       const i = [];
-      return this.si.forEach(((s, o) => {
+      return this.si.forEach((s, o) => {
         o.sequenceNumber <= t && null === n.get(o.targetId) && (this.si.delete(s), i.push(this.removeMatchingKeysForTargetId(e, o.targetId)), r++);
-      })), PersistencePromise.waitFor(i).next((() => r));
+      }), PersistencePromise.waitFor(i).next(() => r);
     }
     getTargetCount(e) {
       return PersistencePromise.resolve(this.targetCount);
@@ -14048,9 +14421,9 @@ ${this.customData.serverResponse}`;
     removeMatchingKeys(e, t, n) {
       this._i.zr(t, n);
       const r = this.persistence.referenceDelegate, i = [];
-      return r && t.forEach(((t2) => {
+      return r && t.forEach((t2) => {
         i.push(r.markPotentiallyOrphaned(e, t2));
-      })), PersistencePromise.waitFor(i);
+      }), PersistencePromise.waitFor(i);
     }
     removeMatchingKeysForTargetId(e, t) {
       return this._i.jr(t), PersistencePromise.resolve();
@@ -14072,9 +14445,9 @@ ${this.customData.serverResponse}`;
      */
     constructor(e, t) {
       this.ui = {}, this.overlays = {}, this.ci = new __PRIVATE_ListenSequence(0), this.li = false, this.li = true, this.hi = new __PRIVATE_MemoryGlobalsCache(), this.referenceDelegate = e(this), this.Pi = new __PRIVATE_MemoryTargetCache(this);
-      this.indexManager = new __PRIVATE_MemoryIndexManager(), this.remoteDocumentCache = (function __PRIVATE_newMemoryRemoteDocumentCache(e2) {
+      this.indexManager = new __PRIVATE_MemoryIndexManager(), this.remoteDocumentCache = function __PRIVATE_newMemoryRemoteDocumentCache(e2) {
         return new __PRIVATE_MemoryRemoteDocumentCacheImpl(e2);
-      })(((e2) => this.referenceDelegate.Ti(e2))), this.serializer = new __PRIVATE_LocalSerializer(t), this.Ii = new __PRIVATE_MemoryBundleCache(this.serializer);
+      }((e2) => this.referenceDelegate.Ti(e2)), this.serializer = new __PRIVATE_LocalSerializer(t), this.Ii = new __PRIVATE_MemoryBundleCache(this.serializer);
     }
     start() {
       return Promise.resolve();
@@ -14115,10 +14488,10 @@ ${this.customData.serverResponse}`;
     runTransaction(e, t, n) {
       __PRIVATE_logDebug("MemoryPersistence", "Starting transaction:", e);
       const r = new __PRIVATE_MemoryTransaction(this.ci.next());
-      return this.referenceDelegate.Ei(), n(r).next(((e2) => this.referenceDelegate.di(r).next((() => e2)))).toPromise().then(((e2) => (r.raiseOnCommittedEvent(), e2)));
+      return this.referenceDelegate.Ei(), n(r).next((e2) => this.referenceDelegate.di(r).next(() => e2)).toPromise().then((e2) => (r.raiseOnCommittedEvent(), e2));
     }
     Ai(e, t) {
-      return PersistencePromise.or(Object.values(this.ui).map(((n) => () => n.containsKey(e, t))));
+      return PersistencePromise.or(Object.values(this.ui).map((n) => () => n.containsKey(e, t)));
     }
   };
   var __PRIVATE_MemoryTransaction = class extends PersistenceTransaction {
@@ -14136,7 +14509,8 @@ ${this.customData.serverResponse}`;
       return new ___PRIVATE_MemoryEagerDelegate(e);
     }
     get fi() {
-      if (this.Vi) return this.Vi;
+      if (this.Vi)
+        return this.Vi;
       throw fail(60996);
     }
     addReference(e, t, n) {
@@ -14149,28 +14523,28 @@ ${this.customData.serverResponse}`;
       return this.fi.add(t.toString()), PersistencePromise.resolve();
     }
     removeTarget(e, t) {
-      this.Ri.jr(t.targetId).forEach(((e2) => this.fi.add(e2.toString())));
+      this.Ri.jr(t.targetId).forEach((e2) => this.fi.add(e2.toString()));
       const n = this.persistence.getTargetCache();
-      return n.getMatchingKeysForTargetId(e, t.targetId).next(((e2) => {
-        e2.forEach(((e3) => this.fi.add(e3.toString())));
-      })).next((() => n.removeTargetData(e, t)));
+      return n.getMatchingKeysForTargetId(e, t.targetId).next((e2) => {
+        e2.forEach((e3) => this.fi.add(e3.toString()));
+      }).next(() => n.removeTargetData(e, t));
     }
     Ei() {
       this.Vi = /* @__PURE__ */ new Set();
     }
     di(e) {
       const t = this.persistence.getRemoteDocumentCache().newChangeBuffer();
-      return PersistencePromise.forEach(this.fi, ((n) => {
+      return PersistencePromise.forEach(this.fi, (n) => {
         const r = DocumentKey.fromPath(n);
-        return this.gi(e, r).next(((e2) => {
+        return this.gi(e, r).next((e2) => {
           e2 || t.removeEntry(r, SnapshotVersion.min());
-        }));
-      })).next((() => (this.Vi = null, t.apply(e))));
+        });
+      }).next(() => (this.Vi = null, t.apply(e)));
     }
     updateLimboDocument(e, t) {
-      return this.gi(e, t).next(((e2) => {
+      return this.gi(e, t).next((e2) => {
         e2 ? this.fi.delete(t.toString()) : this.fi.add(t.toString());
-      }));
+      });
     }
     Ti(e) {
       return 0;
@@ -14185,13 +14559,14 @@ ${this.customData.serverResponse}`;
     }
     static As(e, t) {
       let n = __PRIVATE_documentKeySet(), r = __PRIVATE_documentKeySet();
-      for (const e2 of t.docChanges) switch (e2.type) {
-        case 0:
-          n = n.add(e2.doc.key);
-          break;
-        case 1:
-          r = r.add(e2.doc.key);
-      }
+      for (const e2 of t.docChanges)
+        switch (e2.type) {
+          case 0:
+            n = n.add(e2.doc.key);
+            break;
+          case 1:
+            r = r.add(e2.doc.key);
+        }
       return new ___PRIVATE_LocalViewChanges(e, t.fromCache, n, r);
     }
   };
@@ -14218,9 +14593,9 @@ ${this.customData.serverResponse}`;
       * / ([docKey, docContent] per documents in full collection scan) coming from
       * experiment [enter PR experiment URL here].
       */
-      (function __PRIVATE_getDefaultRelativeIndexReadCostPerDocument() {
+      function __PRIVATE_getDefaultRelativeIndexReadCostPerDocument() {
         return isSafari() ? 8 : __PRIVATE_getAndroidVersion(getUA()) > 0 ? 6 : 4;
-      })();
+      }();
     }
     /** Sets the document view to query against. */
     initialize(e, t) {
@@ -14231,19 +14606,22 @@ ${this.customData.serverResponse}`;
       const i = {
         result: null
       };
-      return this.ys(e, t).next(((e2) => {
+      return this.ys(e, t).next((e2) => {
         i.result = e2;
-      })).next((() => {
-        if (!i.result) return this.ws(e, t, r, n).next(((e2) => {
-          i.result = e2;
-        }));
-      })).next((() => {
-        if (i.result) return;
+      }).next(() => {
+        if (!i.result)
+          return this.ws(e, t, r, n).next((e2) => {
+            i.result = e2;
+          });
+      }).next(() => {
+        if (i.result)
+          return;
         const n2 = new QueryContext();
-        return this.Ss(e, t, n2).next(((r2) => {
-          if (i.result = r2, this.Vs) return this.bs(e, t, n2, r2.size);
-        }));
-      })).next((() => i.result));
+        return this.Ss(e, t, n2).next((r2) => {
+          if (i.result = r2, this.Vs)
+            return this.bs(e, t, n2, r2.size);
+        });
+      }).next(() => i.result);
     }
     bs(e, t, n, r) {
       return n.documentReadCount < this.fs ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "SDK will not create cache indexes for query:", __PRIVATE_stringifyQuery(t), "since it only creates cache indexes for collection contains", "more than or equal to", this.fs, "documents"), PersistencePromise.resolve()) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Query:", __PRIVATE_stringifyQuery(t), "scans", n.documentReadCount, "local documents and returns", r, "documents as results."), n.documentReadCount > this.gs * r ? (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "The SDK decides to create cache indexes for query:", __PRIVATE_stringifyQuery(t), "as using cache indexes may help improve performance."), this.indexManager.createTargetIndexes(e, __PRIVATE_queryToTarget(t))) : PersistencePromise.resolve());
@@ -14256,7 +14634,7 @@ ${this.customData.serverResponse}`;
       if (__PRIVATE_queryMatchesAllDocuments(t))
         return PersistencePromise.resolve(null);
       let n = __PRIVATE_queryToTarget(t);
-      return this.indexManager.getIndexType(e, n).next(((r) => 0 === r ? null : (null !== t.limit && 1 === r && // We cannot apply a limit for targets that are served using a partial
+      return this.indexManager.getIndexType(e, n).next((r) => 0 === r ? null : (null !== t.limit && 1 === r && // We cannot apply a limit for targets that are served using a partial
       // index. If a partial index will be used to serve the target, the
       // query may return a superset of documents that match the target
       // (e.g. if the index doesn't include all the target's filters), or
@@ -14268,9 +14646,9 @@ ${this.customData.serverResponse}`;
         null,
         "F"
         /* LimitType.First */
-      ), n = __PRIVATE_queryToTarget(t)), this.indexManager.getDocumentsMatchingTarget(e, n).next(((r2) => {
+      ), n = __PRIVATE_queryToTarget(t)), this.indexManager.getDocumentsMatchingTarget(e, n).next((r2) => {
         const i = __PRIVATE_documentKeySet(...r2);
-        return this.ps.getDocuments(e, i).next(((r3) => this.indexManager.getMinOffset(e, n).next(((n2) => {
+        return this.ps.getDocuments(e, i).next((r3) => this.indexManager.getMinOffset(e, n).next((n2) => {
           const s = this.Ds(t, r3);
           return this.Cs(t, s, i, n2.readTime) ? this.ys(e, __PRIVATE_queryWithLimit(
             t,
@@ -14278,25 +14656,25 @@ ${this.customData.serverResponse}`;
             "F"
             /* LimitType.First */
           )) : this.vs(e, s, t, n2);
-        }))));
-      })))));
+        }));
+      })));
     }
     /**
      * Performs a query based on the target's persisted query mapping. Returns
      * `null` if the mapping is not available or cannot be used.
      */
     ws(e, t, n, r) {
-      return __PRIVATE_queryMatchesAllDocuments(t) || r.isEqual(SnapshotVersion.min()) ? PersistencePromise.resolve(null) : this.ps.getDocuments(e, n).next(((i) => {
+      return __PRIVATE_queryMatchesAllDocuments(t) || r.isEqual(SnapshotVersion.min()) ? PersistencePromise.resolve(null) : this.ps.getDocuments(e, n).next((i) => {
         const s = this.Ds(t, i);
-        return this.Cs(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.vs(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, U)).next(((e2) => e2)));
-      }));
+        return this.Cs(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.vs(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, U)).next((e2) => e2));
+      });
     }
     /** Applies the query filter and sorting to the provided documents.  */
     Ds(e, t) {
       let n = new SortedSet(__PRIVATE_newQueryComparator(e));
-      return t.forEach(((t2, r) => {
+      return t.forEach((t2, r) => {
         __PRIVATE_queryMatches(e, r) && (n = n.add(r));
-      })), n;
+      }), n;
     }
     /**
      * Determines if a limit query needs to be refilled from cache, making it
@@ -14326,12 +14704,12 @@ ${this.customData.serverResponse}`;
      * that have not yet been indexed.
      */
     vs(e, t, n, r) {
-      return this.ps.getDocumentsMatchingQuery(e, n, r).next(((e2) => (
+      return this.ps.getDocumentsMatchingQuery(e, n, r).next((e2) => (
         // Merge with existing results
-        (t.forEach(((t2) => {
+        (t.forEach((t2) => {
           e2 = e2.insert(t2.key, t2);
-        })), e2)
-      )));
+        }), e2)
+      ));
     }
   };
   var Ut = "LocalStore";
@@ -14345,7 +14723,7 @@ ${this.customData.serverResponse}`;
        */
       this.Ms = new SortedMap(__PRIVATE_primitiveComparator), /** Maps a target to its targetID. */
       // TODO(wuandy): Evaluate if TargetId can be part of Target.
-      this.xs = new ObjectMap(((e2) => __PRIVATE_canonifyTarget(e2)), __PRIVATE_targetEquals), /**
+      this.xs = new ObjectMap((e2) => __PRIVATE_canonifyTarget(e2), __PRIVATE_targetEquals), /**
        * A per collection group index of the last read time processed by
        * `getNewDocumentChanges()`.
        *
@@ -14357,7 +14735,7 @@ ${this.customData.serverResponse}`;
       this.documentOverlayCache = this.persistence.getDocumentOverlayCache(e), this.indexManager = this.persistence.getIndexManager(e), this.mutationQueue = this.persistence.getMutationQueue(e, this.indexManager), this.localDocuments = new LocalDocumentsView(this.Ns, this.mutationQueue, this.documentOverlayCache, this.indexManager), this.Ns.setIndexManager(this.indexManager), this.Fs.initialize(this.localDocuments, this.indexManager);
     }
     collectGarbage(e) {
-      return this.persistence.runTransaction("Collect garbage", "readwrite-primary", ((t) => e.collect(t, this.Ms)));
+      return this.persistence.runTransaction("Collect garbage", "readwrite-primary", (t) => e.collect(t, this.Ms));
     }
   };
   function __PRIVATE_newLocalStore(e, t, n, r) {
@@ -14365,26 +14743,28 @@ ${this.customData.serverResponse}`;
   }
   async function __PRIVATE_localStoreHandleUserChange(e, t) {
     const n = __PRIVATE_debugCast(e);
-    return await n.persistence.runTransaction("Handle user change", "readonly", ((e2) => {
+    return await n.persistence.runTransaction("Handle user change", "readonly", (e2) => {
       let r;
-      return n.mutationQueue.getAllMutationBatches(e2).next(((i) => (r = i, n.Bs(t), n.mutationQueue.getAllMutationBatches(e2)))).next(((t2) => {
+      return n.mutationQueue.getAllMutationBatches(e2).next((i) => (r = i, n.Bs(t), n.mutationQueue.getAllMutationBatches(e2))).next((t2) => {
         const i = [], s = [];
         let o = __PRIVATE_documentKeySet();
         for (const e3 of r) {
           i.push(e3.batchId);
-          for (const t3 of e3.mutations) o = o.add(t3.key);
+          for (const t3 of e3.mutations)
+            o = o.add(t3.key);
         }
         for (const e3 of t2) {
           s.push(e3.batchId);
-          for (const t3 of e3.mutations) o = o.add(t3.key);
+          for (const t3 of e3.mutations)
+            o = o.add(t3.key);
         }
-        return n.localDocuments.getDocuments(e2, o).next(((e3) => ({
+        return n.localDocuments.getDocuments(e2, o).next((e3) => ({
           Ls: e3,
           removedBatchIds: i,
           addedBatchIds: s
-        })));
-      }));
-    }));
+        }));
+      });
+    });
   }
   var __PRIVATE_LocalClientState = class {
     constructor() {
@@ -14473,17 +14853,19 @@ ${this.customData.serverResponse}`;
     }
     Bo() {
       __PRIVATE_logDebug(Jt, "Network connectivity changed: AVAILABLE");
-      for (const e of this.qo) e(
-        0
-        /* NetworkStatus.AVAILABLE */
-      );
+      for (const e of this.qo)
+        e(
+          0
+          /* NetworkStatus.AVAILABLE */
+        );
     }
     ko() {
       __PRIVATE_logDebug(Jt, "Network connectivity changed: UNAVAILABLE");
-      for (const e of this.qo) e(
-        1
-        /* NetworkStatus.UNAVAILABLE */
-      );
+      for (const e of this.qo)
+        e(
+          1
+          /* NetworkStatus.UNAVAILABLE */
+        );
     }
     // TODO(chenbrian): Consider passing in window either into this component or
     // here for testing via FakeWindow.
@@ -14494,9 +14876,9 @@ ${this.customData.serverResponse}`;
   };
   var Ht = null;
   function __PRIVATE_generateUniqueDebugId() {
-    return null === Ht ? Ht = (function __PRIVATE_generateInitialUniqueDebugId() {
+    return null === Ht ? Ht = function __PRIVATE_generateInitialUniqueDebugId() {
       return 268435456 + Math.round(2147483648 * Math.random());
-    })() : Ht++, "0x" + Ht.toString(16);
+    }() : Ht++, "0x" + Ht.toString(16);
   }
   var Yt = "RestConnection";
   var Zt = {
@@ -14523,9 +14905,9 @@ ${this.customData.serverResponse}`;
       };
       this.jo(_, r, i);
       const { host: a } = new URL(o), u = isCloudWorkstation(a);
-      return this.Jo(e, o, _, n, u).then(((t2) => (__PRIVATE_logDebug(Yt, `Received RPC '${e}' ${s}: `, t2), t2)), ((t2) => {
+      return this.Jo(e, o, _, n, u).then((t2) => (__PRIVATE_logDebug(Yt, `Received RPC '${e}' ${s}: `, t2), t2), (t2) => {
         throw __PRIVATE_logWarn(Yt, `RPC '${e}' ${s} failed with error: `, t2, "url: ", o, "request:", n), t2;
-      }));
+      });
     }
     Ho(e, t, n, r, i, s) {
       return this.Go(e, t, n, r, i);
@@ -14537,13 +14919,13 @@ ${this.customData.serverResponse}`;
     jo(e, t, n) {
       e["X-Goog-Api-Client"] = // SDK_VERSION is updated to different value at runtime depending on the entry point,
       // so we need to get its value when we need it in a function.
-      (function __PRIVATE_getGoogApiClientValue() {
+      function __PRIVATE_getGoogApiClientValue() {
         return "gl-js/ fire/" + x;
-      })(), // Content-Type: text/plain will avoid preflight requests which might
+      }(), // Content-Type: text/plain will avoid preflight requests which might
       // mess with CORS and redirects by proxies. If we add custom headers
       // we will need to change this code to potentially use the $httpOverwrite
       // parameter supported by ESF to avoid triggering preflight requests.
-      e["Content-Type"] = "text/plain", this.databaseInfo.appId && (e["X-Firebase-GMPID"] = this.databaseInfo.appId), t && t.headers.forEach(((t2, n2) => e[n2] = t2)), n && n.headers.forEach(((t2, n2) => e[n2] = t2));
+      e["Content-Type"] = "text/plain", this.databaseInfo.appId && (e["X-Firebase-GMPID"] = this.databaseInfo.appId), t && t.headers.forEach((t2, n2) => e[n2] = t2), n && n.headers.forEach((t2, n2) => e[n2] = t2);
     }
     zo(e, t) {
       const n = Zt[e];
@@ -14600,9 +14982,9 @@ ${this.customData.serverResponse}`;
     }
     Jo(e, t, n, r, i) {
       const s = __PRIVATE_generateUniqueDebugId();
-      return new Promise(((i2, o) => {
+      return new Promise((i2, o) => {
         const _ = new XhrIo();
-        _.setWithCredentials(true), _.listenOnce(EventType.COMPLETE, (() => {
+        _.setWithCredentials(true), _.listenOnce(EventType.COMPLETE, () => {
           try {
             switch (_.getLastErrorCode()) {
               case ErrorCode2.NO_ERROR:
@@ -14619,12 +15001,13 @@ ${this.customData.serverResponse}`;
                   Array.isArray(e2) && (e2 = e2[0]);
                   const t3 = e2?.error;
                   if (t3 && t3.status && t3.message) {
-                    const e3 = (function __PRIVATE_mapCodeFromHttpResponseErrorStatus(e4) {
+                    const e3 = function __PRIVATE_mapCodeFromHttpResponseErrorStatus(e4) {
                       const t4 = e4.toLowerCase().replace(/_/g, "-");
                       return Object.values(N).indexOf(t4) >= 0 ? t4 : N.UNKNOWN;
-                    })(t3.status);
+                    }(t3.status);
                     o(new FirestoreError(e3, t3.message));
-                  } else o(new FirestoreError(N.UNKNOWN, "Server responded with status " + _.getStatus()));
+                  } else
+                    o(new FirestoreError(N.UNKNOWN, "Server responded with status " + _.getStatus()));
                 } else
                   o(new FirestoreError(N.UNAVAILABLE, "Connection failed."));
                 break;
@@ -14639,10 +15022,10 @@ ${this.customData.serverResponse}`;
           } finally {
             __PRIVATE_logDebug(Xt, `RPC '${e}' ${s} completed.`);
           }
-        }));
+        });
         const a = JSON.stringify(r);
         __PRIVATE_logDebug(Xt, `RPC '${e}' ${s} sending request:`, r), _.send(t, "POST", a, n, 15);
-      }));
+      });
     }
     T_(e, t, n) {
       const r = __PRIVATE_generateUniqueDebugId(), i = [this.Uo, "/", "google.firestore.v1.Firestore", "/", e, "/channel"], s = createWebChannelTransport(), o = getStatEventTarget(), _ = {
@@ -14690,23 +15073,23 @@ ${this.customData.serverResponse}`;
         },
         Zo: () => c.close()
       }), __PRIVATE_unguardedEventListen = (e2, t2, n2) => {
-        e2.listen(t2, ((e3) => {
+        e2.listen(t2, (e3) => {
           try {
             n2(e3);
           } catch (e4) {
-            setTimeout((() => {
+            setTimeout(() => {
               throw e4;
-            }), 0);
+            }, 0);
           }
-        }));
+        });
       };
-      return __PRIVATE_unguardedEventListen(c, WebChannel.EventType.OPEN, (() => {
+      return __PRIVATE_unguardedEventListen(c, WebChannel.EventType.OPEN, () => {
         h || (__PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} transport opened.`), P.o_());
-      })), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.CLOSE, (() => {
+      }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.CLOSE, () => {
         h || (h = true, __PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} transport closed`), P.a_(), this.E_(c));
-      })), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.ERROR, ((t2) => {
+      }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.ERROR, (t2) => {
         h || (h = true, __PRIVATE_logWarn(Xt, `RPC '${e}' stream ${r} transport errored. Name:`, t2.name, "Message:", t2.message), P.a_(new FirestoreError(N.UNAVAILABLE, "The operation could not be completed")));
-      })), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.MESSAGE, ((t2) => {
+      }), __PRIVATE_unguardedEventListen(c, WebChannel.EventType.MESSAGE, (t2) => {
         if (!h) {
           const n2 = t2.data[0];
           __PRIVATE_hardAssert(!!n2, 16349);
@@ -14721,26 +15104,28 @@ ${this.customData.serverResponse}`;
               * @returns The Code equivalent to the given status string or undefined if
               *     there is no match.
               */
-              (function __PRIVATE_mapCodeFromRpcStatus(e2) {
+              function __PRIVATE_mapCodeFromRpcStatus(e2) {
                 const t4 = pt[e2];
-                if (void 0 !== t4) return __PRIVATE_mapCodeFromRpcCode(t4);
-              })(t3)
+                if (void 0 !== t4)
+                  return __PRIVATE_mapCodeFromRpcCode(t4);
+              }(t3)
             ), i3 = s2.message;
             void 0 === n3 && (n3 = N.INTERNAL, i3 = "Unknown error status: " + t3 + " with message " + s2.message), // Mark closed so no further events are propagated
             h = true, P.a_(new FirestoreError(n3, i3)), c.close();
-          } else __PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} received:`, n2), P.u_(n2);
+          } else
+            __PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} received:`, n2), P.u_(n2);
         }
-      })), __PRIVATE_unguardedEventListen(o, Event.STAT_EVENT, ((t2) => {
+      }), __PRIVATE_unguardedEventListen(o, Event.STAT_EVENT, (t2) => {
         t2.stat === Stat.PROXY ? __PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} detected buffering proxy`) : t2.stat === Stat.NOPROXY && __PRIVATE_logDebug(Xt, `RPC '${e}' stream ${r} detected no buffering proxy`);
-      })), setTimeout((() => {
+      }), setTimeout(() => {
         P.__();
-      }), 0), P;
+      }, 0), P;
     }
     /**
      * Closes and cleans up any resources associated with the connection.
      */
     terminate() {
-      this.c_.forEach(((e) => e.close())), this.c_ = [];
+      this.c_.forEach((e) => e.close()), this.c_ = [];
     }
     /**
      * Add a WebChannel instance to the collection of open instances.
@@ -14754,7 +15139,7 @@ ${this.customData.serverResponse}`;
      * @param webChannel
      */
     E_(e) {
-      this.c_ = this.c_.filter(((t) => t === e));
+      this.c_ = this.c_.filter((t) => t === e);
     }
   };
   function getDocument() {
@@ -14797,7 +15182,7 @@ ${this.customData.serverResponse}`;
     p_(e) {
       this.cancel();
       const t = Math.floor(this.V_ + this.y_()), n = Math.max(0, Date.now() - this.f_), r = Math.max(0, t - n);
-      r > 0 && __PRIVATE_logDebug("ExponentialBackoff", `Backing off for ${r} ms (base delay: ${this.V_} ms, delay with jitter: ${t} ms, last attempt: ${n} ms ago)`), this.m_ = this.Mi.enqueueAfterDelay(this.timerId, r, (() => (this.f_ = Date.now(), e()))), // Apply backoff factor to determine next delay and ensure it is within
+      r > 0 && __PRIVATE_logDebug("ExponentialBackoff", `Backing off for ${r} ms (base delay: ${this.V_} ms, delay with jitter: ${t} ms, last attempt: ${n} ms ago)`), this.m_ = this.Mi.enqueueAfterDelay(this.timerId, r, () => (this.f_ = Date.now(), e())), // Apply backoff factor to determine next delay and ensure it is within
       // bounds.
       this.V_ *= this.A_, this.V_ < this.d_ && (this.V_ = this.d_), this.V_ > this.R_ && (this.V_ = this.R_);
     }
@@ -14819,19 +15204,20 @@ ${this.customData.serverResponse}`;
       super(), this.authCredentials = e, this.appCheckCredentials = t, this.connection = n, this.serializer = r, this.ia = false;
     }
     sa() {
-      if (this.ia) throw new FirestoreError(N.FAILED_PRECONDITION, "The client has already been terminated.");
+      if (this.ia)
+        throw new FirestoreError(N.FAILED_PRECONDITION, "The client has already been terminated.");
     }
     /** Invokes the provided RPC with auth and AppCheck tokens. */
     Go(e, t, n, r) {
-      return this.sa(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then((([i, s]) => this.connection.Go(e, __PRIVATE_toResourcePath(t, n), r, i, s))).catch(((e2) => {
+      return this.sa(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([i, s]) => this.connection.Go(e, __PRIVATE_toResourcePath(t, n), r, i, s)).catch((e2) => {
         throw "FirebaseError" === e2.name ? (e2.code === N.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(N.UNKNOWN, e2.toString());
-      }));
+      });
     }
     /** Invokes the provided RPC with streamed results with auth and AppCheck tokens. */
     Ho(e, t, n, r, i) {
-      return this.sa(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then((([s, o]) => this.connection.Ho(e, __PRIVATE_toResourcePath(t, n), r, s, o, i))).catch(((e2) => {
+      return this.sa(), Promise.all([this.authCredentials.getToken(), this.appCheckCredentials.getToken()]).then(([s, o]) => this.connection.Ho(e, __PRIVATE_toResourcePath(t, n), r, s, o, i)).catch((e2) => {
         throw "FirebaseError" === e2.name ? (e2.code === N.UNAUTHENTICATED && (this.authCredentials.invalidateToken(), this.appCheckCredentials.invalidateToken()), e2) : new FirestoreError(N.UNKNOWN, e2.toString());
-      }));
+      });
     }
     terminate() {
       this.ia = true, this.connection.terminate();
@@ -14868,10 +15254,10 @@ ${this.customData.serverResponse}`;
       0 === this.oa && (this.ca(
         "Unknown"
         /* OnlineState.Unknown */
-      ), this._a = this.asyncQueue.enqueueAfterDelay("online_state_timeout", 1e4, (() => (this._a = null, this.la("Backend didn't respond within 10 seconds."), this.ca(
+      ), this._a = this.asyncQueue.enqueueAfterDelay("online_state_timeout", 1e4, () => (this._a = null, this.la("Backend didn't respond within 10 seconds."), this.ca(
         "Offline"
         /* OnlineState.Offline */
-      ), Promise.resolve()))));
+      ), Promise.resolve())));
     }
     /**
      * Updates our OnlineState as appropriate after the watch stream reports a
@@ -14952,9 +15338,9 @@ This typically indicates that your device does not have a healthy Internet conne
        * underlying streams (to support tree-shakeable streams). On Android and iOS,
        * the streams are created during construction of RemoteStore.
        */
-      this.da = [], this.Aa = i, this.Aa.Oo(((e2) => {
-        n.enqueueAndForget((async () => {
-          __PRIVATE_canUseNetwork(this) && (__PRIVATE_logDebug(tn, "Restarting streams for network reachability change."), await (async function __PRIVATE_restartNetwork(e3) {
+      this.da = [], this.Aa = i, this.Aa.Oo((e2) => {
+        n.enqueueAndForget(async () => {
+          __PRIVATE_canUseNetwork(this) && (__PRIVATE_logDebug(tn, "Restarting streams for network reachability change."), await async function __PRIVATE_restartNetwork(e3) {
             const t2 = __PRIVATE_debugCast(e3);
             t2.Ea.add(
               4
@@ -14966,22 +15352,25 @@ This typically indicates that your device does not have a healthy Internet conne
               4
               /* OfflineCause.ConnectivityChange */
             ), await __PRIVATE_enableNetworkInternal(t2);
-          })(this));
-        }));
-      })), this.Ra = new __PRIVATE_OnlineStateTracker(n, r);
+          }(this));
+        });
+      }), this.Ra = new __PRIVATE_OnlineStateTracker(n, r);
     }
   };
   async function __PRIVATE_enableNetworkInternal(e) {
-    if (__PRIVATE_canUseNetwork(e)) for (const t of e.da) await t(
-      /* enabled= */
-      true
-    );
+    if (__PRIVATE_canUseNetwork(e))
+      for (const t of e.da)
+        await t(
+          /* enabled= */
+          true
+        );
   }
   async function __PRIVATE_disableNetworkInternal(e) {
-    for (const t of e.da) await t(
-      /* enabled= */
-      false
-    );
+    for (const t of e.da)
+      await t(
+        /* enabled= */
+        false
+      );
   }
   function __PRIVATE_canUseNetwork(e) {
     return 0 === __PRIVATE_debugCast(e).Ea.size;
@@ -15004,8 +15393,8 @@ This typically indicates that your device does not have a healthy Internet conne
       this.asyncQueue = e, this.timerId = t, this.targetTimeMs = n, this.op = r, this.removalCallback = i, this.deferred = new __PRIVATE_Deferred(), this.then = this.deferred.promise.then.bind(this.deferred.promise), // It's normal for the deferred promise to be canceled (due to cancellation)
       // and so we attach a dummy catch callback to avoid
       // 'UnhandledPromiseRejectionWarning' log spam.
-      this.deferred.promise.catch(((e2) => {
-      }));
+      this.deferred.promise.catch((e2) => {
+      });
     }
     get promise() {
       return this.deferred.promise;
@@ -15033,7 +15422,7 @@ This typically indicates that your device does not have a healthy Internet conne
      * createAndSchedule().
      */
     start(e) {
-      this.timerHandle = setTimeout((() => this.handleDelayElapsed()), e);
+      this.timerHandle = setTimeout(() => this.handleDelayElapsed(), e);
     }
     /**
      * Queues the operation to run immediately (if it hasn't already been run or
@@ -15053,7 +15442,7 @@ This typically indicates that your device does not have a healthy Internet conne
       null !== this.timerHandle && (this.clearTimeout(), this.deferred.reject(new FirestoreError(N.CANCELLED, "Operation cancelled" + (e ? ": " + e : ""))));
     }
     handleDelayElapsed() {
-      this.asyncQueue.enqueueAndForget((() => null !== this.timerHandle ? (this.clearTimeout(), this.op().then(((e) => this.deferred.resolve(e)))) : Promise.resolve()));
+      this.asyncQueue.enqueueAndForget(() => null !== this.timerHandle ? (this.clearTimeout(), this.op().then((e) => this.deferred.resolve(e))) : Promise.resolve());
     }
     clearTimeout() {
       null !== this.timerHandle && (this.removalCallback(this), clearTimeout(this.timerHandle), this.timerHandle = null);
@@ -15064,21 +15453,22 @@ This typically indicates that your device does not have a healthy Internet conne
       this.queries = __PRIVATE_newQueriesObjectMap(), this.onlineState = "Unknown", this.Ca = /* @__PURE__ */ new Set();
     }
     terminate() {
-      !(function __PRIVATE_errorAllTargets(e, t) {
+      !function __PRIVATE_errorAllTargets(e, t) {
         const n = __PRIVATE_debugCast(e), r = n.queries;
-        n.queries = __PRIVATE_newQueriesObjectMap(), r.forEach(((e2, n2) => {
-          for (const e3 of n2.Sa) e3.onError(t);
-        }));
-      })(this, new FirestoreError(N.ABORTED, "Firestore shutting down"));
+        n.queries = __PRIVATE_newQueriesObjectMap(), r.forEach((e2, n2) => {
+          for (const e3 of n2.Sa)
+            e3.onError(t);
+        });
+      }(this, new FirestoreError(N.ABORTED, "Firestore shutting down"));
     }
   };
   function __PRIVATE_newQueriesObjectMap() {
-    return new ObjectMap(((e) => __PRIVATE_canonifyQuery(e)), __PRIVATE_queryEquals);
+    return new ObjectMap((e) => __PRIVATE_canonifyQuery(e), __PRIVATE_queryEquals);
   }
   function __PRIVATE_raiseSnapshotsInSyncEvent(e) {
-    e.Ca.forEach(((e2) => {
+    e.Ca.forEach((e2) => {
       e2.next();
-    }));
+    });
   }
   var nn;
   var rn;
@@ -15087,7 +15477,7 @@ This typically indicates that your device does not have a healthy Internet conne
   var sn = "SyncEngine";
   var __PRIVATE_SyncEngineImpl = class {
     constructor(e, t, n, r, i, s) {
-      this.localStore = e, this.remoteStore = t, this.eventManager = n, this.sharedClientState = r, this.currentUser = i, this.maxConcurrentLimboResolutions = s, this.Pu = {}, this.Tu = new ObjectMap(((e2) => __PRIVATE_canonifyQuery(e2)), __PRIVATE_queryEquals), this.Iu = /* @__PURE__ */ new Map(), /**
+      this.localStore = e, this.remoteStore = t, this.eventManager = n, this.sharedClientState = r, this.currentUser = i, this.maxConcurrentLimboResolutions = s, this.Pu = {}, this.Tu = new ObjectMap((e2) => __PRIVATE_canonifyQuery(e2), __PRIVATE_queryEquals), this.Iu = /* @__PURE__ */ new Map(), /**
        * The keys of documents that are in limbo for which we haven't yet started a
        * limbo resolution query. The strings in this set are the result of calling
        * `key.path.canonicalString()` where `key` is a `DocumentKey` object.
@@ -15119,24 +15509,24 @@ This typically indicates that your device does not have a healthy Internet conne
     const r = __PRIVATE_debugCast(e);
     if (r.isPrimaryClient && 0 === n || !r.isPrimaryClient && 1 === n) {
       const e2 = [];
-      r.Tu.forEach(((n2, r2) => {
+      r.Tu.forEach((n2, r2) => {
         const i = r2.view.va(t);
         i.snapshot && e2.push(i.snapshot);
-      })), (function __PRIVATE_eventManagerOnOnlineStateChange(e3, t2) {
+      }), function __PRIVATE_eventManagerOnOnlineStateChange(e3, t2) {
         const n2 = __PRIVATE_debugCast(e3);
         n2.onlineState = t2;
         let r2 = false;
-        n2.queries.forEach(((e4, n3) => {
+        n2.queries.forEach((e4, n3) => {
           for (const e5 of n3.Sa)
             e5.va(t2) && (r2 = true);
-        })), r2 && __PRIVATE_raiseSnapshotsInSyncEvent(n2);
-      })(r.eventManager, t), e2.length && r.Pu.H_(e2), r.onlineState = t, r.isPrimaryClient && r.sharedClientState.setOnlineState(t);
+        }), r2 && __PRIVATE_raiseSnapshotsInSyncEvent(n2);
+      }(r.eventManager, t), e2.length && r.Pu.H_(e2), r.onlineState = t, r.isPrimaryClient && r.sharedClientState.setOnlineState(t);
     }
   }
   async function __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(e, t, n) {
     const r = __PRIVATE_debugCast(e), i = [], s = [], o = [];
-    r.Tu.isEmpty() || (r.Tu.forEach(((e2, _) => {
-      o.push(r.pu(_, t, n).then(((e3) => {
+    r.Tu.isEmpty() || (r.Tu.forEach((e2, _) => {
+      o.push(r.pu(_, t, n).then((e3) => {
         if ((e3 || n) && r.isPrimaryClient) {
           const t2 = e3 ? !e3.fromCache : n?.targetChanges.get(_.targetId)?.current;
           r.sharedClientState.updateQueryState(_.targetId, t2 ? "current" : "not-current");
@@ -15146,13 +15536,14 @@ This typically indicates that your device does not have a healthy Internet conne
           const t2 = __PRIVATE_LocalViewChanges.As(_.targetId, e3);
           s.push(t2);
         }
-      })));
-    })), await Promise.all(o), r.Pu.H_(i), await (async function __PRIVATE_localStoreNotifyLocalViewChanges(e2, t2) {
+      }));
+    }), await Promise.all(o), r.Pu.H_(i), await async function __PRIVATE_localStoreNotifyLocalViewChanges(e2, t2) {
       const n2 = __PRIVATE_debugCast(e2);
       try {
-        await n2.persistence.runTransaction("notifyLocalViewChanges", "readwrite", ((e3) => PersistencePromise.forEach(t2, ((t3) => PersistencePromise.forEach(t3.Es, ((r2) => n2.persistence.referenceDelegate.addReference(e3, t3.targetId, r2))).next((() => PersistencePromise.forEach(t3.ds, ((r2) => n2.persistence.referenceDelegate.removeReference(e3, t3.targetId, r2)))))))));
+        await n2.persistence.runTransaction("notifyLocalViewChanges", "readwrite", (e3) => PersistencePromise.forEach(t2, (t3) => PersistencePromise.forEach(t3.Es, (r2) => n2.persistence.referenceDelegate.addReference(e3, t3.targetId, r2)).next(() => PersistencePromise.forEach(t3.ds, (r2) => n2.persistence.referenceDelegate.removeReference(e3, t3.targetId, r2)))));
       } catch (e3) {
-        if (!__PRIVATE_isIndexedDbTransactionError(e3)) throw e3;
+        if (!__PRIVATE_isIndexedDbTransactionError(e3))
+          throw e3;
         __PRIVATE_logDebug(Ut, "Failed to update sequence numbers: " + e3);
       }
       for (const e3 of t2) {
@@ -15162,7 +15553,7 @@ This typically indicates that your device does not have a healthy Internet conne
           n2.Ms = n2.Ms.insert(t3, i2);
         }
       }
-    })(r.localStore, s));
+    }(r.localStore, s));
   }
   async function __PRIVATE_syncEngineHandleCredentialChange(e, t) {
     const n = __PRIVATE_debugCast(e);
@@ -15170,13 +15561,13 @@ This typically indicates that your device does not have a healthy Internet conne
       __PRIVATE_logDebug(sn, "User change. New user:", t.toKey());
       const e2 = await __PRIVATE_localStoreHandleUserChange(n.localStore, t);
       n.currentUser = t, // Fails tasks waiting for pending writes requested by previous user.
-      (function __PRIVATE_rejectOutstandingPendingWritesCallbacks(e3, t2) {
-        e3.mu.forEach(((e4) => {
-          e4.forEach(((e5) => {
+      function __PRIVATE_rejectOutstandingPendingWritesCallbacks(e3, t2) {
+        e3.mu.forEach((e4) => {
+          e4.forEach((e5) => {
             e5.reject(new FirestoreError(N.CANCELLED, t2));
-          }));
-        })), e3.mu.clear();
-      })(n, "'waitForPendingWrites' promise is rejected due to a user change."), // TODO(b/114226417): Consider calling this only in the primary tab.
+          });
+        }), e3.mu.clear();
+      }(n, "'waitForPendingWrites' promise is rejected due to a user change."), // TODO(b/114226417): Consider calling this only in the primary tab.
       n.sharedClientState.handleUserChange(t, e2.removedBatchIds, e2.addedBatchIds), await __PRIVATE_syncEngineEmitNewSnapsAndNotifyLocalStore(n, e2.Ls);
     }
   }
@@ -15223,38 +15614,38 @@ This typically indicates that your device does not have a healthy Internet conne
       ), this.remoteStore.remoteSyncer.handleCredentialChange = __PRIVATE_syncEngineHandleCredentialChange.bind(null, this.syncEngine), await __PRIVATE_remoteStoreApplyPrimaryState(this.remoteStore, this.syncEngine.isPrimaryClient));
     }
     createEventManager(e) {
-      return (function __PRIVATE_newEventManager() {
+      return function __PRIVATE_newEventManager() {
         return new __PRIVATE_EventManagerImpl();
-      })();
+      }();
     }
     createDatastore(e) {
-      const t = __PRIVATE_newSerializer(e.databaseInfo.databaseId), n = (function __PRIVATE_newConnection(e2) {
+      const t = __PRIVATE_newSerializer(e.databaseInfo.databaseId), n = function __PRIVATE_newConnection(e2) {
         return new __PRIVATE_WebChannelConnection(e2);
-      })(e.databaseInfo);
-      return (function __PRIVATE_newDatastore(e2, t2, n2, r) {
+      }(e.databaseInfo);
+      return function __PRIVATE_newDatastore(e2, t2, n2, r) {
         return new __PRIVATE_DatastoreImpl(e2, t2, n2, r);
-      })(e.authCredentials, e.appCheckCredentials, n, t);
+      }(e.authCredentials, e.appCheckCredentials, n, t);
     }
     createRemoteStore(e) {
-      return (function __PRIVATE_newRemoteStore(e2, t, n, r, i) {
+      return function __PRIVATE_newRemoteStore(e2, t, n, r, i) {
         return new __PRIVATE_RemoteStoreImpl(e2, t, n, r, i);
-      })(this.localStore, this.datastore, e.asyncQueue, ((e2) => __PRIVATE_syncEngineApplyOnlineStateChange(
+      }(this.localStore, this.datastore, e.asyncQueue, (e2) => __PRIVATE_syncEngineApplyOnlineStateChange(
         this.syncEngine,
         e2,
         0
         /* OnlineStateSource.RemoteStore */
-      )), (function __PRIVATE_newConnectivityMonitor() {
+      ), function __PRIVATE_newConnectivityMonitor() {
         return __PRIVATE_BrowserConnectivityMonitor.v() ? new __PRIVATE_BrowserConnectivityMonitor() : new __PRIVATE_NoopConnectivityMonitor();
-      })());
+      }());
     }
     createSyncEngine(e, t) {
-      return (function __PRIVATE_newSyncEngine(e2, t2, n, r, i, s, o) {
+      return function __PRIVATE_newSyncEngine(e2, t2, n, r, i, s, o) {
         const _ = new __PRIVATE_SyncEngineImpl(e2, t2, n, r, i, s);
         return o && (_.gu = true), _;
-      })(this.localStore, this.remoteStore, this.eventManager, this.sharedClientState, e.initialUser, e.maxConcurrentLimboResolutions, t);
+      }(this.localStore, this.remoteStore, this.eventManager, this.sharedClientState, e.initialUser, e.maxConcurrentLimboResolutions, t);
     }
     async terminate() {
-      await (async function __PRIVATE_remoteStoreShutdown(e) {
+      await async function __PRIVATE_remoteStoreShutdown(e) {
         const t = __PRIVATE_debugCast(e);
         __PRIVATE_logDebug(tn, "RemoteStore shutting down."), t.Ea.add(
           5
@@ -15265,7 +15656,7 @@ This typically indicates that your device does not have a healthy Internet conne
           "Unknown"
           /* OnlineState.Unknown */
         );
-      })(this.remoteStore), this.datastore?.terminate(), this.eventManager?.terminate();
+      }(this.remoteStore), this.datastore?.terminate(), this.eventManager?.terminate();
     }
   };
   OnlineComponentProvider.provider = {
@@ -15281,12 +15672,16 @@ This typically indicates that your device does not have a healthy Internet conne
   var FirestoreSettingsImpl = class {
     constructor(e) {
       if (void 0 === e.host) {
-        if (void 0 !== e.ssl) throw new FirestoreError(N.INVALID_ARGUMENT, "Can't provide ssl option if host option is not set");
+        if (void 0 !== e.ssl)
+          throw new FirestoreError(N.INVALID_ARGUMENT, "Can't provide ssl option if host option is not set");
         this.host = an, this.ssl = un;
-      } else this.host = e.host, this.ssl = e.ssl ?? un;
-      if (this.isUsingEmulator = void 0 !== e.emulatorOptions, this.credentials = e.credentials, this.ignoreUndefinedProperties = !!e.ignoreUndefinedProperties, this.localCache = e.localCache, void 0 === e.cacheSizeBytes) this.cacheSizeBytes = Ot;
+      } else
+        this.host = e.host, this.ssl = e.ssl ?? un;
+      if (this.isUsingEmulator = void 0 !== e.emulatorOptions, this.credentials = e.credentials, this.ignoreUndefinedProperties = !!e.ignoreUndefinedProperties, this.localCache = e.localCache, void 0 === e.cacheSizeBytes)
+        this.cacheSizeBytes = Ot;
       else {
-        if (-1 !== e.cacheSizeBytes && e.cacheSizeBytes < Bt) throw new FirestoreError(N.INVALID_ARGUMENT, "cacheSizeBytes must be at least 1048576");
+        if (-1 !== e.cacheSizeBytes && e.cacheSizeBytes < Bt)
+          throw new FirestoreError(N.INVALID_ARGUMENT, "cacheSizeBytes must be at least 1048576");
         this.cacheSizeBytes = e.cacheSizeBytes;
       }
       __PRIVATE_validateIsNotUsedTogether("experimentalForceLongPolling", e.experimentalForceLongPolling, "experimentalAutoDetectLongPolling", e.experimentalAutoDetectLongPolling), this.experimentalForceLongPolling = !!e.experimentalForceLongPolling, this.experimentalForceLongPolling ? this.experimentalAutoDetectLongPolling = false : void 0 === e.experimentalAutoDetectLongPolling ? this.experimentalAutoDetectLongPolling = true : (
@@ -15294,18 +15689,21 @@ This typically indicates that your device does not have a healthy Internet conne
         // the TypeScript compiler has narrowed the type to boolean already.
         // noinspection PointlessBooleanExpressionJS
         this.experimentalAutoDetectLongPolling = !!e.experimentalAutoDetectLongPolling
-      ), this.experimentalLongPollingOptions = __PRIVATE_cloneLongPollingOptions(e.experimentalLongPollingOptions ?? {}), (function __PRIVATE_validateLongPollingOptions(e2) {
+      ), this.experimentalLongPollingOptions = __PRIVATE_cloneLongPollingOptions(e.experimentalLongPollingOptions ?? {}), function __PRIVATE_validateLongPollingOptions(e2) {
         if (void 0 !== e2.timeoutSeconds) {
-          if (isNaN(e2.timeoutSeconds)) throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (must not be NaN)`);
-          if (e2.timeoutSeconds < 5) throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (minimum allowed value is 5)`);
-          if (e2.timeoutSeconds > 30) throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (maximum allowed value is 30)`);
+          if (isNaN(e2.timeoutSeconds))
+            throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (must not be NaN)`);
+          if (e2.timeoutSeconds < 5)
+            throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (minimum allowed value is 5)`);
+          if (e2.timeoutSeconds > 30)
+            throw new FirestoreError(N.INVALID_ARGUMENT, `invalid long polling timeout: ${e2.timeoutSeconds} (maximum allowed value is 30)`);
         }
-      })(this.experimentalLongPollingOptions), this.useFetchStreams = !!e.useFetchStreams;
+      }(this.experimentalLongPollingOptions), this.useFetchStreams = !!e.useFetchStreams;
     }
     isEqual(e) {
-      return this.host === e.host && this.ssl === e.ssl && this.credentials === e.credentials && this.cacheSizeBytes === e.cacheSizeBytes && this.experimentalForceLongPolling === e.experimentalForceLongPolling && this.experimentalAutoDetectLongPolling === e.experimentalAutoDetectLongPolling && (function __PRIVATE_longPollingOptionsEqual(e2, t) {
+      return this.host === e.host && this.ssl === e.ssl && this.credentials === e.credentials && this.cacheSizeBytes === e.cacheSizeBytes && this.experimentalForceLongPolling === e.experimentalForceLongPolling && this.experimentalAutoDetectLongPolling === e.experimentalAutoDetectLongPolling && function __PRIVATE_longPollingOptionsEqual(e2, t) {
         return e2.timeoutSeconds === t.timeoutSeconds;
-      })(this.experimentalLongPollingOptions, e.experimentalLongPollingOptions) && this.ignoreUndefinedProperties === e.ignoreUndefinedProperties && this.useFetchStreams === e.useFetchStreams;
+      }(this.experimentalLongPollingOptions, e.experimentalLongPollingOptions) && this.ignoreUndefinedProperties === e.ignoreUndefinedProperties && this.useFetchStreams === e.useFetchStreams;
     }
   };
   var Firestore$1 = class {
@@ -15325,7 +15723,8 @@ This typically indicates that your device does not have a healthy Internet conne
      * instance.
      */
     get app() {
-      if (!this._app) throw new FirestoreError(N.FAILED_PRECONDITION, "Firestore was not initialized using the Firebase SDK. 'app' is not available");
+      if (!this._app)
+        throw new FirestoreError(N.FAILED_PRECONDITION, "Firestore was not initialized using the Firebase SDK. 'app' is not available");
       return this._app;
     }
     get _initialized() {
@@ -15335,9 +15734,11 @@ This typically indicates that your device does not have a healthy Internet conne
       return "notTerminated" !== this._terminateTask;
     }
     _setSettings(e) {
-      if (this._settingsFrozen) throw new FirestoreError(N.FAILED_PRECONDITION, "Firestore has already been started and its settings can no longer be changed. You can only modify settings before calling any other methods on a Firestore object.");
-      this._settings = new FirestoreSettingsImpl(e), this._emulatorOptions = e.emulatorOptions || {}, void 0 !== e.credentials && (this._authCredentials = (function __PRIVATE_makeAuthCredentialsProvider(e2) {
-        if (!e2) return new __PRIVATE_EmptyAuthCredentialsProvider();
+      if (this._settingsFrozen)
+        throw new FirestoreError(N.FAILED_PRECONDITION, "Firestore has already been started and its settings can no longer be changed. You can only modify settings before calling any other methods on a Firestore object.");
+      this._settings = new FirestoreSettingsImpl(e), this._emulatorOptions = e.emulatorOptions || {}, void 0 !== e.credentials && (this._authCredentials = function __PRIVATE_makeAuthCredentialsProvider(e2) {
+        if (!e2)
+          return new __PRIVATE_EmptyAuthCredentialsProvider();
         switch (e2.type) {
           case "firstParty":
             return new __PRIVATE_FirstPartyAuthCredentialsProvider(e2.sessionIndex || "0", e2.iamToken || null, e2.authTokenFactory || null);
@@ -15346,7 +15747,7 @@ This typically indicates that your device does not have a healthy Internet conne
           default:
             throw new FirestoreError(N.INVALID_ARGUMENT, "makeAuthCredentialsProvider failed due to invalid credential type");
         }
-      })(e.credentials));
+      }(e.credentials));
     }
     _getSettings() {
       return this._settings;
@@ -15379,10 +15780,10 @@ This typically indicates that your device does not have a healthy Internet conne
      * Only ever called once.
      */
     _terminate() {
-      return (function __PRIVATE_removeComponents(e) {
+      return function __PRIVATE_removeComponents(e) {
         const t = _n.get(e);
         t && (__PRIVATE_logDebug("ComponentProvider", "Removing Datastore"), _n.delete(e), t.terminate());
-      })(this), Promise.resolve();
+      }(this), Promise.resolve();
     }
   };
   var Query = class _Query {
@@ -15439,7 +15840,8 @@ This typically indicates that your device does not have a healthy Internet conne
       };
     }
     static fromJSON(e, t, n) {
-      if (__PRIVATE_validateJSON(t, _DocumentReference._jsonSchema)) return new _DocumentReference(e, n || null, new DocumentKey(ResourcePath.fromString(t.referencePath)));
+      if (__PRIVATE_validateJSON(t, _DocumentReference._jsonSchema))
+        return new _DocumentReference(e, n || null, new DocumentKey(ResourcePath.fromString(t.referencePath)));
     }
   };
   DocumentReference._jsonSchemaVersion = "firestore/documentReference/1.0", DocumentReference._jsonSchema = {
@@ -15530,13 +15932,13 @@ This typically indicates that your device does not have a healthy Internet conne
     }
     enqueue(e) {
       if (this.uc(), this.ec)
-        return new Promise((() => {
-        }));
+        return new Promise(() => {
+        });
       const t = new __PRIVATE_Deferred();
-      return this.cc((() => this.ec && this.sc ? Promise.resolve() : (e().then(t.resolve, t.reject), t.promise))).then((() => t.promise));
+      return this.cc(() => this.ec && this.sc ? Promise.resolve() : (e().then(t.resolve, t.reject), t.promise)).then(() => t.promise);
     }
     enqueueRetryable(e) {
-      this.enqueueAndForget((() => (this.Xu.push(e), this.lc())));
+      this.enqueueAndForget(() => (this.Xu.push(e), this.lc()));
     }
     /**
      * Runs the next operation from the retryable queue. If the operation fails,
@@ -15547,7 +15949,8 @@ This typically indicates that your device does not have a healthy Internet conne
         try {
           await this.Xu[0](), this.Xu.shift(), this.M_.reset();
         } catch (e) {
-          if (!__PRIVATE_isIndexedDbTransactionError(e)) throw e;
+          if (!__PRIVATE_isIndexedDbTransactionError(e))
+            throw e;
           __PRIVATE_logDebug(cn, "Operation failed with retryable error: " + e);
         }
         this.Xu.length > 0 && // If there are additional operations, we re-schedule `retryNextOp()`.
@@ -15560,20 +15963,20 @@ This typically indicates that your device does not have a healthy Internet conne
         // Since `backoffAndRun()` cancels an existing backoff and schedules a
         // new backoff on every call, there is only ever a single additional
         // operation in the queue.
-        this.M_.p_((() => this.lc()));
+        this.M_.p_(() => this.lc());
       }
     }
     cc(e) {
-      const t = this.ac.then((() => (this.rc = true, e().catch(((e2) => {
+      const t = this.ac.then(() => (this.rc = true, e().catch((e2) => {
         this.nc = e2, this.rc = false;
         throw __PRIVATE_logError("INTERNAL UNHANDLED ERROR: ", __PRIVATE_getMessageOrStack(e2)), e2;
-      })).then(((e2) => (this.rc = false, e2))))));
+      }).then((e2) => (this.rc = false, e2))));
       return this.ac = t, t;
     }
     enqueueAfterDelay(e, t, n) {
       this.uc(), // Fast-forward delays for timerIds that have been overridden.
       this.oc.indexOf(e) > -1 && (t = 0);
-      const r = DelayedOperation.createAndSchedule(this, e, t, n, ((e2) => this.hc(e2)));
+      const r = DelayedOperation.createAndSchedule(this, e, t, n, (e2) => this.hc(e2));
       return this.tc.push(r), r;
     }
     uc() {
@@ -15598,7 +16001,9 @@ This typically indicates that your device does not have a healthy Internet conne
      * exists.
      */
     Ic(e) {
-      for (const t of this.tc) if (t.timerId === e) return true;
+      for (const t of this.tc)
+        if (t.timerId === e)
+          return true;
       return false;
     }
     /**
@@ -15609,11 +16014,13 @@ This typically indicates that your device does not have a healthy Internet conne
      * @returns a Promise that resolves once all operations have been run.
      */
     Ec(e) {
-      return this.Tc().then((() => {
-        this.tc.sort(((e2, t) => e2.targetTimeMs - t.targetTimeMs));
-        for (const t of this.tc) if (t.skipDelay(), "all" !== e && t.timerId === e) break;
+      return this.Tc().then(() => {
+        this.tc.sort((e2, t) => e2.targetTimeMs - t.targetTimeMs);
+        for (const t of this.tc)
+          if (t.skipDelay(), "all" !== e && t.timerId === e)
+            break;
         return this.Tc();
-      }));
+      });
     }
     /**
      * For Tests: Skip all subsequent delays for a timer id.
@@ -15724,7 +16131,8 @@ This typically indicates that your device does not have a healthy Internet conne
      * {@link FirestoreError} if an error occurs.
      */
     static fromJSON(e) {
-      if (__PRIVATE_validateJSON(e, _Bytes._jsonSchema)) return _Bytes.fromBase64String(e.bytes);
+      if (__PRIVATE_validateJSON(e, _Bytes._jsonSchema))
+        return _Bytes.fromBase64String(e.bytes);
     }
   };
   Bytes._jsonSchemaVersion = "firestore/bytes/1.0", Bytes._jsonSchema = {
@@ -15739,7 +16147,9 @@ This typically indicates that your device does not have a healthy Internet conne
      * @param fieldNames - A list of field names.
      */
     constructor(...e) {
-      for (let t = 0; t < e.length; ++t) if (0 === e[t].length) throw new FirestoreError(N.INVALID_ARGUMENT, "Invalid field name at argument $(i + 1). Field names must not be empty.");
+      for (let t = 0; t < e.length; ++t)
+        if (0 === e[t].length)
+          throw new FirestoreError(N.INVALID_ARGUMENT, "Invalid field name at argument $(i + 1). Field names must not be empty.");
       this._internalPath = new FieldPath$1(e);
     }
     /**
@@ -15760,8 +16170,10 @@ This typically indicates that your device does not have a healthy Internet conne
      * @param longitude - The longitude as number between -180 and 180.
      */
     constructor(e, t) {
-      if (!isFinite(e) || e < -90 || e > 90) throw new FirestoreError(N.INVALID_ARGUMENT, "Latitude must be a number between -90 and 90, but was: " + e);
-      if (!isFinite(t) || t < -180 || t > 180) throw new FirestoreError(N.INVALID_ARGUMENT, "Longitude must be a number between -180 and 180, but was: " + t);
+      if (!isFinite(e) || e < -90 || e > 90)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Latitude must be a number between -90 and 90, but was: " + e);
+      if (!isFinite(t) || t < -180 || t > 180)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "Longitude must be a number between -180 and 180, but was: " + t);
       this._lat = e, this._long = t;
     }
     /**
@@ -15812,7 +16224,8 @@ This typically indicates that your device does not have a healthy Internet conne
      * {@link FirestoreError} if an error occurs.
      */
     static fromJSON(e) {
-      if (__PRIVATE_validateJSON(e, _GeoPoint._jsonSchema)) return new _GeoPoint(e.latitude, e.longitude);
+      if (__PRIVATE_validateJSON(e, _GeoPoint._jsonSchema))
+        return new _GeoPoint(e.latitude, e.longitude);
     }
   };
   GeoPoint._jsonSchemaVersion = "firestore/geoPoint/1.0", GeoPoint._jsonSchema = {
@@ -15826,23 +16239,26 @@ This typically indicates that your device does not have a healthy Internet conne
      * @internal
      */
     constructor(e) {
-      this._values = (e || []).map(((e2) => e2));
+      this._values = (e || []).map((e2) => e2);
     }
     /**
      * Returns a copy of the raw number array form of the vector.
      */
     toArray() {
-      return this._values.map(((e) => e));
+      return this._values.map((e) => e);
     }
     /**
      * Returns `true` if the two `VectorValue` values have the same raw number arrays, returns `false` otherwise.
      */
     isEqual(e) {
-      return (function __PRIVATE_isPrimitiveArrayEqual(e2, t) {
-        if (e2.length !== t.length) return false;
-        for (let n = 0; n < e2.length; ++n) if (e2[n] !== t[n]) return false;
+      return function __PRIVATE_isPrimitiveArrayEqual(e2, t) {
+        if (e2.length !== t.length)
+          return false;
+        for (let n = 0; n < e2.length; ++n)
+          if (e2[n] !== t[n])
+            return false;
         return true;
-      })(this._values, e._values);
+      }(this._values, e._values);
     }
     /**
      * Returns a JSON-serializable representation of this `VectorValue` instance.
@@ -15864,7 +16280,8 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     static fromJSON(e) {
       if (__PRIVATE_validateJSON(e, _VectorValue._jsonSchema)) {
-        if (Array.isArray(e.vectorValues) && e.vectorValues.every(((e2) => "number" == typeof e2))) return new _VectorValue(e.vectorValues);
+        if (Array.isArray(e.vectorValues) && e.vectorValues.every((e2) => "number" == typeof e2))
+          return new _VectorValue(e.vectorValues);
         throw new FirestoreError(N.INVALID_ARGUMENT, "Expected 'vectorValues' field to be a number array");
       }
     }
@@ -15875,15 +16292,16 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var Pn = new RegExp("[~\\*/\\[\\]]");
   function __PRIVATE_fieldPathFromDotSeparatedString(e, t, n) {
-    if (t.search(Pn) >= 0) throw __PRIVATE_createError(
-      `Invalid field path (${t}). Paths must not contain '~', '*', '/', '[', or ']'`,
-      e,
-      /* hasConverter= */
-      false,
-      /* path= */
-      void 0,
-      n
-    );
+    if (t.search(Pn) >= 0)
+      throw __PRIVATE_createError(
+        `Invalid field path (${t}). Paths must not contain '~', '*', '/', '[', or ']'`,
+        e,
+        /* hasConverter= */
+        false,
+        /* path= */
+        void 0,
+        n
+      );
     try {
       return new FieldPath(...t.split("."))._internalPath;
     } catch (r) {
@@ -15969,7 +16387,8 @@ This typically indicates that your device does not have a healthy Internet conne
     get(e) {
       if (this._document) {
         const t = this._document.data.field(__PRIVATE_fieldPathFromArgument("DocumentSnapshot.get", e));
-        if (null !== t) return this._userDataWriter.convertValue(t);
+        if (null !== t)
+          return this._userDataWriter.convertValue(t);
       }
     }
   };
@@ -16065,7 +16484,8 @@ This typically indicates that your device does not have a healthy Internet conne
     get(e, t = {}) {
       if (this._document) {
         const n = this._document.data.field(__PRIVATE_fieldPathFromArgument("DocumentSnapshot.get", e));
-        if (null !== n) return this._userDataWriter.convertValue(n, t.serverTimestamps);
+        if (null !== n)
+          return this._userDataWriter.convertValue(n, t.serverTimestamps);
       }
     }
     /**
@@ -16075,9 +16495,11 @@ This typically indicates that your device does not have a healthy Internet conne
      * `DocumentSnapshot` has pending writes.
      */
     toJSON() {
-      if (this.metadata.hasPendingWrites) throw new FirestoreError(N.FAILED_PRECONDITION, "DocumentSnapshot.toJSON() attempted to serialize a document with pending writes. Await waitForPendingWrites() before invoking toJSON().");
+      if (this.metadata.hasPendingWrites)
+        throw new FirestoreError(N.FAILED_PRECONDITION, "DocumentSnapshot.toJSON() attempted to serialize a document with pending writes. Await waitForPendingWrites() before invoking toJSON().");
       const e = this._document, t = {};
-      if (t.type = _DocumentSnapshot._jsonSchemaVersion, t.bundle = "", t.bundleSource = "DocumentSnapshot", t.bundleName = this._key.toString(), !e || !e.isValidDocument() || !e.isFoundDocument()) return t;
+      if (t.type = _DocumentSnapshot._jsonSchemaVersion, t.bundle = "", t.bundleSource = "DocumentSnapshot", t.bundleName = this._key.toString(), !e || !e.isValidDocument() || !e.isFoundDocument())
+        return t;
       this._userDataWriter.convertObjectMap(e.data.value.mapValue.fields, "previous");
       return t.bundle = (this._firestore, this.ref.path, "NOT SUPPORTED"), t;
     }
@@ -16114,7 +16536,7 @@ This typically indicates that your device does not have a healthy Internet conne
     /** An array of all the documents in the `QuerySnapshot`. */
     get docs() {
       const e = [];
-      return this.forEach(((t) => e.push(t))), e;
+      return this.forEach((t) => e.push(t)), e;
     }
     /** The number of documents in the `QuerySnapshot`. */
     get size() {
@@ -16132,9 +16554,9 @@ This typically indicates that your device does not have a healthy Internet conne
      * @param thisArg - The `this` binding for the callback.
      */
     forEach(e, t) {
-      this._snapshot.docs.forEach(((n) => {
+      this._snapshot.docs.forEach((n) => {
         e.call(t, new QueryDocumentSnapshot(this._firestore, this._userDataWriter, n.key, n, new SnapshotMetadata(this._snapshot.mutatedKeys.has(n.key), this._snapshot.fromCache), this.query.converter));
-      }));
+      });
     }
     /**
      * Returns an array of the documents changes since the last snapshot. If this
@@ -16147,12 +16569,13 @@ This typically indicates that your device does not have a healthy Internet conne
      */
     docChanges(e = {}) {
       const t = !!e.includeMetadataChanges;
-      if (t && this._snapshot.excludesMetadataChanges) throw new FirestoreError(N.INVALID_ARGUMENT, "To include metadata changes with your document changes, you must also pass { includeMetadataChanges:true } to onSnapshot().");
+      if (t && this._snapshot.excludesMetadataChanges)
+        throw new FirestoreError(N.INVALID_ARGUMENT, "To include metadata changes with your document changes, you must also pass { includeMetadataChanges:true } to onSnapshot().");
       return this._cachedChanges && this._cachedChangesIncludeMetadataChanges === t || (this._cachedChanges = /** Calculates the array of `DocumentChange`s for a given `ViewSnapshot`. */
-      (function __PRIVATE_changesFromSnapshot(e2, t2) {
+      function __PRIVATE_changesFromSnapshot(e2, t2) {
         if (e2._snapshot.oldDocs.isEmpty()) {
           let t3 = 0;
-          return e2._snapshot.docChanges.map(((n) => {
+          return e2._snapshot.docChanges.map((n) => {
             const r = new QueryDocumentSnapshot(e2._firestore, e2._userDataWriter, n.doc.key, n.doc, new SnapshotMetadata(e2._snapshot.mutatedKeys.has(n.doc.key), e2._snapshot.fromCache), e2.query.converter);
             return n.doc, {
               type: "added",
@@ -16160,11 +16583,11 @@ This typically indicates that your device does not have a healthy Internet conne
               oldIndex: -1,
               newIndex: t3++
             };
-          }));
+          });
         }
         {
           let n = e2._snapshot.oldDocs;
-          return e2._snapshot.docChanges.filter(((e3) => t2 || 3 !== e3.type)).map(((t3) => {
+          return e2._snapshot.docChanges.filter((e3) => t2 || 3 !== e3.type).map((t3) => {
             const r = new QueryDocumentSnapshot(e2._firestore, e2._userDataWriter, t3.doc.key, t3.doc, new SnapshotMetadata(e2._snapshot.mutatedKeys.has(t3.doc.key), e2._snapshot.fromCache), e2.query.converter);
             let i = -1, s = -1;
             return 0 !== t3.type && (i = n.indexOf(t3.doc.key), n = n.delete(t3.doc.key)), 1 !== t3.type && (n = n.add(t3.doc), s = n.indexOf(t3.doc.key)), {
@@ -16173,9 +16596,9 @@ This typically indicates that your device does not have a healthy Internet conne
               oldIndex: i,
               newIndex: s
             };
-          }));
+          });
         }
-      })(this, t), this._cachedChangesIncludeMetadataChanges = t), this._cachedChanges;
+      }(this, t), this._cachedChangesIncludeMetadataChanges = t), this._cachedChanges;
     }
     /**
      * Returns a JSON-serializable representation of this `QuerySnapshot` instance.
@@ -16184,13 +16607,14 @@ This typically indicates that your device does not have a healthy Internet conne
      * `QuerySnapshot` has pending writes.
      */
     toJSON() {
-      if (this.metadata.hasPendingWrites) throw new FirestoreError(N.FAILED_PRECONDITION, "QuerySnapshot.toJSON() attempted to serialize a document with pending writes. Await waitForPendingWrites() before invoking toJSON().");
+      if (this.metadata.hasPendingWrites)
+        throw new FirestoreError(N.FAILED_PRECONDITION, "QuerySnapshot.toJSON() attempted to serialize a document with pending writes. Await waitForPendingWrites() before invoking toJSON().");
       const e = {};
       e.type = _QuerySnapshot._jsonSchemaVersion, e.bundleSource = "QuerySnapshot", e.bundleName = __PRIVATE_AutoId.newId(), this._firestore._databaseId.database, this._firestore._databaseId.projectId;
       const t = [], n = [], r = [];
-      return this.docs.forEach(((e2) => {
+      return this.docs.forEach((e2) => {
         null !== e2._document && (t.push(e2._document), n.push(this._userDataWriter.convertObjectMap(e2._document.data.value.mapValue.fields, "previous")), r.push(e2.ref.path));
-      })), e.bundle = (this._firestore, this.query._query, e.bundleName, "NOT SUPPORTED"), e;
+      }), e.bundle = (this._firestore, this.query._query, e.bundleName, "NOT SUPPORTED"), e;
     }
   };
   function __PRIVATE_resultChangeType(e) {
@@ -16214,21 +16638,22 @@ This typically indicates that your device does not have a healthy Internet conne
     bundleName: property("string"),
     bundle: property("string")
   };
-  !(function __PRIVATE_registerFirestore(e, t = true) {
-    !(function __PRIVATE_setSDKVersion(e2) {
+  !function __PRIVATE_registerFirestore(e, t = true) {
+    !function __PRIVATE_setSDKVersion(e2) {
       x = e2;
-    })(SDK_VERSION), _registerComponent(new Component("firestore", ((e2, { instanceIdentifier: n, options: r }) => {
-      const i = e2.getProvider("app").getImmediate(), s = new Firestore(new __PRIVATE_FirebaseAuthCredentialsProvider(e2.getProvider("auth-internal")), new __PRIVATE_FirebaseAppCheckTokenProvider(i, e2.getProvider("app-check-internal")), (function __PRIVATE_databaseIdFromApp(e3, t2) {
-        if (!Object.prototype.hasOwnProperty.apply(e3.options, ["projectId"])) throw new FirestoreError(N.INVALID_ARGUMENT, '"projectId" not provided in firebase.initializeApp.');
+    }(SDK_VERSION), _registerComponent(new Component("firestore", (e2, { instanceIdentifier: n, options: r }) => {
+      const i = e2.getProvider("app").getImmediate(), s = new Firestore(new __PRIVATE_FirebaseAuthCredentialsProvider(e2.getProvider("auth-internal")), new __PRIVATE_FirebaseAppCheckTokenProvider(i, e2.getProvider("app-check-internal")), function __PRIVATE_databaseIdFromApp(e3, t2) {
+        if (!Object.prototype.hasOwnProperty.apply(e3.options, ["projectId"]))
+          throw new FirestoreError(N.INVALID_ARGUMENT, '"projectId" not provided in firebase.initializeApp.');
         return new DatabaseId(e3.options.projectId, t2);
-      })(i, n), i);
+      }(i, n), i);
       return r = {
         useFetchStreams: t,
         ...r
       }, s._setSettings(r), s;
-    }), "PUBLIC").setMultipleInstances(true)), registerVersion(F, M, e), // BUILD_TARGET will be replaced by values like esm, cjs, etc during the compilation
+    }, "PUBLIC").setMultipleInstances(true)), registerVersion(F, M, e), // BUILD_TARGET will be replaced by values like esm, cjs, etc during the compilation
     registerVersion(F, M, "esm2020");
-  })();
+  }();
 
   // ../node_modules/suffro-lib/dist/index.js
   init_index_esm5();
@@ -16387,9 +16812,11 @@ This typically indicates that your device does not have a healthy Internet conne
 
   // ../node_modules/suffro-lib/dist/index.js
   function validateUrl(input) {
-    if (typeof input !== "string") return false;
+    if (typeof input !== "string")
+      return false;
     const s = input.trim();
-    if (s.length === 0) return false;
+    if (s.length === 0)
+      return false;
     try {
       new URL(s);
       return true;
@@ -16398,7 +16825,8 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   }
   function isValidDateString(value) {
-    if (typeof value !== "string") return false;
+    if (typeof value !== "string")
+      return false;
     const d = new Date(value);
     return !Number.isNaN(d.getTime());
   }
@@ -16408,13 +16836,15 @@ This typically indicates that your device does not have a healthy Internet conne
   var ISO_DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
   var ISO_DATETIME_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(\.\d{1,3})?)?(Z|[+\-](?:[01]\d|2[0-3]):?[0-5]\d)$/;
   function isIsoDateString(value) {
-    if (typeof value !== "string" || !ISO_DATE_RE.test(value)) return false;
+    if (typeof value !== "string" || !ISO_DATE_RE.test(value))
+      return false;
     const [y, m, d] = value.split("-").map(Number);
     const dt = new Date(Date.UTC(y, m - 1, d));
     return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
   }
   function isIsoDateTimeString(value) {
-    if (typeof value !== "string" || !ISO_DATETIME_RE.test(value)) return false;
+    if (typeof value !== "string" || !ISO_DATETIME_RE.test(value))
+      return false;
     const dt = new Date(value);
     return !Number.isNaN(dt.getTime());
   }
@@ -16448,7 +16878,8 @@ This typically indicates that your device does not have a healthy Internet conne
     // oggetti/collezioni
     object: (v) => v !== null && typeof v === "object",
     plainObject: (v) => {
-      if (v === null || typeof v !== "object" || Array.isArray(v)) return false;
+      if (v === null || typeof v !== "object" || Array.isArray(v))
+        return false;
       const proto = Object.getPrototypeOf(v);
       return proto === Object.prototype || proto === null;
     },
@@ -16476,7 +16907,8 @@ This typically indicates that your device does not have a healthy Internet conne
     ipv4: (v) => typeof v === "string" && IPV4_RE.test(v),
     ipv6: (v) => typeof v === "string" && IPV6_RE.test(v),
     jsonString: (v) => {
-      if (typeof v !== "string") return false;
+      if (typeof v !== "string")
+        return false;
       try {
         JSON.parse(v);
         return true;
@@ -16535,7 +16967,8 @@ This typically indicates that your device does not have a healthy Internet conne
     }
     function notify() {
       const page = getPage();
-      for (const cb of listeners) cb(page);
+      for (const cb of listeners)
+        cb(page);
     }
     window.addEventListener("popstate", notify);
     window.addEventListener("hashchange", notify);
@@ -16787,7 +17220,8 @@ This typically indicates that your device does not have a healthy Internet conne
     return {
       is: (v) => isFn(v),
       as: (v) => {
-        if (!isFn(v)) throw new TypeError(`Expected ${tag}, got ${String(v)}`);
+        if (!isFn(v))
+          throw new TypeError(`Expected ${tag}, got ${String(v)}`);
         return v;
       },
       try: (v) => isFn(v) ? v : null,
@@ -16827,9 +17261,12 @@ This typically indicates that your device does not have a healthy Internet conne
 
   // ../src-ts/modules/diagnostics/_helpers.ts
   var diagnosticsSettings = async (core, settings) => {
-    if (settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw "[retentionDaysAnalytics] the value must be a U32 integer number";
-    if (settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs)) throw "[retentionDaysLogs] the value must be a U32 integer number";
-    if (settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes)) throw "[retentionDaysCrashes] the value must be a U32 integer number";
+    if (settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics))
+      throw "[retentionDaysAnalytics] the value must be a U32 integer number";
+    if (settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs))
+      throw "[retentionDaysLogs] the value must be a U32 integer number";
+    if (settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes))
+      throw "[retentionDaysCrashes] the value must be a U32 integer number";
     return await core.invoke("bd_logs_set_privacy", {
       patch: {
         analytics_enabled: settings?.analyticsEnabled,
@@ -16853,20 +17290,41 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/sandbox/_helpers.ts
+  // ../src-ts/modules/worker/_helpers.ts
   var normalizeModuleName = (name6) => {
     const sanitizeWasmExtensions = name6.replaceAll(".wasm", "");
     const addWasmExtensions = `${sanitizeWasmExtensions}.wasm`;
     return addWasmExtensions;
   };
-  var normalizeModuleInput = (input) => {
-    if (validate.emptyObject(input)) throw new Error(`Invalid input
-${input}`);
-    let finalInput = input;
-    const modulePath = input.module_path;
-    finalInput.module_path = normalizeModuleName(modulePath);
-    return finalInput;
-  };
+
+  // ../src-ts/modules/contextMenu/_helpers.ts
+  var CM_TYPES = [
+    "item",
+    "check",
+    "separator",
+    "submenu",
+    "predefined"
+  ];
+  function isCmType(value) {
+    return typeof value === "string" && CM_TYPES.includes(value);
+  }
+  function parseCmType(value) {
+    if (!validate.nonEmptyString(value))
+      return null;
+    const normalized = String(value).toLowerCase().trim().replace(/\s+/g, "");
+    return isCmType(normalized) ? normalized : null;
+  }
+  function normalizeEntries(entries) {
+    const out = [];
+    for (const entry of entries) {
+      const t = parseCmType(entry?.type);
+      if (!t)
+        continue;
+      out.push({ ...entry, type: t });
+    }
+    console.log(out);
+    return out;
+  }
 
   // ../src-ts/_helpers.ts
   var tauriReadyCheck = () => typeof window !== "undefined" && window.__TAURI__ && window.Bubbledesk;
@@ -16895,17 +17353,20 @@ ${input}`);
   // ../src-ts/bubbledesk/_main.ts
   var BubbledeskInstance = {
     ready: () => {
-      if (!window?.Bubbledesk) return false;
+      if (!window?.Bubbledesk)
+        return false;
       return true;
     },
     get: () => {
-      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
+      if (!BubbledeskInstance.ready())
+        throw "'window.Bubbledesk' not found";
       return window?.Bubbledesk;
     }
   };
   var bdInitiators = async () => {
     try {
-      if (!BubbledeskInstance.ready()) throw "'window.Bubbledesk' not found";
+      if (!BubbledeskInstance.ready())
+        throw "'window.Bubbledesk' not found";
       const Bubbledesk = BubbledeskInstance.get();
       Bubbledesk.events.onMenuEvent((id) => {
         if (id === "view.devtools") {
@@ -16950,7 +17411,8 @@ ${input}`);
       onShortcut: async (handler) => listenForEvent("shortcut:event", handler),
       onDragDrop: async (handler, options) => {
         const evs = ["dragdrop:enter", "dragdrop:drop", "dragdrop:cancel"];
-        if (options?.includeHover) evs.push("dragdrop:hover");
+        if (options?.includeHover)
+          evs.push("dragdrop:hover");
         const offs = await Promise.all(evs.map((n) => listenForEvent(n, (p) => handler(n, p))));
         return () => offs.forEach((off) => off());
       },
@@ -17002,8 +17464,10 @@ ${input}`);
         return permanent ? p.data : p.cache;
       },
       clear: async () => {
-        if (permanent) core.invoke("bd_fs_clear_data");
-        else core.invoke("bd_fs_clear_cache");
+        if (permanent)
+          core.invoke("bd_fs_clear_data");
+        else
+          core.invoke("bd_fs_clear_cache");
       },
       base: permanent ? ".data" : ".cache"
     };
@@ -17033,12 +17497,6 @@ ${input}`);
         exists: async (rel = "") => core.invoke("bd_fs_diagnostics_exists", { rel }),
         readText: async (rel) => core.invoke("bd_fs_diagnostics_read_text", { rel }),
         readBytes: async (rel) => core.invoke("bd_fs_diagnostics_read_bytes", { rel })
-      },
-      sandbox: {
-        readText: async (jobId, rel) => core.invoke("bd_fs_sandbox_read_text", { jobId, rel }),
-        getStdin: async (jobId) => core.invoke("bd_fs_sandbox_read_stdin", { jobId }),
-        getMeta: async (jobId) => core.invoke("bd_fs_sandbox_read_meta", { jobId }),
-        listContent: async (jobId, rel = "") => core.invoke("bd_fs_sandbox_list_dir", { jobId, rel })
       }
     };
   }
@@ -17058,14 +17516,16 @@ ${input}`);
         const gs = tauriGlobalShortcut();
         await gs.register(accelerator, async (e) => {
           const payload = { accelerator, ...e };
-          if (options?.emitEvent) await core.invoke("bd_event_emit", { event: "shortcut:event", payload });
+          if (options?.emitEvent)
+            await core.invoke("bd_event_emit", { event: "shortcut:event", payload });
           cb(payload);
         });
       },
       unregister: async (accelerator) => {
         const gs = tauriGlobalShortcut();
         const reg = await gs.isRegistered(accelerator);
-        if (reg) await gs.unregister(accelerator);
+        if (reg)
+          await gs.unregister(accelerator);
       },
       unregisterAll: async () => {
         const gs = tauriGlobalShortcut();
@@ -17197,34 +17657,35 @@ ${input}`);
     };
   }
 
-  // ../src-ts/modules/sandbox/_main.ts
-  function buildSandbox(core) {
+  // ../src-ts/modules/worker/_main.ts
+  function buildWorker(core) {
     return {
-      call: (input) => core.invoke("bd_sandbox_call", { input: normalizeModuleInput(input) }),
+      call: (method, payload, timeoutMs) => core.invoke("bd_worker_call", { modulePath: normalizeModuleName(method), payload, timeoutMs }),
+      status: () => core.invoke("bd_worker_status"),
+      restart: () => core.invoke("bd_worker_restart"),
+      // delivery: (id: string, result: string): Promise<boolean> => core.invoke("bd_worker_delivery", {id, result}),
       modules: {
-        list: () => core.invoke("bd_sandbox_list_modules"),
-        remove: (name6) => core.invoke("bd_sandbox_remove_module", { name: normalizeModuleName(name6) }),
-        addFromBytes: (name6, contents) => core.invoke("bd_sandbox_save_module", { name: normalizeModuleName(name6), contents }),
-        add: (name6, maxBytes) => core.invoke("bd_sandbox_pick_and_save_module", { maxBytes, defaultName: normalizeModuleName(name6) })
+        list: () => core.invoke("bd_worker_list_modules"),
+        remove: (name6) => core.invoke("bd_worker_remove_module", { name: normalizeModuleName(name6) }),
+        addFromBytes: (name6, contents) => core.invoke("bd_worker_add_module", { name: normalizeModuleName(name6), contents }),
+        add: (name6, maxBytes) => core.invoke("bd_worker_pick_and_add_module", { maxBytes, defaultName: normalizeModuleName(name6) })
       },
-      clearAll: () => core.invoke("bd_sandbox_clear_all"),
-      paths: () => core.invoke("bd_sandbox_paths"),
-      activeJobs: () => core.invoke("bd_sandbox_list_active"),
-      ttl: {
-        sweep: () => core.invoke("bd_sandbox_sweep"),
-        set: (minutes) => core.invoke("bd_sandbox_set_ttl_minutes", { minutes }),
-        get: () => core.invoke("bd_sandbox_get_ttl_minutes")
-      },
-      concurrency: {
-        setLimit: (limit) => core.invoke("bd_sandbox_set_concurrency_limit", { limit }),
-        get: () => core.invoke("bd_sandbox_get_concurrency")
-      }
+      clearSandbox: () => core.invoke("bd_worker_clear_all"),
+      paths: () => core.invoke("bd_worker_paths")
+    };
+  }
+
+  // ../src-ts/modules/contextMenu/_main.ts
+  function buildContextMenu(core) {
+    return {
+      show: (entries, options) => core.invoke("bd_context_menu_popup", { items: normalizeEntries(entries), options })
     };
   }
 
   // ../src-ts/bridge.ts
   (() => {
-    if (typeof window === "undefined" || window.Bubbledesk) return;
+    if (typeof window === "undefined" || window.Bubbledesk)
+      return;
     const core = buildCore();
     const api = {
       get isAvailable() {
@@ -17248,7 +17709,8 @@ ${input}`);
       network: buildNetwork(core),
       autostart: buildAutostart(core),
       badge: buildBadge(core),
-      sandbox: buildSandbox(core)
+      worker: buildWorker(core),
+      contextMenu: buildContextMenu(core)
     };
     Object.defineProperty(window, "Bubbledesk", {
       value: api,
@@ -17259,7 +17721,8 @@ ${input}`);
   })();
   (async () => {
     await waitTauri();
-    if (tauriReadyCheck()) bdInitiators();
+    if (tauriReadyCheck())
+      bdInitiators();
   })();
 })();
 /*! Bundled license information:
@@ -17363,12 +17826,6 @@ ${input}`);
    *)
 
 @firebase/component/dist/esm/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2019 Google LLC
@@ -17387,53 +17844,6 @@ ${input}`);
    *)
 
 @firebase/logger/dist/esm/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/functions/dist/esm/index.esm.js:
-@firebase/functions/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -17618,6 +18028,78 @@ ${input}`);
 @firebase/storage/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2022 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17650,8 +18132,6 @@ ${input}`);
    *)
 
 @firebase/storage/dist/index.esm.js:
-@firebase/storage/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2021 Google LLC
@@ -17670,30 +18150,258 @@ ${input}`);
    *)
 
 @firebase/storage/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-firebase/app/dist/esm/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/storage/dist/index.esm.js:
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -17711,7 +18419,35 @@ firebase/app/dist/esm/index.esm.js:
    * limitations under the License.
    *)
 
+@firebase/storage/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/webchannel-wrapper/dist/bloom-blob/esm/bloom_blob_es2018.js:
+  (** @license
+  Copyright The Closure Library Authors.
+  SPDX-License-Identifier: Apache-2.0
+  *)
+  (** @license
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  *)
+
 @firebase/webchannel-wrapper/dist/webchannel-blob/esm/webchannel_blob_es2018.js:
   (** @license
   Copyright The Closure Library Authors.
@@ -17722,6 +18458,24 @@ firebase/app/dist/esm/index.esm.js:
    Copyright The Closure Library Authors.
    SPDX-License-Identifier: Apache-2.0
   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
 
 @firebase/firestore/dist/index.esm.js:
   (**
@@ -17758,11 +18512,24 @@ firebase/app/dist/esm/index.esm.js:
    *)
 
 @firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/functions/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -17779,6 +18546,24 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2017 Google LLC
@@ -17847,6 +18632,59 @@ firebase/app/dist/esm/index.esm.js:
    *)
 
 @firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
@@ -17882,16 +18720,99 @@ firebase/app/dist/esm/index.esm.js:
    *)
 
 @firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -17943,6 +18864,76 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17960,6 +18951,42 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -18011,6 +19038,58 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2018 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2022 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18043,12 +19122,189 @@ firebase/app/dist/esm/index.esm.js:
    *)
 
 @firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
-@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2023 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2023 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -18116,6 +19372,59 @@ firebase/app/dist/esm/index.esm.js:
    *)
 
 @firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
@@ -18137,6 +19446,114 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18186,6 +19603,24 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2024 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -18283,6 +19718,42 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2018 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
   (**
    * @license
    * Copyright 2023 Google LLC
@@ -18335,7 +19806,291 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2025 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.
@@ -18367,6 +20122,76 @@ firebase/app/dist/esm/index.esm.js:
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *)
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
   (**
    * @license
    * Copyright 2020 Google LLC
@@ -18421,6 +20246,42 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18455,6 +20316,60 @@ firebase/app/dist/esm/index.esm.js:
 @firebase/firestore/dist/index.esm.js:
   (**
    * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
    * Copyright 2025 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18472,6 +20387,292 @@ firebase/app/dist/esm/index.esm.js:
   (**
    * @license
    * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2022 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2023 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/firestore/dist/index.esm.js:
+  (**
+   * @license
+   * Copyright 2023 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+firebase/app/dist/esm/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/functions/dist/esm/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/functions/dist/esm/index.esm.js:
+  (**
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+  (**
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *)
+
+@firebase/functions/dist/esm/index.esm.js:
+  (**
+   * @license
+   * Copyright 2017 Google LLC
    *
    * Licensed under the Apache License, Version 2.0 (the "License");
    * you may not use this file except in compliance with the License.

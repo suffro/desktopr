@@ -15,10 +15,11 @@ import {
     buildNetwork,
     buildAutostart,
     buildBadge,
-    buildSandbox
+    buildContextMenu,
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
+import { buildWorker } from "modules/worker/_main";
 
 (() => {
   if (typeof window === "undefined" || (window as any).Bubbledesk) return;
@@ -46,7 +47,8 @@ import { tauriReadyCheck, waitTauri } from "@helpers";
     network:       buildNetwork(core),
     autostart:     buildAutostart(core),
     badge:         buildBadge(core),
-    sandbox:       buildSandbox(core)
+    worker:        buildWorker(core),
+    contextMenu:   buildContextMenu(core),
   };
 
   Object.defineProperty(window, "Bubbledesk", {

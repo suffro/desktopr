@@ -13,7 +13,8 @@ pub mod diagnostics;
 pub mod network;
 pub mod autostart;
 pub mod badge;
-pub mod sandbox;
+pub mod web_worker;
+pub mod context_menu;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -29,4 +30,5 @@ pub use diagnostics::*;
 pub use network::*;
 pub use autostart::*;
 pub use badge::*;
-pub use sandbox::*;
+pub use web_worker::*;
+pub use context_menu::*;

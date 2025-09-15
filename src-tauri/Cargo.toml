@@ -50,13 +50,13 @@ anyhow = "1.0"
 # Async runtime già fornito da Tauri, qui serve solo std::thread
 # ma se ti serve altrove puoi usare tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 # WASM runtime
-wasmtime = "19.0"       # oppure la versione più recente stabile
+wasmtime = "21.0"       # oppure la versione più recente stabile
 # Abilita Preview1 altrimenti `WasiP1Ctx` non esiste
-wasmtime-wasi = { version = "19", features = ["preview1"] }
+wasmtime-wasi = { version = "21", features = ["preview1"] }
 # Per usare `wasi_common::sync::Dir::from_cap_std`
-wasi-common = { version = "19", features = ["sync"] }
+wasi-common = { version = "21", features = ["sync"] }
 # Capability-based FS (per preopen sicuro)
-cap-std = "2"
+cap-std = "3.4"
 # Helpers
 once_cell = "1.19"
 rand = { version = "0.8", features = ["std", "std_rng"] }

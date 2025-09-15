@@ -101,10 +101,17 @@ fn main() {
       }
     });
 
-    if let Err(e) = crate::bridge::sandbox::sandbox_cleanup_on_boot(&app.handle()) {
-        eprintln!("[sandbox] cleanup on boot failed: {e}");
+    // Cleans worker _sandbox
+    crate::bridge::web_worker::worker_sandbox_cleanup_on_boot(&app.handle());
+
+    // Create hidden worker window once
+    if let Err(e) = crate::bridge::web_worker::spawn_hidden_worker_window_from_app(app) {
+      eprintln!("[bd-worker] spawn failed: {e}");
     }
     
+    // Prime the worker readiness handshake at startup so the first call doesn't fail
+    crate::bridge::web_worker::kickoff_worker_readiness(&app.handle());
+
     Ok(())
   });
 
@@ -194,7 +201,6 @@ fn main() {
       // fs diagnostics
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
-      bd_fs_sandbox_read_stdin, bd_fs_sandbox_read_meta, bd_fs_sandbox_read_text,
       // menu
       bd_menu_set_enabled, bd_menu_set_checked,
       // diagnostics
@@ -206,11 +212,11 @@ fn main() {
       bd_get_autostart_mode, bd_set_autostart_mode, bd_autostart_enable, bd_autostart_disable, bd_autostart_status,
       // badge
       bd_badge_set, bd_badge_clear,
-      // sandbox
-      bd_sandbox_call, bd_sandbox_run, bd_sandbox_list_modules, bd_sandbox_save_module,
-      bd_sandbox_pick_and_save_module, bd_sandbox_delete_module, bd_sandbox_remove_module, bd_sandbox_paths, bd_sandbox_clear_all,
-      bd_sandbox_cleanup_on_boot, bd_sandbox_list_active, bd_sandbox_sweep, bd_sandbox_set_concurrency_limit, bd_sandbox_get_concurrency,
-      bd_sandbox_set_ttl_minutes, bd_sandbox_get_ttl_minutes,
+      // context_menu
+      bd_context_menu_popup,
+      // web_worker
+      bd_worker_call, bd_worker_delivery, bd_worker_ready, bd_worker_add_module, bd_worker_pick_and_add_module, bd_worker_remove_module,
+      bd_worker_paths, bd_worker_clear_all, bd_worker_list_modules, bd_worker_status, bd_worker_restart,
       // test commands (only in dev)
       #[cfg(debug_assertions)]
       bd_logs_test_record_n,
@@ -222,6 +228,3 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
-
-
-
