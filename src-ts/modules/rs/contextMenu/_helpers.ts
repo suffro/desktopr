@@ -54,17 +54,17 @@ const onCmClick = (ev: MouseEvent, callback: CmListenerCallback, preventDefault:
     const target = ev.target as HTMLElement | null;
 
     // se vuoi risalire fino a un elemento significativo (con attributo data-bd-context)
-    const parentActionable =
+    const ancestorActionable =
       target?.closest<HTMLElement>("[data-bd-contextmenu]") ?? null;
-    const childActionable =
+    const descendantActionable =
       target?.querySelector<HTMLElement>("[data-bd-contextmenu]") ?? null;
 
     const info = {
       targetTag: target?.tagName ?? null,
       targetId: target?.id ?? null,
       targetClasses: target?.className ?? null,
-      parentActionable,
-      childActionable,
+      ancestorActionable,
+      descendantActionable,
       // coordinate
       pageX: ev.pageX, // rispetto al documento (scorrimento incluso)
       pageY: ev.pageY,

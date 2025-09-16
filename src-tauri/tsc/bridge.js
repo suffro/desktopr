@@ -17256,7 +17256,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return normalized;
   };
 
-  // ../src-ts/modules/events/_helpers.ts
+  // ../src-ts/modules/rs/events/_helpers.ts
   var listenForEvent = async (event, handler) => {
     const tauri = window.__TAURI__;
     const eventApi = tauri?.event;
@@ -17266,7 +17266,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return () => unlisten();
   };
 
-  // ../src-ts/modules/shortcuts/_helpers.ts
+  // ../src-ts/modules/rs/shortcuts/_helpers.ts
   var tauriGlobalShortcut = () => {
     const g = window.__TAURI__?.globalShortcut;
     if (!g)
@@ -17274,7 +17274,7 @@ This typically indicates that your device does not have a healthy Internet conne
     return g;
   };
 
-  // ../src-ts/modules/diagnostics/_helpers.ts
+  // ../src-ts/modules/rs/diagnostics/_helpers.ts
   var diagnosticsSettings = async (core, settings) => {
     if (settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics))
       throw "[retentionDaysAnalytics] the value must be a U32 integer number";
@@ -17305,14 +17305,14 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/worker/_helpers.ts
+  // ../src-ts/modules/rs/worker/_helpers.ts
   var normalizeModuleName = (name6) => {
     const sanitizeWasmExtensions = name6.replaceAll(".wasm", "");
     const addWasmExtensions = `${sanitizeWasmExtensions}.wasm`;
     return addWasmExtensions;
   };
 
-  // ../src-ts/modules/contextMenu/_helpers.ts
+  // ../src-ts/modules/rs/contextMenu/_helpers.ts
   var CM_TYPES = [
     "item",
     "check",
@@ -17339,6 +17339,70 @@ This typically indicates that your device does not have a healthy Internet conne
     }
     return out;
   }
+  var onCmClick = (ev, callback, preventDefault = true) => {
+    try {
+      if (preventDefault)
+        ev.preventDefault();
+      const target = ev.target;
+      const ancestorActionable = target?.closest("[data-bd-contextmenu]") ?? null;
+      const descendantActionable = target?.querySelector("[data-bd-contextmenu]") ?? null;
+      const info = {
+        targetTag: target?.tagName ?? null,
+        targetId: target?.id ?? null,
+        targetClasses: target?.className ?? null,
+        ancestorActionable,
+        descendantActionable,
+        // coordinate
+        pageX: ev.pageX,
+        // rispetto al documento (scorrimento incluso)
+        pageY: ev.pageY,
+        clientX: ev.clientX,
+        // rispetto alla viewport
+        clientY: ev.clientY,
+        screenX: ev.screenX,
+        // coordinate dello schermo
+        screenY: ev.screenY,
+        altKey: ev.altKey,
+        ctrlKey: ev.ctrlKey,
+        shiftKey: ev.shiftKey,
+        metaKey: ev.metaKey
+      };
+      if (!window?.Bubbledesk)
+        throw new Error("[contextmenu listener] Bubbledesk not found");
+      window.Bubbledesk.events.emit("cm:click", info);
+      const callbackPlayload = {
+        event: ev,
+        ...info
+      };
+      if (callback)
+        callback(callbackPlayload);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  var initContextMenuListener = (callback, preventDefault = true) => {
+    if (!window?.Bubbledesk)
+      throw new Error("[contextmenu listener] Bubbledesk not found");
+    const listening = window.Bubbledesk.contextMenu.listening;
+    if (listening)
+      return console.warn("[contextmenu listener] already initialized");
+    const listener = (ev) => onCmClick(ev, callback, preventDefault);
+    window.Bubbledesk.contextMenu.listener = listener;
+    document.addEventListener("contextmenu", listener);
+    window.Bubbledesk.contextMenu.listening = true;
+  };
+  var removeContextMenuListener = () => {
+    if (!window?.Bubbledesk)
+      throw new Error("[contextmenu listener] Bubbledesk not found");
+    const listening = window.Bubbledesk.contextMenu.listening;
+    if (!listening)
+      return;
+    const listener = window.Bubbledesk.contextMenu.listener ?? (() => {
+    });
+    document.removeEventListener("contextmenu", listener);
+    window.Bubbledesk.contextMenu.listening = false;
+    window.Bubbledesk.contextMenu.listener = void 0;
+  };
 
   // ../src-ts/_helpers.ts
   var tauriReadyCheck = () => typeof window !== "undefined" && window.__TAURI__ && window.Bubbledesk;
@@ -17394,7 +17458,7 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   };
 
-  // ../src-ts/modules/files/_main.ts
+  // ../src-ts/modules/rs/files/_main.ts
   function buildFiles(core) {
     return {
       open: (options) => core.invoke("bd_file_open", { multi: options?.multi ?? false, allowedExtensions: options?.allowed, maxBytes: options?.maxBytes }),
@@ -17403,7 +17467,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/events/_main.ts
+  // ../src-ts/modules/rs/events/_main.ts
   function buildEvents(core) {
     return {
       emit: (event, payload) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
@@ -17435,7 +17499,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/fs/_main.ts
+  // ../src-ts/modules/rs/fs/_main.ts
   function scope(core, permanent) {
     return {
       listContent: (rel = "") => core.invoke("bd_fs_list_dir", { rel, permanent }),
@@ -17515,7 +17579,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/clipboard/_main.ts
+  // ../src-ts/modules/rs/clipboard/_main.ts
   function buildClipboard(core) {
     return {
       readText: () => core.invoke("bd_clipboard_read"),
@@ -17523,7 +17587,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/shortcuts/_main.ts
+  // ../src-ts/modules/rs/shortcuts/_main.ts
   function buildShortcuts(core) {
     return {
       register: async (accelerator, cb, options) => {
@@ -17552,7 +17616,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/notifications/_main.ts
+  // ../src-ts/modules/rs/notifications/_main.ts
   function buildNotifications(core) {
     return {
       state: () => core.invoke("bd_notification_state"),
@@ -17561,7 +17625,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/app/_main.ts
+  // ../src-ts/modules/rs/app/_main.ts
   function buildAppInfo(core) {
     return {
       info: () => core.invoke("bd_app_info"),
@@ -17569,7 +17633,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/window/_main.ts
+  // ../src-ts/modules/rs/window/_main.ts
   function buildWindow(core) {
     const randomWindowLabel = `w_${Math.random().toString(36).substring(2, 2 + 8)}`;
     return {
@@ -17590,7 +17654,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/menu/_main.ts
+  // ../src-ts/modules/rs/menu/_main.ts
   function buildMenu(core) {
     return {
       setEnabled: (id, enabled) => core.invoke("bd_menu_set_enabled", { id, enabled }),
@@ -17608,7 +17672,7 @@ This typically indicates that your device does not have a healthy Internet conne
   var APP_URL = bridge_constants_default.appUrl;
   var APP_VERSION = bridge_constants_default.appVersion;
 
-  // ../src-ts/modules/diagnostics/_main.ts
+  // ../src-ts/modules/rs/diagnostics/_main.ts
   function buildDiagnostics(core) {
     return {
       settings: {
@@ -17638,7 +17702,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/network/_main.ts
+  // ../src-ts/modules/rs/network/_main.ts
   function buildNetwork(core) {
     return {
       status: () => core.invoke("bd_network_get_status"),
@@ -17650,7 +17714,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/autostart/_main.ts
+  // ../src-ts/modules/rs/autostart/_main.ts
   function buildAutostart(core) {
     return {
       enable: () => core.invoke("bd_autostart_enable"),
@@ -17663,7 +17727,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/badge/_main.ts
+  // ../src-ts/modules/rs/badge/_main.ts
   function buildBadge(core) {
     return {
       set: async (count) => core.invoke("bd_badge_set", { count }),
@@ -17671,7 +17735,7 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/worker/_main.ts
+  // ../src-ts/modules/rs/worker/_main.ts
   function buildWorker(core) {
     return {
       call: (method, payload, timeoutMs) => core.invoke("bd_worker_call", { modulePath: normalizeModuleName(method), payload, timeoutMs }),
@@ -17689,10 +17753,14 @@ This typically indicates that your device does not have a healthy Internet conne
     };
   }
 
-  // ../src-ts/modules/contextMenu/_main.ts
+  // ../src-ts/modules/rs/contextMenu/_main.ts
   function buildContextMenu(core) {
     return {
-      show: (entries, options) => core.invoke("bd_context_menu_popup", { items: normalizeEntries(entries), options })
+      show: (entries, options) => core.invoke("bd_context_menu_popup", { items: normalizeEntries(entries), options }),
+      handler: {
+        init: initContextMenuListener,
+        remove: removeContextMenuListener
+      }
     };
   }
 

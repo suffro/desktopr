@@ -63,8 +63,8 @@ export type CmListenerCallbackPlayload = {
   targetTag: string | null;
   targetId: string | null;
   targetClasses: string | null;
-  parentActionable: HTMLElement | null;
-  childActionable: HTMLElement | null;
+  ancestorActionable: HTMLElement | null;
+  descendantActionable: HTMLElement | null;
   pageX: number;
   pageY: number;
   clientX: number;

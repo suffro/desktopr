@@ -1,6 +1,7 @@
 
 
 src-tauri/target/
+src-tauri/tsc/
 src-tauri/gen/
 src-tauri/Cargo.lock
 
