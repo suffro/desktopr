@@ -13,8 +13,8 @@ import type {
   WorkerInterface,
   ContextMenuInterface,
 } from "@types";
-import { AutostartInterface } from "modules/autostart/_types";
-import { NetworkInterface } from "modules/network/_types";
+import { AutostartInterface } from "modules/rs/autostart/_types";
+import { NetworkInterface } from "modules/rs/network/_types";
 
 export type BubbledeskAPI = {
   readonly isAvailable: boolean;
@@ -38,7 +38,7 @@ export type BubbledeskAPI = {
   autostart: AutostartInterface;
   badge: BadgeInterface;
   worker: WorkerInterface;
-  contextMenu: ContextMenuInterface;
+  contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
 };
 
 export interface BubbledeskInstanceInterface {

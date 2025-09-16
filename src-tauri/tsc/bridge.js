@@ -6730,24 +6730,6 @@ var Bridge = (() => {
     })();
   });
 
-  // ../src-ts/modules/events/_helpers.ts
-  var listenForEvent = async (event, handler) => {
-    const tauri = window.__TAURI__;
-    const eventApi = tauri?.event;
-    if (!eventApi?.listen)
-      throw new Error("Tauri event API not available");
-    const unlisten = await eventApi.listen(event, (e) => handler(e?.payload));
-    return () => unlisten();
-  };
-
-  // ../src-ts/modules/shortcuts/_helpers.ts
-  var tauriGlobalShortcut = () => {
-    const g = window.__TAURI__?.globalShortcut;
-    if (!g)
-      throw new Error("Global Shortcut plugin not available");
-    return g;
-  };
-
   // ../node_modules/@firebase/storage/dist/index.esm.js
   init_index_esm4();
   init_index_esm();
@@ -17259,6 +17241,39 @@ This typically indicates that your device does not have a healthy Internet conne
     F64: makeRefinement("f64", Pred.isF64)
   };
 
+  // ../src-ts/bubbledesk/_helpers.ts
+  var normalizeString = (str, options = {
+    toLowerCase: true,
+    spacesFiller: ""
+  }) => {
+    if (!validate.nonEmptyString(str))
+      return "";
+    let normalized = "";
+    if (options.toLowerCase)
+      normalized = String(str).toLowerCase().trim().replace(/\s+/g, options.spacesFiller);
+    else
+      normalized = String(str).trim().replace(/\s+/g, options.spacesFiller);
+    return normalized;
+  };
+
+  // ../src-ts/modules/events/_helpers.ts
+  var listenForEvent = async (event, handler) => {
+    const tauri = window.__TAURI__;
+    const eventApi = tauri?.event;
+    if (!eventApi?.listen)
+      throw new Error("Tauri event API not available");
+    const unlisten = await eventApi.listen(event, (e) => handler(e?.payload));
+    return () => unlisten();
+  };
+
+  // ../src-ts/modules/shortcuts/_helpers.ts
+  var tauriGlobalShortcut = () => {
+    const g = window.__TAURI__?.globalShortcut;
+    if (!g)
+      throw new Error("Global Shortcut plugin not available");
+    return g;
+  };
+
   // ../src-ts/modules/diagnostics/_helpers.ts
   var diagnosticsSettings = async (core, settings) => {
     if (settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics))
@@ -17311,7 +17326,7 @@ This typically indicates that your device does not have a healthy Internet conne
   function parseCmType(value) {
     if (!validate.nonEmptyString(value))
       return null;
-    const normalized = String(value).toLowerCase().trim().replace(/\s+/g, "");
+    const normalized = normalizeString(value);
     return isCmType(normalized) ? normalized : null;
   }
   function normalizeEntries(entries) {
@@ -17322,7 +17337,6 @@ This typically indicates that your device does not have a healthy Internet conne
         continue;
       out.push({ ...entry, type: t });
     }
-    console.log(out);
     return out;
   }
 

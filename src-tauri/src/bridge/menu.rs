@@ -27,6 +27,10 @@ struct CheckState {
   map: Mutex<HashMap<String, bool>>,
 }
 
+struct CxCheckState {
+  map: Mutex<HashMap<String, bool>>, // id -> checked (context menu only)
+}
+
 // -------- init --------
 
 pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
@@ -143,6 +147,7 @@ pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
   // 🧠 salva gli state
   app.manage(MenuIndex { by_id: index_map });
   app.manage(CheckState { map: Mutex::new(check_map) });
+  app.manage(CxCheckState { map: Mutex::new(HashMap::new()) });
 
   attach_menu_events(app.handle().clone());
   Ok(())
@@ -276,17 +281,30 @@ fn attach_menu_events(app: AppHandle<Wry>) {
   app.on_menu_event(move |app, ev| {
     let id = ev.id().as_ref();
 
-    // 🔘 deterministico: se è un item "check" noto nel nostro stato, toggle e usa quel valore
+    // 🔘 Deterministic check-state handling:
+    // First try main menu CheckState; if not present, fall back to context-menu state.
     let checked = if let Some(state) = app.try_state::<CheckState>() {
       let mut map = state.map.lock().unwrap();
       if let Some(val) = map.get_mut(id) {
-        *val = !*val;                 // toggle
+        *val = !*val;                 // toggle known main-menu check item
         let new_val = *val;
-        // allinea l'UI (idempotente anche se l'OS ha già aggiornato)
+        // align UI (idempotent even if OS already updated)
         let _ = super::set_checked(&app, id, new_val);
         Some(new_val)
       } else {
-        None
+        // Not a known main-menu check item → maybe a context-menu check
+        if let Some(cx) = app.try_state::<CxCheckState>() {
+          let mut cmap = cx.map.lock().unwrap();
+          if let Some(val) = cmap.get_mut(id) {
+            *val = !*val; // toggle existing context item
+            Some(*val)
+          } else {
+            // unknown context item: do not assume it's a check; no "checked" field
+            None
+          }
+        } else {
+          None
+        }
       }
     } else {
       None
@@ -295,16 +313,13 @@ fn attach_menu_events(app: AppHandle<Wry>) {
     // 🔎 lookup in indice (se presente: section + parent)
     let (section, parent_label, parent_id) = if let Some(idx) = app.try_state::<MenuIndex>() {
       if let Some(meta) = idx.by_id.get(id) {
-        (
-          Some(meta.section.clone()),
-          meta.parent_label.clone(),
-          meta.parent_id.clone(),
-        )
+        (Some(meta.section.clone()), meta.parent_label.clone(), meta.parent_id.clone())
       } else {
-        (None, None, None)
+        // Not in the main menu index → treat as context menu
+        (Some("context_menu".to_string()), None, None)
       }
     } else {
-      (None, None, None)
+      (Some("context_menu".to_string()), None, None)
     };
     let window_label = get_latest_window_label(app);
     let _ = app.emit(

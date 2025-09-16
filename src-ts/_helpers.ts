@@ -1,21 +1,21 @@
 export * from "./core/_helpers";
 export * from "./bubbledesk/_helpers";
-export * from "./modules/files/_helpers";
-export * from "./modules/events/_helpers";
-export * from "./modules/fs/_helpers";
-export * from "./modules/clipboard/_helpers";
-export * from "./modules/shortcuts/_helpers";
-export * from "./modules/notifications/_helpers";
-export * from "./modules/app/_helpers";
-export * from "./modules/window/_helpers";
-export * from "./modules/dragdrop/_helpers";
-export * from "./modules/menu/_helpers";
-export * from "./modules/diagnostics/_helpers";
-export * from "./modules/network/_helpers";
-export * from "./modules/autostart/_helpers";
-export * from "./modules/badge/_helpers";
-export * from "./modules/worker/_helpers";
-export * from "./modules/contextMenu/_helpers";
+export * from "./modules/rs/files/_helpers";
+export * from "./modules/rs/events/_helpers";
+export * from "./modules/rs/fs/_helpers";
+export * from "./modules/rs/clipboard/_helpers";
+export * from "./modules/rs/shortcuts/_helpers";
+export * from "./modules/rs/notifications/_helpers";
+export * from "./modules/rs/app/_helpers";
+export * from "./modules/rs/window/_helpers";
+export * from "./modules/rs/dragdrop/_helpers";
+export * from "./modules/rs/menu/_helpers";
+export * from "./modules/rs/diagnostics/_helpers";
+export * from "./modules/rs/network/_helpers";
+export * from "./modules/rs/autostart/_helpers";
+export * from "./modules/rs/badge/_helpers";
+export * from "./modules/rs/worker/_helpers";
+export * from "./modules/rs/contextMenu/_helpers";
 
 import { wait } from "suffro-lib";
 

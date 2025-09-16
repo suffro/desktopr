@@ -19,7 +19,7 @@ import {
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { tauriReadyCheck, waitTauri } from "@helpers";
-import { buildWorker } from "modules/worker/_main";
+import { buildWorker } from "modules/rs/worker/_main";
 
 (() => {
   if (typeof window === "undefined" || (window as any).Bubbledesk) return;
