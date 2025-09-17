@@ -4,6 +4,7 @@
   },
   "scripts": {
     "devconf": "bash scripts/dev-conf.sh",
+    "prodconf": "bash scripts/prod-conf.sh",
     "ts:compile": "npm run ts:compile --prefix src-tauri/",
     "build:worker": "npm run build:worker --prefix src-tauri/",
     "clean": "npm run clean --prefix src-tauri/",

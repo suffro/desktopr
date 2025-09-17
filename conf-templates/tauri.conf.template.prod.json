@@ -26,9 +26,9 @@
           "width": "%%MAIN_WINDOW_WIDTH%%",
           "height": "%%MAIN_WINDOW_HEIGHT%%",
           "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",
-          "resizable": true,
+          "resizable": %%MAIN_WINDOW_RESIZABLE%%,
           "visible": false,
-          "fullscreen": false,
+          "fullscreen": %%MAIN_WINDOW_OPEN_FULLSCREEN%%,
           "url": "%%MAIN_WINDOW_URL%%"
         }
       ]
