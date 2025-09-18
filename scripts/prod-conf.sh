@@ -9,8 +9,8 @@ set -euo pipefail
 : "${CARGO_PACKAGE_NAME:=bubbledesk-wrapper}"
 : "${CARGO_PACKAGE_VERSION:=$APP_VERSION}"
 : "${APP_IDENTIFIER:=app.bubbledesk.app}"
-: "${UPDATE_ENDPOINT:=}"
-: "${ED25519_PUBKEY:=}"
+: "${UPDATE_ENDPOINT:?Missing UPDATE_ENDPOINT (set by CI)}}"
+: "${ED25519_PUBKEY:?Missing ED25519_PUBKEY (GitHub secret)}}"
 : "${DEEPLINK_SCHEME:=}"
 : "${MAIN_WINDOW_TITLE:=Bubbledesk}"
 : "${MAIN_WINDOW_WIDTH:=1200}"
@@ -90,15 +90,13 @@ jq --arg url "$APP_URL" '
   .app.security.csp = ("default-src '\''self'\'' " + $url + "; script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; img-src * data: blob:; connect-src *; media-src *;")
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-# Updater (optional)
-if [ -n "$UPDATE_ENDPOINT" ] && [ -n "$ED25519_PUBKEY" ]; then
-  jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
-    .updater = (.updater // {}) |
-    .updater.active = true |
-    .updater.endpoints = [ $endpoint ] |
-    .updater.pubkey = $pubkey
-  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
-fi
+# Updater (required in CI)
+jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
+  .updater = (.updater // {}) |
+  .updater.active = true |
+  .updater.endpoints = [ $endpoint ] |
+  .updater.pubkey = $pubkey
+' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Deeplink (optional)
 if [ -n "$DEEPLINK_SCHEME" ]; then
@@ -106,13 +104,6 @@ if [ -n "$DEEPLINK_SCHEME" ]; then
     .app.protocols = (.app.protocols // {}) |
     .app.protocols.custom = [ { "name": $scheme, "scheme": $scheme } ]
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
-fi
-
-# 5) menu config (prefer prod, fallback to dev)
-if [ -f conf-templates/menu.config.prod.json ]; then
-  cp conf-templates/menu.config.prod.json src-tauri/resources/menu/menu.config.json
-elif [ -f conf-templates/menu.config.dev.json ]; then
-  cp conf-templates/menu.config.dev.json src-tauri/resources/menu/menu.config.json
 fi
 
 echo "PROD remote.json  -> ${APP_URL}"

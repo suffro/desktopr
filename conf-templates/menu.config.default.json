@@ -1,0 +1,48 @@
+{
+  "enabled": true,
+  "platforms": ["macos", "windows", "linux"],
+  "file": {
+    "section": "file",
+    "items": [
+      {
+        "type": "predefined",
+        "item": "close_window"
+      },
+      {
+        "type": "predefined",
+        "item": "quit"
+      }
+    ]
+  },
+  "edit": {
+    "section": "edit",
+    "items": [
+      { "type": "predefined", "item": "copy" },
+      { "type": "predefined", "item": "cut" },
+      { "type": "predefined", "item": "paste" },
+      { "type": "predefined", "item": "select_all" }
+    ]
+  },
+  "window": {
+    "section": "window",
+    "items": [
+      { "type": "predefined", "item": "minimize" },
+      { "type": "predefined", "item": "maximize" },
+      { "type": "predefined", "item": "close_window" }
+    ]
+  },
+  "macosRoot": {
+    "section": "macosRoot",
+    "items": [
+      { "type": "predefined", "item": "about", "customLabel": "About MyApp" },
+      { "type": "separator" },
+      { "type": "predefined", "item": "services" },
+      { "type": "separator" },
+      { "type": "predefined", "item": "hide" },
+      { "type": "predefined", "item": "hide_others" },
+      { "type": "predefined", "item": "show_all" },
+      { "type": "separator" },
+      { "type": "predefined", "item": "quit" }
+    ]
+  }
+}
