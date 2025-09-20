@@ -47,9 +47,11 @@ sed -e "s|%%APP_URL%%|${APP_URL}|g" \
 cp "${TAURI_TEMPLATE}" src-tauri/tauri.conf.json
 
 # Ensure file exists and is valid JSON
+echo "Ensure file exists and is valid JSON"
 jq . src-tauri/tauri.conf.json >/dev/null
 
 # Identifier & product name
+echo "Identifier & product name"
 jq \
   --arg ident "$APP_IDENTIFIER" \
   --arg prod "$MAIN_WINDOW_TITLE" \
@@ -59,6 +61,7 @@ jq \
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Windows config
+echo "Windows config"
 jq \
   --arg title "$MAIN_WINDOW_TITLE" \
   --argjson width "$MAIN_WINDOW_WIDTH" \
@@ -86,11 +89,13 @@ jq \
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # CSP allowlist for APP_URL
+echo "CSP allowlist for APP_URL"
 jq --arg url "$APP_URL" '
   .app.security.csp = ("default-src '\''self'\'' " + $url + "; script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; img-src * data: blob:; connect-src *; media-src *;")
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Updater (required in CI)
+echo "Updater (required in CI)"
 jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
   .updater = (.updater // {}) |
   .updater.active = true |
@@ -99,6 +104,7 @@ jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Deeplink (optional)
+echo "Deeplink (optional)"
 if [ -n "$DEEPLINK_SCHEME" ]; then
   jq --arg scheme "$DEEPLINK_SCHEME" '
     .app.protocols = (.app.protocols // {}) |
