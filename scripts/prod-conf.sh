@@ -33,19 +33,19 @@ echo "1. Generating files from templates"
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%ASSETS_CDN_URL%%|${APP_URL}|g" \
   conf-templates/remote.template.json > src-tauri/capabilities/remote.json
-echo "  remote.json  -> ${APP_URL}"
+echo "  remote.json             -> patched [${APP_URL}]"
 
 # Cargo.toml
 sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
     -e "s/%%CARGO_PACKAGE_VERSION%%/${CARGO_PACKAGE_VERSION}/g" \
   conf-templates/Cargo.template.toml > src-tauri/Cargo.toml
-echo "  Cargo.toml   -> ${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}"
+echo "  Cargo.toml              -> patched [${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}]"
 
 # bridge.constants.json
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%APP_VERSION%%|${APP_VERSION}|g" \
   conf-templates/bridge.constants.template.json > src-ts/bridge.constants.json
-echo "  tauri.conf   -> patched"
+echo "  bridge.constants.json   -> patched"
 
 # tauri.conf.json (start from PROD template, then patch via jq for dynamic fields)
 cp "${TAURI_TEMPLATE}" src-tauri/tauri.conf.json
@@ -119,3 +119,5 @@ if [ -n "$DEEPLINK_SCHEME" ]; then
     .app.protocols.custom = [ { "name": $scheme, "scheme": $scheme } ]
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 fi
+
+echo "tauri.conf.json -> patched"
