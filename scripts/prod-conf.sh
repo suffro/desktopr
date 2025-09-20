@@ -28,32 +28,38 @@ TAURI_TEMPLATE="conf-templates/tauri.conf.template.prod.json"
 # -----------------------------
 # Generate files from templates
 # -----------------------------
-echo "Generate files from templates"
-
-# 1) remote.json (capabilities)
+echo "1. Generating files from templates"
+# remote.json (capabilities)
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%ASSETS_CDN_URL%%|${APP_URL}|g" \
   conf-templates/remote.template.json > src-tauri/capabilities/remote.json
+echo "  remote.json  -> ${APP_URL}"
 
-# 2) Cargo.toml
+# Cargo.toml
 sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
     -e "s/%%CARGO_PACKAGE_VERSION%%/${CARGO_PACKAGE_VERSION}/g" \
   conf-templates/Cargo.template.toml > src-tauri/Cargo.toml
+echo "  Cargo.toml   -> ${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}"
 
-# 3) bridge.constants.json
+# bridge.constants.json
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%APP_VERSION%%|${APP_VERSION}|g" \
   conf-templates/bridge.constants.template.json > src-ts/bridge.constants.json
+echo "  tauri.conf   -> patched"
 
-# 4) tauri.conf.json (start from PROD template, then patch via jq for dynamic fields)
+# tauri.conf.json (start from PROD template, then patch via jq for dynamic fields)
 cp "${TAURI_TEMPLATE}" src-tauri/tauri.conf.json
 
+# -----------------------------
+# Patch configuration values
+# -----------------------------
+
 # Ensure file exists and is valid JSON
-echo "Ensure file exists and is valid JSON"
+echo "2. Checking if file exists and is valid JSON"
 jq . src-tauri/tauri.conf.json >/dev/null
 
 # Identifier & product name
-echo "Identifier & product name"
+echo "3. Patching identifier and product name"
 jq \
   --arg ident "$APP_IDENTIFIER" \
   --arg prod "$MAIN_WINDOW_TITLE" \
@@ -63,7 +69,7 @@ jq \
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Windows config
-echo "Windows config"
+echo "4. Patching app windows configuration"
 jq \
   --arg title "$MAIN_WINDOW_TITLE" \
   --argjson width "$MAIN_WINDOW_WIDTH" \
@@ -91,13 +97,13 @@ jq \
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # CSP allowlist for APP_URL
-echo "CSP allowlist for APP_URL"
+echo "5. Patching CSP allowlist for APP_URL"
 jq --arg url "$APP_URL" '
   .app.security.csp = ("default-src '\''self'\'' " + $url + "; script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; img-src * data: blob:; connect-src *; media-src *;")
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Updater (required in CI)
-echo "Updater (required in CI)"
+echo "6. Patching updater settings"
 jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
   .updater = (.updater // {}) |
   .updater.active = true |
@@ -106,14 +112,10 @@ jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Deeplink (optional)
-echo "Deeplink (optional)"
+echo "7. Patching deeplink settings"
 if [ -n "$DEEPLINK_SCHEME" ]; then
   jq --arg scheme "$DEEPLINK_SCHEME" '
     .app.protocols = (.app.protocols // {}) |
     .app.protocols.custom = [ { "name": $scheme, "scheme": $scheme } ]
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 fi
-
-echo "PROD remote.json  -> ${APP_URL}"
-echo "PROD Cargo.toml   -> ${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}"
-echo "PROD tauri.conf   -> patched"
