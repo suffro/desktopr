@@ -28,6 +28,8 @@ TAURI_TEMPLATE="conf-templates/tauri.conf.template.prod.json"
 # -----------------------------
 # Generate files from templates
 # -----------------------------
+echo "Generate files from templates"
+
 # 1) remote.json (capabilities)
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%ASSETS_CDN_URL%%|${APP_URL}|g" \
