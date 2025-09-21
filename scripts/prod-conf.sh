@@ -9,8 +9,12 @@ set -euo pipefail
 : "${CARGO_PACKAGE_NAME:=bubbledesk-wrapper}"
 : "${CARGO_PACKAGE_VERSION:=$APP_VERSION}"
 : "${APP_IDENTIFIER:=app.bubbledesk.app}"
-: "${UPDATE_ENDPOINT:?Missing UPDATE_ENDPOINT (set by CI)}}"
-: "${ED25519_PUBKEY:?Missing ED25519_PUBKEY (GitHub secret)}}"
+: "${UPDATE_ENDPOINT:?Missing UPDATE_ENDPOINT (set by CI)}"
+: "${TAURI_SIGNING_PUBLIC_KEY:=}"
+if [ -z "${ED25519_PUBKEY:-}" ] && [ -n "${TAURI_SIGNING_PUBLIC_KEY:-}" ]; then
+  ED25519_PUBKEY="$TAURI_SIGNING_PUBLIC_KEY"
+fi
+: "${ED25519_PUBKEY:?Missing ED25519_PUBKEY (CI var/secret)}"
 : "${DEEPLINK_SCHEME:=}"
 : "${MAIN_WINDOW_TITLE:=Bubbledesk}"
 : "${MAIN_WINDOW_WIDTH:=1200}"
@@ -68,6 +72,13 @@ jq \
   .productName = ($prod // .productName)
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
+# Ensure top-level app version is set from APP_VERSION
+echo "3.1. Patching top-level version"
+jq \
+  --arg ver "$APP_VERSION" \
+  '.version = $ver' \
+  src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+
 # Windows config
 echo "4. Patching app windows configuration"
 jq \
@@ -79,6 +90,7 @@ jq \
   --argjson resizable "$( [ "$MAIN_WINDOW_RESIZABLE" = "true" ] && echo true || echo false )" \
   --argjson fullscreen "$( [ "$MAIN_WINDOW_OPEN_FULLSCREEN" = "true" ] && echo true || echo false )" \
   '
+  .app = (.app // {}) |
   .app.windows = (
     if (.app.windows | type) == "array" and (.app.windows | length) > 0 then
       (.app.windows | map(
