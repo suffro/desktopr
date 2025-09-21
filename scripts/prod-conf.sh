@@ -102,21 +102,26 @@ jq --arg url "$APP_URL" '
   .app.security.csp = ("default-src '\''self'\'' " + $url + "; script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; img-src * data: blob:; connect-src *; media-src *;")
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-# Updater (required in CI)
-echo "6. Patching updater settings"
-jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
-  .updater = (.updater // {}) |
-  .updater.active = true |
-  .updater.endpoints = [ $endpoint ] |
-  .updater.pubkey = $pubkey
-' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+ # Updater (Tauri v2 plugin)
+ echo "6. Patching updater settings (Tauri v2 plugin)"
+ jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
+   .bundle = (.bundle // {}) |
+   .bundle.createUpdaterArtifacts = true |
+   .plugins = (.plugins // {}) |
+ 	.plugins.updater = (.plugins.updater // {}) |
+   .plugins.updater.endpoints = [ $endpoint ] |
+   .plugins.updater.pubkey = $pubkey
+ ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-# Deeplink (optional)
-echo "7. Patching deeplink settings"
+
+# Deeplink (optional) — Tauri v2 deep-link plugin
+echo "7. Patching deep-link plugin configuration"
 if [ -n "$DEEPLINK_SCHEME" ]; then
   jq --arg scheme "$DEEPLINK_SCHEME" '
-    .app.protocols = (.app.protocols // {}) |
-    .app.protocols.custom = [ { "name": $scheme, "scheme": $scheme } ]
+    .plugins = (.plugins // {}) |
+    .plugins["deep-link"] = (.plugins["deep-link"] // {}) |
+    .plugins["deep-link"].desktop = (.plugins["deep-link"].desktop // {}) |
+    .plugins["deep-link"].desktop.schemes = [ $scheme ]
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 fi
 

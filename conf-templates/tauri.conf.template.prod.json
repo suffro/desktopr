@@ -1,42 +1,33 @@
 {
-    "productName": "%%APP_NAME%%",
-    "identifier": "%%APP_IDENTIFIER%%",
-    "version": "%%APP_VERSION%%",
-    "plugins": {
-      "updater": {
-        "active": true,
-        "endpoints": ["%%UPDATE_ENDPOINT%%"],
-        "dialog": false,
-        "pubkey": "%%ED25519_PUBKEY%%"
-      },
-      "deep-link": {
-        "desktop": {
-          "schemes": ["%%DEEPLINK_SCHEME%%"]
-        }
+  "productName": "%%APP_NAME%%",
+  "identifier": "%%APP_IDENTIFIER%%",
+  "version": "%%APP_VERSION%%",
+
+  "build": { "removeUnusedCommands": true },
+
+  "app": {
+    "withGlobalTauri": true,
+    "security": { "capabilities": ["remote"], "csp": null },
+    "windows": [
+      {
+        "label": "main",
+        "title": "%%MAIN_WINDOW_TITLE%%",
+        "width": "%%MAIN_WINDOW_WIDTH%%",
+        "height": "%%MAIN_WINDOW_HEIGHT%%",
+        "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",
+        "resizable": "%%MAIN_WINDOW_RESIZABLE%%",
+        "visible": false,
+        "fullscreen": "%%MAIN_WINDOW_OPEN_FULLSCREEN%%",
+        "url": "%%MAIN_WINDOW_URL%%"
       }
-    },
-    "build": { "removeUnusedCommands": true },
-    "app": {
-      "withGlobalTauri": true,
-      "security": { "capabilities": ["remote"], "csp": null },
-      "windows": [
-        {
-          "label": "main",
-          "title": "%%MAIN_WINDOW_TITLE%%",
-          "width": "%%MAIN_WINDOW_WIDTH%%",
-          "height": "%%MAIN_WINDOW_HEIGHT%%",
-          "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",
-          "resizable": "%%MAIN_WINDOW_RESIZABLE%%",
-          "visible": false,
-          "fullscreen": "%%MAIN_WINDOW_OPEN_FULLSCREEN%%",
-          "url": "%%MAIN_WINDOW_URL%%"
-        }
-      ]
-    },
-    "bundle": {
-      "active": true,
-      "targets": ["dmg"],
-      "icon": ["icons/icon.png"]
-    }
-  }
-  
+    ]
+  },
+
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png"]
+  },
+
+  "plugins": {}
+}
