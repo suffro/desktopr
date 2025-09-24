@@ -120,17 +120,15 @@ fn set_badge_linux(app: &AppHandle, count: Option<u32>) -> Result<(), String> {
     use tauri::tray::TrayIcon;
     use tauri::image::Image as TImage;
 
-    fn load_image_from_path(p: &std::path::Path) -> Result<TImage<'static>, String> {
-        let bytes = std::fs::read(p).map_err(|e| e.to_string())?;
-        TImage::from_bytes(bytes).map_err(|e| e.to_string())
-    }
-
     let tray = app.tray_by_id("main").ok_or("Tray icon not found")?;
     if count.unwrap_or(0) == 0 {
         // Restore base icon shipped with the app
         let base = tray_icon_base_path(app)?;
-        let img = load_image_from_path(&base)?;
-        tray.set_icon(Some(&img)).map_err(|e| e.to_string())?;
+        let dynimg = image::open(&base).map_err(|e| e.to_string())?;
+        let rgba = dynimg.to_rgba8();
+        let (bw, bh) = rgba.dimensions();
+        let img = TImage::from_rgba8(bw, bh, rgba.into_raw());
+        tray.set_icon(Some(img)).map_err(|e| e.to_string())?;
         tray.set_tooltip(None).ok();
         return Ok(());
     }
@@ -168,8 +166,13 @@ fn set_badge_linux(app: &AppHandle, count: Option<u32>) -> Result<(), String> {
         .join("tray_badge.png");
     rgba.save(&out).map_err(|e| e.to_string())?;
 
-    let img = load_image_from_path(&out)?;
-    tray.set_icon(Some(&img)).map_err(|e| e.to_string())?;
+    let bytes = std::fs::read(&out).map_err(|e| e.to_string())?;
+    // Decode back to RGBA and build a Tauri Image
+    let dynimg2 = image::load_from_memory(&bytes).map_err(|e| e.to_string())?;
+    let rgba2 = dynimg2.to_rgba8();
+    let (w2, h2) = rgba2.dimensions();
+    let img = TImage::from_rgba8(w2, h2, rgba2.into_raw());
+    tray.set_icon(Some(img)).map_err(|e| e.to_string())?;
     tray.set_tooltip(Some(format!("{} unread", count.unwrap()))).ok();
     Ok(())
 }
