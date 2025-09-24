@@ -72,16 +72,18 @@ fn set_badge_windows(app: &AppHandle, count: Option<u32>) -> Result<(), String> 
     // - You can keep prepared icons under resources/badges/*.ico.
     use windows::Win32::{
         System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
-        UI::Shell::{ITaskbarList3, CLSID_TaskbarList},
+        UI::Shell::ITaskbarList3,
         UI::WindowsAndMessaging::{HICON, LoadImageW, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE},
     };
-    use windows::core::PCWSTR;
+    use windows::core::{GUID, PCWSTR};
+
+    const CLSID_TASKBARLIST: GUID = GUID::from_u128(0x56fdf344_fd6d_11d0_958a_006097c9a090);
 
     let win = app.get_webview_window("main").ok_or("Window not found")?;
     let hwnd = win.hwnd().map_err(|e| e.to_string())?;
 
     unsafe {
-        let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TaskbarList, None, CLSCTX_INPROC_SERVER)?;
+        let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)?;
 
         let icon: HICON = if let Some(c) = count.filter(|v| *v > 0) {
             let name = if c > 9 { "badge_9plus.ico" } else { &format!("badge_{}.ico", c) };
@@ -118,11 +120,16 @@ fn set_badge_linux(app: &AppHandle, count: Option<u32>) -> Result<(), String> {
     use tauri::tray::TrayIcon;
     use tauri::image::Image as TImage;
 
+    fn load_image_from_path(p: &std::path::Path) -> Result<TImage<'static>, String> {
+        let bytes = std::fs::read(p).map_err(|e| e.to_string())?;
+        TImage::from_bytes(bytes).map_err(|e| e.to_string())
+    }
+
     let tray = app.tray_by_id("main").ok_or("Tray icon not found")?;
     if count.unwrap_or(0) == 0 {
         // Restore base icon shipped with the app
         let base = tray_icon_base_path(app)?;
-        let img = TImage::from_path(&base).map_err(|e| e.to_string())?;
+        let img = load_image_from_path(&base)?;
         tray.set_icon(Some(&img)).map_err(|e| e.to_string())?;
         tray.set_tooltip(None).ok();
         return Ok(());
@@ -161,7 +168,7 @@ fn set_badge_linux(app: &AppHandle, count: Option<u32>) -> Result<(), String> {
         .join("tray_badge.png");
     rgba.save(&out).map_err(|e| e.to_string())?;
 
-    let img = TImage::from_path(&out).map_err(|e| e.to_string())?;
+    let img = load_image_from_path(&out)?;
     tray.set_icon(Some(&img)).map_err(|e| e.to_string())?;
     tray.set_tooltip(Some(format!("{} unread", count.unwrap()))).ok();
     Ok(())
