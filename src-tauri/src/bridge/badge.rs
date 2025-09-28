@@ -64,45 +64,65 @@ fn set_badge_macos(count: Option<u32>) -> Result<(), String> {
 
 #[cfg(target_os = "windows")]
 fn set_badge_windows(app: &AppHandle, count: Option<u32>) -> Result<(), String> {
-    // Strategy:
-    // - Build/select a tiny .ico overlay for digits 1..9 and "9+"
-    // - Apply with ITaskbarList3::SetOverlayIcon on the *current* window HWND
-    // Notes:
-    // - This affects each window's taskbar button individually.
-    // - You can keep prepared icons under resources/badges/*.ico.
     use windows::Win32::{
         Foundation::HWND,
-        System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
+        System::Com::{CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED},
         UI::Shell::ITaskbarList3,
-        UI::WindowsAndMessaging::{HICON, LoadImageW, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE},
+        UI::WindowsAndMessaging::{HICON, DestroyIcon, LoadImageW, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE, LR_LOADFROMFILE},
     };
     use windows::core::{GUID, PCWSTR};
-    use core::ffi::c_void;
+    use std::ptr;
 
     const CLSID_TASKBARLIST: GUID = GUID::from_u128(0x56fdf344_fd6d_11d0_958a_006097c9a090);
 
     let win = app.get_webview_window("main").ok_or("Window not found")?;
     let hwnd = win.hwnd().map_err(|e| e.to_string())?;
 
-    unsafe {
-        let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)
-            .map_err(|e| e.to_string())?;
+    // Initialize COM on this thread (noop if already initialized)
+    unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok(); }
 
-        let icon: HICON = if let Some(c) = count.filter(|v| *v > 0) {
-            let name = if c > 9 { "badge_9plus.ico" } else { &format!("badge_{}.ico", c) };
-            let path = resource_badge_icon_path(name)?;
-            let w: Vec<u16> = path.to_string_lossy().encode_utf16().chain(std::iter::once(0)).collect();
-            // Safety: LoadImageW returns an HGDIOBJ; here we request an ICON and wrap it as HICON.
-            unsafe { HICON(LoadImageW(None, PCWSTR(w.as_ptr()), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_DEFAULTCOLOR).ok().unwrap_or_default().0) }
-        } else {
-            // null handle clears the overlay
-            HICON::default()
+    // Create the TaskbarList3 COM object
+    let taskbar: ITaskbarList3 = unsafe {
+        CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)
+            .map_err(|e| e.to_string())?
+    };
+
+    // Compute overlay HICON (or null to clear)
+    let icon: HICON = if let Some(c) = count.filter(|v| *v > 0) {
+        let name = if c > 9 { "badge_9plus.ico" } else { &format!("badge_{}.ico", c) };
+        let path = resource_badge_icon_path(name)?;
+        let widestr: Vec<u16> = path.to_string_lossy().encode_utf16().chain(std::iter::once(0)).collect();
+
+        // Load icon from file (Windows will scale to default size)
+        let handle = unsafe {
+            LoadImageW(
+                None,
+                PCWSTR(widestr.as_ptr()),
+                IMAGE_ICON,
+                0,
+                0,
+                LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_DEFAULTCOLOR,
+            )
         };
 
-        // Safety: COM call with HWND/HICON obtained from Tauri and WinAPI; parameters are valid or null to clear.
-        unsafe { taskbar.SetOverlayIcon(hwnd, icon, PCWSTR::null()) }
-            .map_err(|e| e.to_string())?;
+        // `LoadImageW` returns a type-erased HANDLE. Wrap it as HICON.
+        HICON(handle.0 as _)
+    } else {
+        // null handle clears the overlay
+        HICON::default()
+    };
+
+    // Apply (or clear) overlay on the taskbar button
+    unsafe { taskbar.SetOverlayIcon(hwnd, icon, PCWSTR::null()) }
+        .map_err(|e| e.to_string())?;
+
+    // Avoid leaking the icon handle when we loaded from file
+    if icon.0 != 0 {
+        unsafe { DestroyIcon(icon); }
     }
+
+    // Optionally uninitialize COM (safe in STA)
+    unsafe { CoUninitialize(); }
 
     Ok(())
 }
