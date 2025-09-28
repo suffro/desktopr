@@ -82,9 +82,7 @@ fn set_badge_windows(app: &AppHandle, count: Option<u32>) -> Result<(), String> 
     const CLSID_TASKBARLIST: GUID = GUID::from_u128(0x56fdf344_fd6d_11d0_958a_006097c9a090);
 
     let win = app.get_webview_window("main").ok_or("Window not found")?;
-    // Tauri returns a raw isize handle on Windows; construct an HWND explicitly
-    let raw_hwnd = win.hwnd().map_err(|e| e.to_string())?;
-    let hwnd = HWND(raw_hwnd as *mut c_void);
+    let hwnd: HWND = win.hwnd().map_err(|e| e.to_string())?;
 
     unsafe {
         let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)
