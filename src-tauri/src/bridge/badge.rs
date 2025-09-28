@@ -71,19 +71,24 @@ fn set_badge_windows(app: &AppHandle, count: Option<u32>) -> Result<(), String> 
     // - This affects each window's taskbar button individually.
     // - You can keep prepared icons under resources/badges/*.ico.
     use windows::Win32::{
+        Foundation::HWND,
         System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER},
         UI::Shell::ITaskbarList3,
         UI::WindowsAndMessaging::{HICON, LoadImageW, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE},
     };
     use windows::core::{GUID, PCWSTR};
+    use core::ffi::c_void;
 
     const CLSID_TASKBARLIST: GUID = GUID::from_u128(0x56fdf344_fd6d_11d0_958a_006097c9a090);
 
     let win = app.get_webview_window("main").ok_or("Window not found")?;
-    let hwnd = win.hwnd().map_err(|e| e.to_string())?;
+    // Tauri returns a raw isize handle on Windows; construct an HWND explicitly
+    let raw_hwnd = win.hwnd().map_err(|e| e.to_string())?;
+    let hwnd = HWND(raw_hwnd as *mut c_void);
 
     unsafe {
-        let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)?;
+        let taskbar: ITaskbarList3 = CoCreateInstance(&CLSID_TASKBARLIST, None, CLSCTX_INPROC_SERVER)
+            .map_err(|e| e.to_string())?;
 
         let icon: HICON = if let Some(c) = count.filter(|v| *v > 0) {
             let name = if c > 9 { "badge_9plus.ico" } else { &format!("badge_{}.ico", c) };
@@ -97,7 +102,8 @@ fn set_badge_windows(app: &AppHandle, count: Option<u32>) -> Result<(), String> 
         };
 
         // Safety: COM call with HWND/HICON obtained from Tauri and WinAPI; parameters are valid or null to clear.
-        unsafe { taskbar.SetOverlayIcon(hwnd, icon, PCWSTR::null())?; }
+        unsafe { taskbar.SetOverlayIcon(hwnd, icon, PCWSTR::null()) }
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(())
