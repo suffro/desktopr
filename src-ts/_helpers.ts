@@ -29,3 +29,29 @@ export const waitTauri = async () => {
     counter=counter+interval;
   }
 }
+
+
+/** 
+ * Detects if running inside a native Tauri WebView.
+ * - Fast path: checks global objects (__TAURI__ / __TAURI_INTERNALS__)
+ * - Fallback: tries invoking a Tauri command (bd_app_info)
+ */
+export async function isTauri(): Promise<boolean> {
+  // --- Fast sync path ---
+  if (
+    typeof window !== "undefined" &&
+    (typeof (window as any).__TAURI__ !== "undefined" ||
+     typeof (window as any).__TAURI_INTERNALS__ !== "undefined")
+  ) {
+    return true;
+  }
+
+  // --- Safe async fallback ---
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("bd_app_info");
+    return true;
+  } catch {
+    return false;
+  }
+}

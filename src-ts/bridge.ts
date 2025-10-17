@@ -18,7 +18,7 @@ import {
     buildContextMenu,
 } from "@main";
 import { APP_VERSION } from "@constants";
-import { tauriReadyCheck, waitTauri } from "@helpers";
+import { isTauri, tauriReadyCheck, waitTauri } from "@helpers";
 import { buildWorker } from "modules/rs/worker/_main";
 
 (() => {
@@ -33,7 +33,7 @@ import { buildWorker } from "modules/rs/worker/_main";
       return core.ready; 
     },
     invoke: core.invoke,
-
+    isDesktop:     isTauri(),
     notifications: buildNotifications(core),
     clipboard:     buildClipboard(core),
     files:         buildFiles(core),
