@@ -202,7 +202,7 @@ fn main() {
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
       // menu
-      bd_menu_set_enabled, bd_menu_set_checked,
+      bd_menu_set_enabled, bd_menu_set_checked, bd_apply_menu_json,
       // diagnostics
       bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,

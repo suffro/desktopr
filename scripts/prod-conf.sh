@@ -137,4 +137,41 @@ if [ -n "$DEEPLINK_SCHEME" ]; then
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 fi
 
-echo "tauri.conf.json -> patched"
+# -----------------------------
+# Generate Companion configuration clone (generic)
+# -----------------------------
+echo "8. Generating tauri.conf.companion.json"
+
+# Derive dynamic values
+COMPANION_IDENTIFIER="${APP_IDENTIFIER}.companion"
+COMPANION_PRODUCT_NAME="${MAIN_WINDOW_TITLE} Companion"
+COMPANION_DEEPLINK_SCHEME="${DEEPLINK_SCHEME:-${APP_NAME:-app}}-companion"
+
+jq \
+  --arg ident "$COMPANION_IDENTIFIER" \
+  --arg prod "$COMPANION_PRODUCT_NAME" \
+  --arg scheme "$COMPANION_DEEPLINK_SCHEME" \
+  '
+  .productName = $prod |
+  .identifier = $ident |
+  .app.windows = [
+    {
+      "label": "main",
+      "title": $prod,
+      "url": "index.html",
+      "fullscreen": false,
+      "resizable": true
+    }
+  ] |
+  .plugins["deep-link"] = {
+    "desktop": { "schemes": [ $scheme ] }
+  } |
+  # Disable updater for companion
+  del(.plugins.updater)
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.companion.json
+
+# Validate JSON
+jq . src-tauri/tauri.conf.companion.json >/dev/null
+
+echo "  tauri.conf.companion.json -> created for [$COMPANION_PRODUCT_NAME / $COMPANION_IDENTIFIER]"
+echo "  tauri.conf.json -> patched"

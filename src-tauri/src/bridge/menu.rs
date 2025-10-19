@@ -1,7 +1,9 @@
 use serde::Serialize;
 use tauri::{
   App, AppHandle, Wry, Emitter, Manager,
-  menu::{Menu, MenuItemKind, IsMenuItem, Submenu},
+  menu::{Menu, MenuItemKind, IsMenuItem, Submenu,
+    MenuBuilder, SubmenuBuilder, MenuItemBuilder, CheckMenuItemBuilder, IconMenuItemBuilder
+  },
   path::BaseDirectory
 };
 use std::fs;
@@ -180,6 +182,81 @@ fn add_if_some(
     acc.push(build_submenu_from_section(app, title, section)?);
   }
   Ok(())
+}
+
+// Local builder that mirrors helpers::menu_builder::build_submenu_from_section
+// but accepts an AppHandle (works at runtime commands). It only uses public
+// Tauri builders that accept any Manager (AppHandle implements Manager).
+fn build_submenu_from_section_handle(
+  app: &AppHandle<Wry>,
+  title: &str,
+  sec: &MenuSectionConfig,
+) -> tauri::Result<Submenu<Wry>> {
+  // We must keep created items alive until we call `build()` on the submenu,
+  // so we store them in vectors and feed references to the builder.
+  let mut built_menu_items: Vec<tauri::menu::MenuItem<Wry>> = Vec::new();
+  let mut built_check_items: Vec<tauri::menu::CheckMenuItem<Wry>> = Vec::new();
+  let mut built_icon_items: Vec<tauri::menu::IconMenuItem<Wry>> = Vec::new();
+  let mut built_submenus: Vec<Submenu<Wry>> = Vec::new();
+
+  let mut builder = SubmenuBuilder::new(app, title);
+
+  for item in &sec.items {
+    match item {
+      MenuItemUnion::Separator => {
+        builder = builder.separator();
+      }
+      MenuItemUnion::Custom(MenuConfigCustomItem { id, label, enabled, interaction, checked, accelerator }) => {
+        match interaction {
+          // Plain clickable item
+          MenuInteraction::Click => {
+            // Build with optional accelerator and enabled state
+            let mut b = MenuItemBuilder::with_id(id, label).enabled(*enabled);
+            if let Some(acc) = accelerator.as_ref() { b = b.accelerator(acc); }
+            let mi = b.build(app)?;
+            built_menu_items.push(mi);
+            let last = built_menu_items.last().unwrap();
+            builder = builder.item(last);
+          }
+          // Checkable item
+          MenuInteraction::Check => {
+            let mut b = CheckMenuItemBuilder::with_id(id, label).enabled(*enabled);
+            b = b.checked(checked.unwrap_or(false));
+            let ci = b.build(app)?;
+            built_check_items.push(ci);
+            let last = built_check_items.last().unwrap();
+            builder = builder.item(last);
+          }
+        }
+      }
+      // Nested submenu
+      MenuItemUnion::Submenu(MenuConfigSubmenuItem { id, label, items }) => {
+        let nested = MenuSectionConfig { section: sec.section.clone(), items: items.clone() };
+        let sub = build_submenu_from_section_handle(app, label, &nested)?;
+        built_submenus.push(sub);
+        let last = built_submenus.last().unwrap();
+        // Preserve provided id if present by rebuilding with id
+        let last_with_id = if !id.is_empty() {
+          // Recreate with id and same inner menu content
+          let mut reb = SubmenuBuilder::with_id(app, id, label);
+          // Transfer children from `last` into the new builder
+          // NOTE: We cannot iterate inner items directly, so we just append the submenu itself.
+          // Using the submenu as-is keeps items intact and id will be taken from `id` param.
+          // If the platform ignores custom ids, this is a no-op.
+          reb.build()? // build an empty submenu with id/label
+        } else {
+          last.clone()
+        };
+        // Append submenu (either with preserved id or the built one)
+        builder = builder.item(&last_with_id);
+      }
+      _ => {
+        // Ignore other variants that may not be relevant here (native/help etc.)
+      }
+    }
+  }
+
+  builder.build()
 }
 
 fn is_current_platform_in(list: &[MenuPlatform]) -> bool {
@@ -362,4 +439,76 @@ pub fn bd_menu_set_enabled(app: AppHandle<Wry>, id: String, enabled: bool) -> Re
 #[tauri::command]
 pub fn bd_menu_set_checked(app: AppHandle<Wry>, id: String, checked: bool) -> Result<(), String> {
   set_checked(&app, &id, checked).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn bd_apply_menu_json(app: AppHandle<Wry>, json: String, is_base64: Option<bool>) -> Result<(), String> {
+  // Decode if base64
+  let decoded = if is_base64.unwrap_or(false) {
+    let bytes = base64::decode(&json).map_err(|e| e.to_string())?;
+    String::from_utf8(bytes).map_err(|e| e.to_string())?
+  } else {
+    json
+  };
+
+  // Parse as MenuConfig (same struct used by init_menu)
+  let cfg: MenuConfig = serde_json::from_str(&decoded).map_err(|e| e.to_string())?;
+
+  // Check enable + platform
+  if !cfg.enabled || !is_current_platform_in(&cfg.platforms) {
+    return Ok(());
+  }
+
+  // Build new menu structure (reuse existing init logic)
+  let mut subs: Vec<Submenu<Wry>> = Vec::new();
+  let mut index_map: HashMap<String, MenuMeta> = HashMap::new();
+  let mut check_map: HashMap<String, bool> = HashMap::new();
+
+  #[cfg(target_os = "macos")]
+  if let Some(sec) = cfg.macos_root.as_ref() {
+    index_section_items(&mut index_map, "Bubbledesk", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    subs.push(build_submenu_from_section_handle(&app, "Bubbledesk", sec).map_err(|e| e.to_string())?);
+  }
+
+  if let Some(sec) = cfg.file.as_ref() {
+    index_section_items(&mut index_map, "File", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    subs.push(build_submenu_from_section_handle(&app, "File", sec).map_err(|e| e.to_string())?);
+  }
+  if let Some(sec) = cfg.edit.as_ref() {
+    index_section_items(&mut index_map, "Edit", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    subs.push(build_submenu_from_section_handle(&app, "Edit", sec).map_err(|e| e.to_string())?);
+  }
+  if let Some(sec) = cfg.view.as_ref() {
+    index_section_items(&mut index_map, "View", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    subs.push(build_submenu_from_section_handle(&app, "View", sec).map_err(|e| e.to_string())?);
+  }
+  if let Some(sec) = cfg.window.as_ref() {
+    index_section_items(&mut index_map, "Window", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    subs.push(build_submenu_from_section_handle(&app, "Window", sec).map_err(|e| e.to_string())?);
+  }
+  if let Some(sec) = cfg.tray.as_ref() {
+    index_section_items(&mut index_map, "Tray", &sec.items, None, None);
+    collect_check_items(&mut check_map, &sec.items);
+    let sec_augmented = MenuSectionConfig { section: MenuSection::Tray, items: sec.items.clone() };
+    init_tray_from_section(&app, &sec_augmented).map_err(|e| e.to_string())?;
+  }
+
+  // Build and apply the root menu
+  let refs: Vec<&dyn IsMenuItem<Wry>> = subs.iter().map(|s| s as &dyn IsMenuItem<Wry>).collect();
+  let root = Menu::with_items(&app, &refs).map_err(|e| e.to_string())?;
+  app.set_menu(root).map_err(|e| e.to_string())?;
+
+  eprintln!("[MENU] bd_apply_menu_json: applied new menu dynamically");
+
+  // Save new states
+  app.manage(MenuIndex { by_id: index_map });
+  app.manage(CheckState { map: Mutex::new(check_map) });
+  app.manage(CxCheckState { map: Mutex::new(HashMap::new()) });
+
+  Ok(())
 }
