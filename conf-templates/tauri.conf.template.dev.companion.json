@@ -42,7 +42,7 @@
     "active": true,
     "targets": ["dmg"],
     "resources": [
-      "resources/menu/menu.config.json"
+      "resources/menu/menu.config.companion.json"
     ],
     "icon": [
       "icons/icon.png"

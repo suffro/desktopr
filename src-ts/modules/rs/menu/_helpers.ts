@@ -5,8 +5,10 @@ import { cryptoTools, validate } from "suffro-lib";
 export const applyMenuConfig = async (core: { invoke: BubbledeskAPI["invoke"] }, menuConfig: MenuConfig): Promise<void> => {
     validateMenuConfig(menuConfig);
     const jsonString: string = JSON.stringify(menuConfig);
-    const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim())
-    await core.invoke("bd_apply_menu_json", { json: jsonBase64, isBase64: true });
+    console.log("Converted to JSON");
+    const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
+    console.log("Encoded to base64");
+    await core.invoke("bd_apply_menu_json", { json: jsonString.trim(), is_base64: false });
 }
 
 
@@ -15,20 +17,17 @@ export const applyMenuConfig = async (core: { invoke: BubbledeskAPI["invoke"] },
  * to Rust. Throws an Error if invalid. Depth control is internal only.
  */
 function validateMenuConfig(config: any): void {
-  _validateMenuConfig(config, 0);
+  _validateMenuConfig(config);
 }
 
 // ---- Internal recursive implementation ----
 
-function _validateMenuConfig(config: any, depth: number): void {
-  if (depth > 32) throw new Error("Menu config too deeply nested (possible recursion).");
-  
+function _validateMenuConfig(config: any): void {
   if (typeof config !== "object" || config === null)
     throw new Error("Menu config must be an object.");
 
-  if(validate.emptyObject(config)) throw new Error(`Menu config is an empty object:\n\n${config}`);
+  if (validate.emptyObject(config)) throw new Error(`Menu config is an empty object:\n\n${config}`);
 
-  // --- Root fields ---
   if (typeof config.enabled !== "boolean")
     throw new Error("Missing or invalid 'enabled' (boolean required).");
 
@@ -40,34 +39,31 @@ function _validateMenuConfig(config: any, depth: number): void {
       throw new Error(`Invalid platform '${p}'.`);
   }
 
-  // --- Sections ---
   const validSections = ["macosRoot", "file", "edit", "view", "window", "tray"];
   for (const key of validSections) {
     if (config[key]) {
-      validateSection(config[key], key, depth + 1);
+      validateSection(config[key], key);
     }
   }
 }
 
-/** Validates a single menu section */
-function validateSection(section: any, name: string, depth: number): void {
+function validateSection(section: any, name: string): void {
   if (typeof section !== "object" || section === null)
     throw new Error(`Section '${name}' must be an object.`);
 
   if (!Array.isArray(section.items))
     throw new Error(`Section '${name}' missing or invalid 'items' array.`);
 
-  validateItems(section.items, `${name}.items`, depth + 1);
+  validateItems(section.items, `${name}.items`);
 }
 
-/** Recursively validates items and nested submenus */
-function validateItems(items: any[], path: string, depth: number): void {
+function validateItems(items: any[], path: string): void {
   if (!Array.isArray(items)) throw new Error(`${path} must be an array.`);
-  if (depth > 32) throw new Error(`Exceeded maximum menu depth at ${path}`);
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const loc = `${path}[${i}]`;
+
     if (typeof item !== "object" || item === null)
       throw new Error(`${loc} must be an object.`);
 
@@ -81,55 +77,33 @@ function validateItems(items: any[], path: string, depth: number): void {
         if (typeof item.label !== "string") throw new Error(`${loc} missing 'label' (string).`);
         if (item.enabled !== undefined && typeof item.enabled !== "boolean")
           throw new Error(`${loc} invalid 'enabled' type (boolean expected).`);
-
-        if (
-          item.interaction !== undefined &&
-          !["click", "check"].includes(item.interaction)
-        ) {
+        if (item.interaction !== undefined && !["click", "check"].includes(item.interaction))
           throw new Error(`${loc} invalid 'interaction' value.`);
-        }
-
-        if (
-          item.interaction === "check" &&
-          item.checked !== undefined &&
-          typeof item.checked !== "boolean"
-        ) {
+        if (item.interaction === "check" && item.checked !== undefined && typeof item.checked !== "boolean")
           throw new Error(`${loc} invalid 'checked' for checkable item (boolean expected).`);
-        }
-
-        if (
-          item.accelerator !== undefined &&
-          typeof item.accelerator !== "string"
-        ) {
+        if (item.accelerator !== undefined && typeof item.accelerator !== "string")
           throw new Error(`${loc} invalid 'accelerator' type (string expected).`);
+        break;
+      }
+      case "submenu": {
+        if (typeof item.label !== "string") throw new Error(`${loc} submenu missing 'label' (string).`);
+        if (!Array.isArray(item.items)) throw new Error(`${loc} submenu missing 'items' array.`);
+        for (const sub of item.items) {
+          if (sub.type === "submenu") {
+            throw new Error(`${loc} submenu contains another submenu — only one level of depth allowed.`);
+          }
         }
         break;
       }
-
-      case "submenu": {
-        if (typeof item.label !== "string")
-          throw new Error(`${loc} submenu missing 'label' (string).`);
-        if (!Array.isArray(item.items))
-          throw new Error(`${loc} submenu missing 'items' array.`);
-        validateItems(item.items, `${loc}.items`, depth + 1);
-        break;
-      }
-
       case "predefined": {
         if (typeof item.item !== "string")
           throw new Error(`${loc} predefined item missing 'item' field.`);
-        if (
-          item.customLabel !== undefined &&
-          typeof item.customLabel !== "string"
-        ) {
+        if (item.customLabel !== undefined && typeof item.customLabel !== "string")
           throw new Error(`${loc} invalid 'customLabel' type (string expected).`);
-        }
         break;
       }
-
       case "separator":
         break;
-
       default:
         throw new Error(`${loc} has unknown type '${type}'.`);
     }

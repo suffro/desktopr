@@ -12,6 +12,7 @@ import type {
   BadgeInterface,
   WorkerInterface,
   ContextMenuInterface,
+  CompanionInterface,
 } from "@types";
 import { AutostartInterface } from "modules/rs/autostart/_types";
 import { NetworkInterface } from "modules/rs/network/_types";
@@ -52,6 +53,7 @@ export type BubbledeskAPI = {
   autostart: AutostartInterface;
   badge?: BadgeInterface;
   worker: WorkerInterface;
+  companion: CompanionInterface;
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
 };
 

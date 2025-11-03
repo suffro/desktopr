@@ -12,10 +12,12 @@
     "build": "npm install && npm run build --prefix src-tauri/",
     "dev:keepsandbox": "npm run dev:keepsandbox --prefix src-tauri/",
     "dev": "npm run dev --prefix src-tauri/",
+    "dev:companion": "npm run dev:companion --prefix src-tauri/",
     "dev:clean": "npm run dev:clean --prefix src-tauri/",
     "build:clean": "npm run build:clean --prefix src-tauri/",
     "build:log": "npm run build:log --prefix src-tauri/",
     "dev:log": "npm run dev:log --prefix src-tauri/",
+    "cargo:update": "npm run cargo:update --prefix src-tauri/",
     "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
   },
   "dependencies": {

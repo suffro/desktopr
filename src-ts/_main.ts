@@ -16,3 +16,4 @@ export * from "./modules/rs/autostart/_main";
 export * from "./modules/rs/badge/_main";
 export * from "./modules/rs/worker/_main";
 export * from "./modules/rs/contextMenu/_main";
+export * from "./modules/rs/companion/_main";

@@ -15,3 +15,4 @@ export * from "./modules/rs/autostart/_types";
 export * from "./modules/rs/badge/_types";
 export * from "./modules/rs/worker/_types";
 export * from "./modules/rs/contextMenu/_types";
+export * from "./modules/rs/companion/_types";

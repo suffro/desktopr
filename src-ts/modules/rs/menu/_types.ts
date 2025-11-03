@@ -3,18 +3,8 @@
 export type MenuCustomItemEventPlayload = { id: string, [key: string]: any };
 
 export interface MenuInterface {
-    setMenu: (config: MenuConfig) => Promise<void>;
     setEnabled: (id: string, enabled: boolean) => Promise<void>;
     setChecked: (id: string, checked: boolean) => Promise<void>;
-    // listItems: () => Promise<any[]>;
-    // reset: () => Promise<void>;
-    // disableAll: () => Promise<void>;
-    // enableSection: (section: string) => Promise<void>;
-    // disableSection: (section: string) => Promise<void>;
-    // setLabel: (id: string, label: string) => Promise<void>;
-    // toggleChecked: (id: string) => Promise<boolean>;
-    // getState: (id: string) => Promise<any>;
-    // reloadFromFile: (path: string) => Promise<void>;
   };
 
 

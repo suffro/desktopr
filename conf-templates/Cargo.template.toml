@@ -2,6 +2,7 @@
 name = "%%CARGO_PACKAGE_NAME%%"
 version = "%%CARGO_PACKAGE_VERSION%%"
 edition = "2021"
+default-run = "%%CARGO_PACKAGE_NAME%%"
 
 [target.'cfg(windows)'.dependencies]
 tauri-plugin-prevent-default = { version = "3", features = ["platform-windows"], optional = true }
@@ -61,6 +62,14 @@ cap-std = "3.4"
 # Helpers
 once_cell = "1.19"
 rand = { version = "0.8", features = ["std", "std_rng"] }
+toml = "0.9.8"
+
+[dependencies.uuid]
+version = "1.18.1"
+# Lets you generate random UUIDs
+features = [
+    "v4",
+]
 
 [features]
 default = [
@@ -84,3 +93,12 @@ strip = true
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+
+
+[[bin]]
+name = "%%CARGO_PACKAGE_NAME%%"
+path = "src/main.rs"
+
+[[bin]]
+name = "%%CARGO_PACKAGE_NAME%%-companion"
+path = "src/main-companion.rs"

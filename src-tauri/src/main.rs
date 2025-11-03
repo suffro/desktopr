@@ -202,7 +202,7 @@ fn main() {
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
       // menu
-      bd_menu_set_enabled, bd_menu_set_checked, bd_apply_menu_json,
+      bd_menu_set_enabled, bd_menu_set_checked,
       // diagnostics
       bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
@@ -214,6 +214,8 @@ fn main() {
       bd_badge_set, bd_badge_clear,
       // context_menu
       bd_context_menu_popup,
+      // companion
+      bd_launch_companion,
       // web_worker
       bd_worker_call, bd_worker_delivery, bd_worker_ready, bd_worker_add_module, bd_worker_pick_and_add_module, bd_worker_remove_module,
       bd_worker_paths, bd_worker_clear_all, bd_worker_list_modules, bd_worker_status, bd_worker_restart,

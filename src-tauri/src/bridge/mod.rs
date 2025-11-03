@@ -15,6 +15,7 @@ pub mod autostart;
 pub mod badge;
 pub mod web_worker;
 pub mod context_menu;
+pub mod companion;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -32,3 +33,4 @@ pub use autostart::*;
 pub use badge::*;
 pub use web_worker::*;
 pub use context_menu::*;
+pub use companion::*;

@@ -5,228 +5,232 @@ mod helpers;
 
 use bridge::*;
 use bubbledesk::bridge;
-use tauri::{Manager, WindowBuilder, WindowUrl, AppHandle};
-use serde::Deserialize;
-use std::fs;
-use std::path::PathBuf;
-use base64;
-use dirs;
+use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
+use crate::bridge::dragdrop;
 
-// --- Helper function to show error window ---
-fn show_error_window(app: &AppHandle, message: &str) {
-    // Check if error window already exists
-    if app.get_window("companion_error").is_some() {
-        return;
-    }
-    let html_content = format!(
-        r#"
-        <html>
-            <head><title>Errore Bubbledesk Companion</title></head>
-            <body style="font-family:sans-serif; padding:20px; background:#f8d7da; color:#721c24;">
-                <h2>Errore Bubbledesk Companion</h2>
-                <pre style="white-space: pre-wrap;">{}</pre>
-            </body>
-        </html>
-        "#,
-        message
-    );
-    let window = WindowBuilder::new(app, "companion_error", WindowUrl::App("about:blank".into()))
-        .title("Errore Bubbledesk Companion")
-        .inner_size(420.0, 260.0)
-        .build();
-    if let Ok(win) = window {
-        let _ = win.eval(&format!(
-            "document.documentElement.innerHTML = `{}`",
-            html_content.replace('`', "\\`")
-        ));
-    }
-}
+// Global Shortcut plugin
+use tauri_plugin_global_shortcut as gsc;
+use crate::gsc::Builder;
+use crate::gsc::ShortcutState;
+use helpers::states::*;
 
-// --- Configurazione runtime ricevuta dal builder tramite file temporaneo ---
-#[derive(Debug, Deserialize)]
-struct CompanionConfig {
-    title: Option<String>,
-    url: String,
-    color: Option<String>,
-    logo: Option<String>,
-    menu_config_base64: Option<String>,
-    fullscreen: Option<bool>,
-}
+// Deep-link + single-instance
+use tauri_plugin_deep_link::DeepLinkExt;
 
-// --- Applica la configurazione base64 o da file ---
-#[tauri::command]
-fn bd_companion_apply_config(app: AppHandle, token: String) -> Result<(), String> {
-    // Percorso della configurazione temporanea (scritta dal builder)
-    let path = dirs::data_dir()
-        .ok_or_else(|| {
-            let err = "Failed to resolve app data dir".to_string();
-            show_error_window(&app, &err);
-            err
-        })?
-        .join("Bubbledesk/tmp")
-        .join(format!("{}.json", token));
+use tauri_plugin_prevent_default::{
+  Builder as PD, Flags, KeyboardShortcut,
+  ModifierKey::{CtrlKey, ShiftKey, AltKey, MetaKey}
+};
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-    if !path.exists() {
-        let err = format!("Configuration file not found: {:?}", path);
-        show_error_window(&app, &err);
-        return Err(err);
-    }
 
-    let contents = match fs::read_to_string(&path) {
-        Ok(c) => c,
-        Err(e) => {
-            let err = format!("Failed to read config file: {}", e);
-            show_error_window(&app, &err);
-            return Err(err);
-        }
-    };
-    let cfg: CompanionConfig = match serde_json::from_str(&contents) {
-        Ok(c) => c,
-        Err(e) => {
-            let err = format!("Invalid config JSON: {}", e);
-            show_error_window(&app, &err);
-            return Err(err);
-        }
-    };
-
-    // Costruzione finestra
-    let mut builder = WindowBuilder::new(
-        &app,
-        "companion",
-        WindowUrl::External(cfg.url.parse().map_err(|e| {
-            let err = e.to_string();
-            show_error_window(&app, &err);
-            err
-        })?),
-    )
-    .title(cfg.title.unwrap_or_else(|| "Preview".into()))
-    .fullscreen(cfg.fullscreen.unwrap_or(false));
-
-    // --- Applicazione menu dinamico ---
-    if let Some(menu_b64) = cfg.menu_config_base64 {
-        let decoded = match base64::decode(menu_b64) {
-            Ok(d) => d,
-            Err(e) => {
-                let err = e.to_string();
-                eprintln!("[companion] Failed to decode menu base64: {}", err);
-                show_error_window(&app, &err);
-                return Err(err);
-            }
-        };
-        let json = match String::from_utf8(decoded) {
-            Ok(s) => s,
-            Err(e) => {
-                let err = e.to_string();
-                eprintln!("[companion] Failed to parse menu JSON: {}", err);
-                show_error_window(&app, &err);
-                return Err(err);
-            }
-        };
-        if let Err(e) = crate::bridge::menu::bd_apply_menu_json(app.clone(), json, Some(false)) {
-            eprintln!("[companion] Failed to apply menu: {e}");
-            show_error_window(&app, &format!("Failed to apply menu: {e}"));
-        }
-    }
-
-    // --- (opzionale) Colori o logo ---
-    if let Some(color) = cfg.color {
-        println!("[companion] Applying window color: {}", color);
-        // Potresti usarlo per tema o accent color del frontend
-    }
-
-    if let Some(logo) = cfg.logo {
-        println!("[companion] Logo path: {}", logo);
-        // Potresti caricarlo nel webview come overlay
-    }
-
-    if let Err(e) = builder.build() {
-        let err = e.to_string();
-        show_error_window(&app, &err);
-        return Err(err);
-    }
-
-    // Cleanup file temporaneo (opzionale)
-    let _ = fs::remove_file(&path);
-
-    Ok(())
-}
-
-// --- Entry point principale Companion ---
 fn main() {
-    let mut builder = tauri::Builder::default();
+  // let prevent = PD::new()
+  // .with_flags(Flags::CONTEXT_MENU | Flags::DEV_TOOLS) // disabilita menu e scorciatoie DevTools
+  // .shortcut(KeyboardShortcut::new("F12"))
+  // .shortcut(KeyboardShortcut::with_modifiers("I", &[CtrlKey, ShiftKey])) // Ctrl+Shift+I
+  // .shortcut(KeyboardShortcut::with_modifiers("I", &[MetaKey, AltKey]))  // ⌘⌥I
+  // .build();
 
-    // Stessi plugin e bridge del builder principale
-    builder = builder
-        .plugin(bridge())
-        .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(bridge::autostart::init_plugin())
-        .plugin(tauri_plugin_deep_link::init());
+  let mut builder = tauri::Builder::default();
 
-    builder = builder.setup(|app| {
-        // Registrazione runtime (solo dev su Win/Linux)
-        #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]
-        {
-            app.deep_link().register_all()?;
-        }
-
-        // Deep link iniziale (quando Companion viene avviato)
-        if let Some(urls) = app.deep_link().get_current()? {
-            if let Some(u) = urls.first() {
-                if let Some(token) = u.strip_prefix("bubbledesk-companion://launch/") {
-                    println!("[companion] Received token: {}", token);
-                    let app_handle = app.handle().clone();
-                    match bd_companion_apply_config(app_handle.clone(), token.to_string()) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            show_error_window(&app_handle, &e);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Deep link runtime (quando Companion è già aperto)
-        let handle = app.handle().clone();
-        app.deep_link().on_open_url(move |e| {
-            if let Some(u) = e.urls().first() {
-                if let Some(token) = u.strip_prefix("bubbledesk-companion://launch/") {
-                    println!("[companion] Received token (runtime): {}", token);
-                    let handle = handle.clone();
-                    tauri::async_runtime::spawn(async move {
-                        match bd_companion_apply_config(handle.clone(), token.to_string()) {
-                            Ok(_) => {}
-                            Err(e) => {
-                                show_error_window(&handle, &e);
-                            }
-                        }
-                    });
-                }
-            }
+  builder = builder.manage(CloseGuard {
+            closing: AtomicBool::new(false),
         });
 
-        Ok(())
+  builder = builder.manage(LatestWindowLabel {
+            label: Mutex::new("main".to_string()),
+        });
+  // --- 0) Single-instance PRIMO (importante con deep-link) ---
+  builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
+    println!("single-instance argv: {argv:?}");
+  }));
+
+  // --- 1) Plugin del tuo bridge + altri già presenti ---
+  builder = builder
+    .plugin(bridge())
+    // .plugin(prevent)
+    .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_clipboard_manager::init())
+    .plugin(tauri_plugin_dialog::init())
+    .plugin(bridge::autostart::init_plugin());
+
+  // --- 2) Plugin Deep Link ---
+  builder = builder.plugin(tauri_plugin_deep_link::init());
+
+  // --- 3) Setup: tray, shortcut e deeplink (boot + runtime) ---
+  builder = builder.setup(|app| {
+    // Run autostart bootstrap first so this setup owns the timing.
+    bridge::autostart::run_from_setup(app)?;
+
+    // Menu nativo
+    use std::path::Path;
+    if let Ok(menu_path_env) = std::env::var("MENU_CONFIG_PATH") {
+        let path = Path::new(&menu_path_env);
+        if path.exists() {
+            crate::bridge::menu::init_menu_from_file(app, path)?;
+        }
+    }
+    
+    let version = app.package_info().version.to_string();
+    start_heartbeat(app.handle().clone());
+    // panic hook
+    install_panic_hook(app.handle().clone(), version);
+    // retention all’avvio
+    let _ = bd_logs_run_retention(app.handle().clone());
+
+    // Global Shortcut
+    app.handle().plugin(
+      gsc::Builder::new().build(),
+    )?;
+
+    // Registrazione runtime (solo dev su Win/Linux)
+    #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]
+    {
+      app.deep_link().register_all()?;
+    }
+
+    // Deep link: URL di avvio
+    let start_urls = app.deep_link().get_current()?;
+    if let Some(urls) = start_urls {
+      if let Some(u) = urls.first() {
+        crate::bridge::deeplink::emit_parsed_deeplink(&app.handle(), u.as_str());
+      }
+    }
+
+    // Deep link: URL runtime (quando l’app è già aperta)
+    let handle = app.handle().clone();
+    app.deep_link().on_open_url(move |e| {
+      if let Some(u) = e.urls().first() {
+        crate::bridge::deeplink::emit_parsed_deeplink(&handle, u.as_str());
+      }
     });
 
-    builder
-        .invoke_handler(tauri::generate_handler![
-            // tutte le API bridge normali + quella del companion
-            bd_notification_state, bd_request_permission, bd_notify,
-            bd_clipboard_write, bd_clipboard_read,
-            bd_file_open, bd_file_save, bd_file_open_with_bytes,
-            bd_app_info, bd_app_exit,
-            bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
-            bd_toggle_devtools, bd_open_devtools, bd_close_devtools,
-            bd_event_emit, bd_event_emit_to, bd_event_emit_to_current_window,
-            bd_fs_list_dir, bd_fs_mkdir, bd_fs_rm, bd_fs_stat, bd_fs_write_text, bd_fs_read_text,
-            bd_fs_write_bytes, bd_fs_read_bytes, bd_fs_exists, bd_fs_move, bd_fs_copy,
-            bd_menu_set_enabled, bd_menu_set_checked, bd_apply_menu_json,
-            bd_menu_set_label, bd_menu_toggle_checked, bd_menu_get_state,
-            bd_menu_reload_from_file, bd_menu_list_items, bd_menu_reset,
-            bd_menu_disable_all, bd_menu_enable_section, bd_menu_disable_section,
-            bd_companion_apply_config, // 👈 nuovo comando companion
-        ])
-        .run(tauri::generate_context!("tauri.conf.companion.json"))
-        .expect("error while running Bubbledesk Companion");
+    // Cleans worker _sandbox
+    crate::bridge::web_worker::worker_sandbox_cleanup_on_boot(&app.handle());
+
+    // Create hidden worker window once
+    if let Err(e) = crate::bridge::web_worker::spawn_hidden_worker_window_from_app(app) {
+      eprintln!("[bd-worker] spawn failed: {e}");
+    }
+    
+    // Prime the worker readiness handshake at startup so the first call doesn't fail
+    crate::bridge::web_worker::kickoff_worker_readiness(&app.handle());
+
+    Ok(())
+  });
+
+
+  // --- 4) Eventi finestra + invoke handler ---
+  builder
+    .on_window_event(|window, event| {
+      match event {
+        WindowEvent::Focused(true)  => {
+          let _ = window.emit("window:focus",  ());
+          let app = window.app_handle();
+          let window_label = window.label().to_string();
+          // Prendi lo state e aggiornalo
+          let state = window.app_handle().state::<LatestWindowLabel>();
+          state.set(window_label);
+        }
+        WindowEvent::Focused(false) => { let _ = window.emit("window:blur",   ()); }
+        WindowEvent::CloseRequested { api, .. } => {
+
+          let app = window.app_handle();
+          let guard = app.state::<CloseGuard>();
+          let is_closing = guard.closing.load(Ordering::SeqCst);
+
+          // Se è già in fase di chiusura → ignora
+          if guard.closing.swap(true, Ordering::SeqCst) {
+            return;
+          }
+
+          // blocca chiusura immediata
+          api.prevent_close();
+
+          // emette evento
+          let _ = window.emit("window:close-requested", ());
+          // marca clean shutdown centralmente
+          mark_clean_shutdown_now(&app);
+          // chiudi davvero ora
+          let window_label = window.label().to_string();
+          let _ = bd_win_close(app.clone(), window_label);
+        }
+        WindowEvent::Resized(size) => {
+          let _ = window.emit("window:resized", Some(serde_json::json!({
+            "width": size.width,
+            "height": size.height
+          })));
+        }
+        WindowEvent::DragDrop(e) => {
+          match e {
+            DragDropEvent::Enter { paths, position } => {
+              dragdrop::emit_enter(window, &paths, position.x, position.y);
+            }
+            DragDropEvent::Over { position } => {
+              dragdrop::emit_over(window, position.x, position.y);
+            }
+            DragDropEvent::Drop { paths, position } => {
+              dragdrop::emit_drop(window, &paths, position.x, position.y);
+            }
+            DragDropEvent::Leave => {
+              dragdrop::emit_cancel(window);
+            }
+            _ => {}
+          }
+        }
+        _ => {}
+      }
+    })
+    .invoke_handler(tauri::generate_handler![
+      // notifications
+      bd_notification_state, bd_request_permission, bd_notify,
+      // clipboard
+      bd_clipboard_write, bd_clipboard_read,
+      // files
+      bd_file_open, bd_file_save, bd_file_open_with_bytes,
+      // app
+      bd_app_info, bd_app_exit,
+      // window
+      bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
+      bd_toggle_devtools, bd_open_devtools, bd_close_devtools,
+      // events
+      bd_event_emit, bd_event_emit_to, bd_event_emit_to_current_window,
+      // fs
+      bd_fs_list_dir, bd_fs_mkdir, bd_fs_rm, bd_fs_stat, bd_fs_write_text, bd_fs_read_text,
+      bd_fs_write_bytes, bd_fs_read_bytes, bd_fs_exists, bd_fs_move, bd_fs_copy,
+      bd_fs_clear_cache, bd_fs_clear_data, bd_fs_paths,
+      // fs trash
+      bd_fs_trash_list_dir, bd_fs_trash_stat, bd_fs_trash_exists, bd_fs_trash_read_text, bd_fs_trash_read_bytes,
+      bd_fs_data_recover_trash, bd_fs_data_clear_trash,
+      // fs diagnostics
+      bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
+      bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
+      // menu
+      bd_menu_set_enabled, bd_menu_set_checked,
+      // diagnostics
+      bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
+      bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
+      // network
+      bd_network_get_status, bd_network_ping, bd_network_resolve, bd_network_bandwidth_estimate, bd_network_set_monitor, bd_network_stop_monitor,
+      // autostart
+      bd_get_autostart_mode, bd_set_autostart_mode, bd_autostart_enable, bd_autostart_disable, bd_autostart_status,
+      // badge
+      bd_badge_set, bd_badge_clear,
+      // context_menu
+      bd_context_menu_popup,
+      // web_worker
+      bd_worker_call, bd_worker_delivery, bd_worker_ready, bd_worker_add_module, bd_worker_pick_and_add_module, bd_worker_remove_module,
+      bd_worker_paths, bd_worker_clear_all, bd_worker_list_modules, bd_worker_status, bd_worker_restart,
+      // test commands (only in dev)
+      #[cfg(debug_assertions)]
+      bd_logs_test_record_n,
+      #[cfg(debug_assertions)]
+      bd_logs_test_panic,
+      #[cfg(debug_assertions)]
+      bd_logs_test_force_retention,
+    ])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
 }

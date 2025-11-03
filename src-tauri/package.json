@@ -13,7 +13,9 @@
         "dev:log": "npm run ts:compile && npm run devconf && npm run rustbacktrace && cargo tauri dev",
         "dev:keepsandbox": "npm run ts:compile && npm run devconf && npm run build:worker && npm run keepsandbox && cargo tauri dev",
         "dev": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev",
+        "dev:companion": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev -- --bin bubbledesk-wrapper-companion",
         "dev:clean": "npm run clean && npm run dev",
+        "cargo:update": "cargo update",
         "build:clean": "npm run clean && npm run build"
     }
 }

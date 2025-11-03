@@ -16,6 +16,8 @@ export * from "./modules/rs/autostart/_helpers";
 export * from "./modules/rs/badge/_helpers";
 export * from "./modules/rs/worker/_helpers";
 export * from "./modules/rs/contextMenu/_helpers";
+export * from "./modules/rs/companion/_helpers";
+
 
 import { wait } from "suffro-lib";
 

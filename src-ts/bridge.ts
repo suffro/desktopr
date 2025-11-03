@@ -16,6 +16,7 @@ import {
     buildAutostart,
     buildBadge,
     buildContextMenu,
+    buildCompanion,
 } from "@main";
 import { APP_VERSION } from "@constants";
 import { isTauri, tauriReadyCheck, waitTauri } from "@helpers";
@@ -49,6 +50,7 @@ import { buildWorker } from "modules/rs/worker/_main";
     badge:         buildBadge(core),
     worker:        buildWorker(core),
     contextMenu:   buildContextMenu(core),
+    companion:     buildCompanion(core)
   };
 
   Object.defineProperty(window, "Bubbledesk", {
