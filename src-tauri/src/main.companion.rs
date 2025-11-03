@@ -65,13 +65,13 @@ fn main() {
     bridge::autostart::run_from_setup(app)?;
 
     // Menu nativo
-    use std::path::Path;
-    if let Ok(menu_path_env) = std::env::var("MENU_CONFIG_PATH") {
-        let path = Path::new(&menu_path_env);
-        if path.exists() {
-            crate::bridge::menu::init_menu_from_file(app, path)?;
-        }
-    }
+    // use std::path::Path;
+    // if let Ok(menu_path_env) = std::env::var("MENU_CONFIG_PATH") {
+    //     let path = Path::new(&menu_path_env);
+    //     if path.exists() {
+    //         crate::bridge::menu::init_menu_from_file(app, path)?;
+    //     }
+    // }
     
     let version = app.package_info().version.to_string();
     start_heartbeat(app.handle().clone());

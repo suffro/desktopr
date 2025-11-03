@@ -1,5 +1,42 @@
 use std::path::Path;
 
+
+use serde::Serialize;
+use tauri::{
+  App, AppHandle, Wry, Emitter, Manager,
+  menu::{Menu, MenuItemKind, IsMenuItem, Submenu,
+    MenuBuilder, SubmenuBuilder, MenuItemBuilder, CheckMenuItemBuilder, IconMenuItemBuilder
+  },
+  path::BaseDirectory
+};
+use std::fs;
+use std::collections::HashMap;
+use std::sync::Mutex;
+use crate::helpers::menu_builder::*;
+use crate::bridge::tray::init_tray_from_section;
+use crate::helpers::states::*;
+
+#[derive(Clone)]
+pub struct MenuMeta {
+  pub section: String,
+  pub parent_label: Option<String>,      // label del submenu genitore (se presente)
+  pub parent_id: Option<String>,         // id del submenu genitore (se presente)
+}
+
+pub struct MenuIndex {
+  pub by_id: HashMap<String, MenuMeta>,
+}
+
+struct CheckState {
+  map: Mutex<HashMap<String, bool>>,
+}
+
+struct CxCheckState {
+  map: Mutex<HashMap<String, bool>>, // id -> checked (context menu only)
+}
+
+// -------- init --------
+
 /// Inizializza il menu leggendo la configurazione dal file JSON specificato dal path.
 /// Se la lettura o il parsing falliscono, restituisce un errore Tauri esplicativo.
 pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
@@ -119,42 +156,6 @@ pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
   attach_menu_events(app.handle().clone());
   Ok(())
 }
-use serde::Serialize;
-use tauri::{
-  App, AppHandle, Wry, Emitter, Manager,
-  menu::{Menu, MenuItemKind, IsMenuItem, Submenu,
-    MenuBuilder, SubmenuBuilder, MenuItemBuilder, CheckMenuItemBuilder, IconMenuItemBuilder
-  },
-  path::BaseDirectory
-};
-use std::fs;
-use std::collections::HashMap;
-use std::sync::Mutex;
-use crate::helpers::menu_builder::*;
-use crate::bridge::tray::init_tray_from_section;
-use crate::helpers::states::*;
-
-
-#[derive(Clone)]
-pub struct MenuMeta {
-  pub section: String,
-  pub parent_label: Option<String>,      // label del submenu genitore (se presente)
-  pub parent_id: Option<String>,         // id del submenu genitore (se presente)
-}
-
-pub struct MenuIndex {
-  pub by_id: HashMap<String, MenuMeta>,
-}
-
-struct CheckState {
-  map: Mutex<HashMap<String, bool>>,
-}
-
-struct CxCheckState {
-  map: Mutex<HashMap<String, bool>>, // id -> checked (context menu only)
-}
-
-// -------- init --------
 
 pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
   eprintln!("[MENU] >>> init_menu CALLED");

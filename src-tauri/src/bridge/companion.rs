@@ -9,7 +9,7 @@ use toml::Value;
 use std::fs::File;
 
 #[tauri::command]
-pub fn bd_launch_companion(app_config: serde_json::Value, menu_config: serde_json::Value) -> Result<(), String> {
+pub fn bd_launch_companion(app_config: serde_json::Value/*, menu_config: serde_json::Value*/) -> Result<(), String> {
     // 1. Generate unique session_id
     let start = SystemTime::now();
     let since_the_epoch = start.duration_since(UNIX_EPOCH).map_err(|e| e.to_string())?;
@@ -38,13 +38,13 @@ pub fn bd_launch_companion(app_config: serde_json::Value, menu_config: serde_jso
         let content = serde_json::to_string_pretty(&app_config).map_err(|e| e.to_string())?;
         file.write_all(content.as_bytes()).map_err(|e| e.to_string())?;
     }
-    if menu_config.is_null() || (menu_config.is_object() && menu_config.as_object().unwrap().is_empty()) {
-        println!("Menu config is null or empty; using native system menu.");
-    } else {
-        let mut file = File::create(&menu_config_path).map_err(|e| e.to_string())?;
-        let content = serde_json::to_string_pretty(&menu_config).map_err(|e| e.to_string())?;
-        file.write_all(content.as_bytes()).map_err(|e| e.to_string())?;
-    }
+    // if menu_config.is_null() || (menu_config.is_object() && menu_config.as_object().unwrap().is_empty()) {
+    //     println!("Menu config is null or empty; using native system menu.");
+    // } else {
+    //     let mut file = File::create(&menu_config_path).map_err(|e| e.to_string())?;
+    //     let content = serde_json::to_string_pretty(&menu_config).map_err(|e| e.to_string())?;
+    //     file.write_all(content.as_bytes()).map_err(|e| e.to_string())?;
+    // }
 
     let companion_bin_name = format!("{}-companion", package_name);
 
@@ -52,7 +52,7 @@ pub fn bd_launch_companion(app_config: serde_json::Value, menu_config: serde_jso
     let mut child = Command::new("cargo")
         .args(&["tauri", "dev", "--bin", &companion_bin_name])
         .env("TAURI_CONFIG", app_config_path.to_str().unwrap())
-        .env("MENU_CONFIG_PATH", menu_config_path.to_str().unwrap())
+        // .env("MENU_CONFIG_PATH", menu_config_path.to_str().unwrap())
         .current_dir(".")
         .spawn()
         .map_err(|e| e.to_string())?;

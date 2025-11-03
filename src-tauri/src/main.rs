@@ -65,7 +65,7 @@ fn main() {
     bridge::autostart::run_from_setup(app)?;
 
     // Menu nativo
-    crate::bridge::menu::init_menu(app)?;
+    // crate::bridge::menu::init_menu(app)?;
     
     let version = app.package_info().version.to_string();
     start_heartbeat(app.handle().clone());
