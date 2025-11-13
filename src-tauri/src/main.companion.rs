@@ -8,6 +8,9 @@ use bubbledesk::bridge;
 use tauri::{WindowEvent, Emitter, DragDropEvent, PhysicalSize, Manager};
 use crate::bridge::dragdrop;
 
+use std::fs;
+use tauri::utils::config::Config;
+
 // Global Shortcut plugin
 use tauri_plugin_global_shortcut as gsc;
 use crate::gsc::Builder;
@@ -43,9 +46,7 @@ fn main() {
             label: Mutex::new("main".to_string()),
         });
   // --- 0) Single-instance PRIMO (importante con deep-link) ---
-  builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
-    println!("single-instance argv: {argv:?}");
-  }));
+  // Disabled single-instance plugin for companion, so it can run alongside the main app.
 
   // --- 1) Plugin del tuo bridge + altri già presenti ---
   builder = builder
@@ -122,8 +123,7 @@ fn main() {
   });
 
 
-  // --- 4) Eventi finestra + invoke handler ---
-  builder
+  let builder = builder
     .on_window_event(|window, event| {
       match event {
         WindowEvent::Focused(true)  => {
@@ -208,7 +208,7 @@ fn main() {
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
       // menu
-      bd_menu_set_enabled, bd_menu_set_checked,
+      bd_menu_set_enabled, bd_menu_set_checked, bd_init_menu_from_json, bd_init_menu_from_file,
       // diagnostics
       bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,
@@ -230,7 +230,20 @@ fn main() {
       bd_logs_test_panic,
       #[cfg(debug_assertions)]
       bd_logs_test_force_retention,
-    ])
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    ]);
+
+  // Build the base context once, then optionally override it with a runtime companion config
+  let mut ctx = tauri::generate_context!();
+
+  if let Ok(cfg_path) = std::env::var("COMPANION_APP_CONFIG_PATH") {
+    if let Ok(raw) = fs::read_to_string(&cfg_path) {
+      if let Ok(config) = serde_json::from_str::<Config>(&raw) {
+        ctx.config_mut().clone_from(&config);
+      }
+    }
+  }
+
+  builder
+    .run(ctx)
+    .expect("error while running tauri companion");
 }

@@ -37,30 +37,9 @@ struct CxCheckState {
 
 // -------- init --------
 
-/// Inizializza il menu leggendo la configurazione dal file JSON specificato dal path.
-/// Se la lettura o il parsing falliscono, restituisce un errore Tauri esplicativo.
-pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
-  use std::fs;
-  use crate::helpers::menu_builder::*;
-  use crate::bridge::tray::init_tray_from_section;
-  use std::collections::HashMap;
-  use std::sync::Mutex;
 
-  let s = fs::read_to_string(path).map_err(|e| -> tauri::Error {
-      anyhow::anyhow!(
-          "Impossibile leggere il file di configurazione del menu '{}': {}",
-          path.display(),
-          e
-      ).into()
-  })?;
-  let cfg: MenuConfig = serde_json::from_str(&s).map_err(|e| -> tauri::Error {
-      anyhow::anyhow!(
-          "Impossibile fare il parse del file di configurazione del menu '{}': {}",
-          path.display(),
-          e
-      ).into()
-  })?;
-
+// Applies a MenuConfig to the app, building and setting the menu and tray, and managing state.
+fn apply_menu_config(app: &AppHandle<Wry>, cfg: MenuConfig) -> tauri::Result<()> {
   if !cfg.enabled || !is_current_platform_in(&cfg.platforms) {
     return Ok(());
   }
@@ -76,28 +55,28 @@ pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
   if let Some(sec) = cfg.macos_root.as_ref() {
     index_section_items(&mut index_map, "Bubbledesk", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Bubbledesk", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "Bubbledesk", sec)?);
   }
 
   if let Some(sec) = cfg.file.as_ref() {
     index_section_items(&mut index_map, "File", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "File", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "File", sec)?);
   }
   if let Some(sec) = cfg.edit.as_ref() {
     index_section_items(&mut index_map, "Edit", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Edit", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "Edit", sec)?);
   }
   if let Some(sec) = cfg.view.as_ref() {
     index_section_items(&mut index_map, "View", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "View", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "View", sec)?);
   }
   if let Some(sec) = cfg.window.as_ref() {
     index_section_items(&mut index_map, "Window", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Window", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "Window", sec)?);
   }
   if let Some(sec) = cfg.tray.as_ref() {
     let mut tray_items: Vec<MenuItemUnion> = vec![
@@ -142,10 +121,11 @@ pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
       section: MenuSection::Tray,
       items: tray_items,
     };
-    init_tray_from_section(&app.handle(), &sec_augmented)?;
+    init_tray_from_section(app, &sec_augmented)?;
   }
 
-  let refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> = subs.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<Wry>).collect();
+  let refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
+    subs.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<Wry>).collect();
   let root = tauri::menu::Menu::with_items(app, &refs)?;
   app.set_menu(root)?;
 
@@ -153,131 +133,60 @@ pub fn init_menu_from_file(app: &App<Wry>, path: &Path) -> tauri::Result<()> {
   app.manage(CheckState { map: Mutex::new(check_map) });
   app.manage(CxCheckState { map: Mutex::new(HashMap::new()) });
 
-  attach_menu_events(app.handle().clone());
+  attach_menu_events(app.clone());
   Ok(())
 }
 
+// Internal helpers for menu initialization from file and JSON
+fn init_menu_from_file_internal(app: &AppHandle<Wry>, path: &Path) -> tauri::Result<()> {
+  let s = fs::read_to_string(path).map_err(|e| -> tauri::Error {
+    anyhow::anyhow!(
+      "Impossibile leggere il file di configurazione del menu '{}': {}",
+      path.display(),
+      e
+    ).into()
+  })?;
+  let cfg: MenuConfig = serde_json::from_str(&s).map_err(|e| -> tauri::Error {
+    anyhow::anyhow!(
+      "Impossibile fare il parse del file di configurazione del menu '{}': {}",
+      path.display(),
+      e
+    ).into()
+  })?;
+  apply_menu_config(app, cfg)
+}
+
+fn init_menu_from_json_internal(app: &AppHandle<Wry>, cfg_json: &serde_json::Value) -> tauri::Result<()> {
+  let cfg: MenuConfig = serde_json::from_value(cfg_json.clone()).map_err(|e| -> tauri::Error {
+    anyhow::anyhow!(
+      "Impossibile fare il parse della configurazione del menu da JSON: {}",
+      e
+    ).into()
+  })?;
+  apply_menu_config(app, cfg)
+}
+
+#[tauri::command]
+pub fn bd_init_menu_from_file(app: AppHandle<Wry>, path: String) -> Result<(), String> {
+  let path_ref = Path::new(&path);
+  init_menu_from_file_internal(&app, path_ref).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn bd_init_menu_from_json(app: AppHandle<Wry>, cfg_json: serde_json::Value) -> Result<(), String> {
+  init_menu_from_json_internal(&app, &cfg_json).map_err(|e| e.to_string())
+}
+
 pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
-  eprintln!("[MENU] >>> init_menu CALLED");
   let cfg = match parse_menu_config(app) {
     Some(c) => c,
     None => return Ok(()),
   };
-  eprintln!("[MENU] enabled={} platforms={:?}", cfg.enabled, cfg.platforms);
-  eprintln!("[MENU] has macos_root? {} | file? {} | edit? {} | view? {} | window? {} | tray? {}",
-    cfg.macos_root.is_some(), cfg.file.is_some(), cfg.edit.is_some(), cfg.view.is_some(), cfg.window.is_some(), cfg.tray.is_some()
-  );
-
-  if !cfg.enabled || !is_current_platform_in(&cfg.platforms) {
-    return Ok(());
-  }
-
-  // 🔎 indice id -> { section, parent }
-  let mut index_map: HashMap<String, MenuMeta> = HashMap::new();
-  // 🔘 stato check id -> bool
-  let mut check_map: HashMap<String, bool> = HashMap::new();
-
-  let mut subs: Vec<Submenu<Wry>> = Vec::new();
-
-  #[cfg(target_os = "macos")]
-  if let Some(sec) = cfg.macos_root.as_ref() {
-    // indicizza + raccogli check
-    index_section_items(&mut index_map, "Bubbledesk", &sec.items, None, None);
-    collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Bubbledesk", sec)?);
-  }
-
-  if let Some(sec) = cfg.file.as_ref() {
-    index_section_items(&mut index_map, "File", &sec.items, None, None);
-    collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "File", sec)?);
-  }
-  if let Some(sec) = cfg.edit.as_ref() {
-    index_section_items(&mut index_map, "Edit", &sec.items, None, None);
-    collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Edit", sec)?);
-  }
-  if let Some(sec) = cfg.view.as_ref() {
-    index_section_items(&mut index_map, "View", &sec.items, None, None);
-    collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "View", sec)?);
-  }
-  if let Some(sec) = cfg.window.as_ref() {
-    index_section_items(&mut index_map, "Window", &sec.items, None, None);
-    collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section(app, "Window", sec)?);
-  }
-  if let Some(sec) = cfg.tray.as_ref() {
-    // 1) costruisci i 3 item predefiniti (custom click) + separator
-    let mut tray_items: Vec<MenuItemUnion> = vec![
-      MenuItemUnion::Custom(MenuConfigCustomItem {
-        id: "tray.show".to_string(),
-        label: "Show".to_string(),
-        enabled: true,
-        interaction: MenuInteraction::Click,
-        checked: None,
-        accelerator: None,
-      }),
-      MenuItemUnion::Custom(MenuConfigCustomItem {
-        id: "tray.hide".to_string(),
-        label: "Hide".to_string(),
-        enabled: true,
-        interaction: MenuInteraction::Click,
-        checked: None,
-        accelerator: None,
-      }),
-      MenuItemUnion::Custom(MenuConfigCustomItem {
-        id: "tray.close".to_string(),
-        label: "Close".to_string(),
-        enabled: true,
-        interaction: MenuInteraction::Click,
-        checked: None,
-        accelerator: None,
-      }),
-      MenuItemUnion::Custom(MenuConfigCustomItem {
-        id: "tray.quit".to_string(),
-        label: "Quit".to_string(),
-        enabled: true,
-        interaction: MenuInteraction::Click,
-        checked: None,
-        accelerator: None,
-      }),
-      MenuItemUnion::Separator,
-    ];
-
-    // 2) aggiungi gli item dal JSON (in coda, così i 3 restano in cima)
-    tray_items.extend(sec.items.clone());
-
-    // 3) indicizza + raccogli check sull'intera lista (ora include i predefiniti)
-    index_section_items(&mut index_map, "Tray", &tray_items, None, None);
-    collect_check_items(&mut check_map, &tray_items);
-
-    // 4) crea una sezione "completa" da passare al builder del tray
-    //    (se il tuo enum MenuSection non ha Tray, usa `section: sec.section.clone()` e assicurati che MenuSection: Clone)
-    let sec_augmented = MenuSectionConfig {
-      section: MenuSection::Tray,
-      items: tray_items,
-    };
-
-    // 5) delega al costruttore del tray
-    init_tray_from_section(&app.handle(), &sec_augmented)?;
-  }
-
-  let refs: Vec<&dyn IsMenuItem<Wry>> = subs.iter().map(|s| s as &dyn IsMenuItem<Wry>).collect();
-  let root = Menu::with_items(app, &refs)?;
-  eprintln!("[MENU] submenus count = {}", subs.len());
-  app.set_menu(root)?;
-
-  // 🧠 salva gli state
-  app.manage(MenuIndex { by_id: index_map });
-  app.manage(CheckState { map: Mutex::new(check_map) });
-  app.manage(CxCheckState { map: Mutex::new(HashMap::new()) });
-
-  attach_menu_events(app.handle().clone());
-  Ok(())
+  apply_menu_config(&app.handle(), cfg)
 }
 
 // raccoglie tutti i check dell'albero e li mette in map (id -> checked)
+
 fn collect_check_items(map: &mut HashMap<String, bool>, items: &[MenuItemUnion]) {
   for it in items {
     match it {
@@ -291,6 +200,131 @@ fn collect_check_items(map: &mut HashMap<String, bool>, items: &[MenuItemUnion])
       }
       _ => {}
     }
+  }
+}
+
+fn predefined_ids_and_label(
+  item: &MenuPredefinedMenuItemSlug,
+  custom_label: &Option<String>,
+) -> (String, String, Option<&'static str>) {
+  // If a custom label is provided, always use it and no accelerator
+  if let Some(lbl) = custom_label {
+    return (
+      format!("predefined.{}", item_to_slug(item)),
+      lbl.clone(),
+      None,
+    );
+  }
+
+  match item {
+    MenuPredefinedMenuItemSlug::About => (
+      "predefined.about".to_string(),
+      "About".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::CloseWindow => (
+      "predefined.close_window".to_string(),
+      "Close Window".to_string(),
+      Some("CmdOrCtrl+W"),
+    ),
+    MenuPredefinedMenuItemSlug::Copy => (
+      "predefined.copy".to_string(),
+      "Copy".to_string(),
+      Some("CmdOrCtrl+C"),
+    ),
+    MenuPredefinedMenuItemSlug::Cut => (
+      "predefined.cut".to_string(),
+      "Cut".to_string(),
+      Some("CmdOrCtrl+X"),
+    ),
+    MenuPredefinedMenuItemSlug::Fullscreen => (
+      "predefined.fullscreen".to_string(),
+      "Fullscreen".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::Hide => (
+      "predefined.hide".to_string(),
+      "Hide".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::HideOthers => (
+      "predefined.hide_others".to_string(),
+      "Hide Others".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::Maximize => (
+      "predefined.maximize".to_string(),
+      "Maximize".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::Minimize => (
+      "predefined.minimize".to_string(),
+      "Minimize".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::Paste => (
+      "predefined.paste".to_string(),
+      "Paste".to_string(),
+      Some("CmdOrCtrl+V"),
+    ),
+    MenuPredefinedMenuItemSlug::Quit => (
+      "predefined.quit".to_string(),
+      "Quit".to_string(),
+      Some("CmdOrCtrl+Q"),
+    ),
+    MenuPredefinedMenuItemSlug::Redo => (
+      "predefined.redo".to_string(),
+      "Redo".to_string(),
+      Some("CmdOrCtrl+Shift+Z"),
+    ),
+    MenuPredefinedMenuItemSlug::SelectAll => (
+      "predefined.select_all".to_string(),
+      "Select All".to_string(),
+      Some("CmdOrCtrl+A"),
+    ),
+    MenuPredefinedMenuItemSlug::Services => (
+      "predefined.services".to_string(),
+      "Services".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::ShowAll => (
+      "predefined.show_all".to_string(),
+      "Show All".to_string(),
+      None,
+    ),
+    MenuPredefinedMenuItemSlug::Undo => (
+      "predefined.undo".to_string(),
+      "Undo".to_string(),
+      Some("CmdOrCtrl+Z"),
+    ),
+    // For a predefined "separator" slug, caller should handle it as a separator
+    MenuPredefinedMenuItemSlug::Separator => (
+      "predefined.separator".to_string(),
+      "".to_string(),
+      None,
+    ),
+  }
+}
+
+fn item_to_slug(item: &MenuPredefinedMenuItemSlug) -> &'static str {
+  match item {
+    MenuPredefinedMenuItemSlug::About => "about",
+    MenuPredefinedMenuItemSlug::CloseWindow => "close_window",
+    MenuPredefinedMenuItemSlug::Copy => "copy",
+    MenuPredefinedMenuItemSlug::Cut => "cut",
+    MenuPredefinedMenuItemSlug::Fullscreen => "fullscreen",
+    MenuPredefinedMenuItemSlug::Hide => "hide",
+    MenuPredefinedMenuItemSlug::HideOthers => "hide_others",
+    MenuPredefinedMenuItemSlug::Maximize => "maximize",
+    MenuPredefinedMenuItemSlug::Minimize => "minimize",
+    MenuPredefinedMenuItemSlug::Paste => "paste",
+    MenuPredefinedMenuItemSlug::Quit => "quit",
+    MenuPredefinedMenuItemSlug::Redo => "redo",
+    MenuPredefinedMenuItemSlug::SelectAll => "select_all",
+    MenuPredefinedMenuItemSlug::Separator => "separator",
+    MenuPredefinedMenuItemSlug::Services => "services",
+    MenuPredefinedMenuItemSlug::ShowAll => "show_all",
+    MenuPredefinedMenuItemSlug::Undo => "undo",
   }
 }
 
@@ -344,6 +378,18 @@ fn build_submenu_from_section_handle(
           }
         }
       }
+      MenuItemUnion::Predefined(MenuConfigPredefinedItem { item, custom_label, .. }) => {
+        if let MenuPredefinedMenuItemSlug::Separator = item {
+          builder = builder.separator();
+        } else {
+          let (id, label, acc) = predefined_ids_and_label(item, custom_label);
+          let mut b = MenuItemBuilder::with_id(&id, &label).enabled(true);
+          if let Some(accel) = acc { b = b.accelerator(accel); }
+          let mi = b.build(app)?;
+          built_menu_items.push(mi);
+          builder = builder.item(built_menu_items.last().unwrap());
+        }
+      }
       MenuItemUnion::Submenu(MenuConfigSubmenuItem { id, label, items }) => {
         // Only one level of submenu allowed — no recursion
         let mut nested_builder = SubmenuBuilder::with_id(app, id, label);
@@ -371,6 +417,18 @@ fn build_submenu_from_section_handle(
                   nested_check_items.push(ci);
                   nested_builder = nested_builder.item(nested_check_items.last().unwrap());
                 }
+              }
+            }
+            MenuItemUnion::Predefined(MenuConfigPredefinedItem { item, custom_label, .. }) => {
+              if let MenuPredefinedMenuItemSlug::Separator = item {
+                nested_builder = nested_builder.separator();
+              } else {
+                let (id, label, acc) = predefined_ids_and_label(item, custom_label);
+                let mut b = MenuItemBuilder::with_id(&id, &label).enabled(true);
+                if let Some(accel) = acc { b = b.accelerator(accel); }
+                let mi = b.build(app)?;
+                nested_menu_items.push(mi);
+                nested_builder = nested_builder.item(nested_menu_items.last().unwrap());
               }
             }
             _ => {}

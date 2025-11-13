@@ -2,13 +2,13 @@ import { BubbledeskAPI, MenuConfig } from "@types"
 import { cryptoTools, validate } from "suffro-lib";
 
 
-export const applyMenuConfig = async (core: { invoke: BubbledeskAPI["invoke"] }, menuConfig: MenuConfig): Promise<void> => {
+export const initMenuConfig = async (core: { invoke: BubbledeskAPI["invoke"] }, menuConfig: MenuConfig): Promise<void> => {
     validateMenuConfig(menuConfig);
-    const jsonString: string = JSON.stringify(menuConfig);
-    console.log("Converted to JSON");
-    const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
-    console.log("Encoded to base64");
-    await core.invoke("bd_apply_menu_json", { json: jsonString.trim(), is_base64: false });
+    // const jsonString: string = JSON.stringify(menuConfig);
+    // console.log("Converted to JSON");
+    // const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
+    // console.log("Encoded to base64");
+    await core.invoke("bd_init_menu_from_json", { cfgJson: menuConfig/*, is_base64: false*/ });
 }
 
 

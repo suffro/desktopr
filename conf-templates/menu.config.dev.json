@@ -1,34 +1,6 @@
 {
   "enabled": true,
   "platforms": ["macos", "windows", "linux"],
-  "file": {
-    "section": "file",
-    "items": [
-      {
-        "type": "custom",
-        "id": "file.new",
-        "label": "New File",
-        "enabled": true,
-        "interaction": "click"
-      },
-      {
-        "type": "custom",
-        "id": "file.open",
-        "label": "Open File...",
-        "enabled": true,
-        "interaction": "click"
-      },
-      { "type": "separator" },
-      {
-        "type": "predefined",
-        "item": "close_window"
-      },
-      {
-        "type": "predefined",
-        "item": "quit"
-      }
-    ]
-  },
   "edit": {
     "section": "edit",
     "items": [
@@ -38,7 +10,6 @@
       { "type": "predefined", "item": "select_all" }
     ]
   },
-  
   "view": {
     "section": "view",
     "items": [
@@ -58,16 +29,6 @@
         "interaction": "check",
         "checked": false,
         "accelerator": "CmdOrCtrl+Alt+I"
-      },
-      { "type": "separator" },
-      {
-        "type": "submenu",
-        "label": "Language",
-        "id": "view.lang",
-        "items": [
-          { "type": "custom", "id": "view.lang.en", "label": "English",  "enabled": true, "interaction": "check" },
-          { "type": "custom", "id": "view.lang.it", "label": "Italiano", "enabled": true, "interaction": "check" }
-        ]
       }
     ]
   },

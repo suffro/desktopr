@@ -106,7 +106,6 @@ pub fn init_tray_from_section(app: &AppHandle<Wry>, sec: &MenuSectionConfig) -> 
     .on_menu_event(|app, ev| {
       let id = ev.id.0.as_str();
       let window_label = get_latest_window_label(app);
-      eprintln!("Tray event on window '{}'", window_label);
       match id {
         "tray.show" => {
           if let Some(win) = app.get_webview_window(&window_label) {

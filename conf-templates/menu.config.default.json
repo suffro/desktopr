@@ -1,19 +1,6 @@
 {
   "enabled": true,
   "platforms": ["macos", "windows", "linux"],
-  "file": {
-    "section": "file",
-    "items": [
-      {
-        "type": "predefined",
-        "item": "close_window"
-      },
-      {
-        "type": "predefined",
-        "item": "quit"
-      }
-    ]
-  },
   "edit": {
     "section": "edit",
     "items": [
@@ -21,6 +8,19 @@
       { "type": "predefined", "item": "cut" },
       { "type": "predefined", "item": "paste" },
       { "type": "predefined", "item": "select_all" }
+    ]
+  },
+  "view": {
+    "section": "view",
+    "items": [
+      {
+        "type": "custom",
+        "id": "view.reload",
+        "label": "Reload",
+        "enabled": true,
+        "interaction": "click",
+        "accelerator": "CmdOrCtrl+R"
+      }
     ]
   },
   "window": {
@@ -44,5 +44,12 @@
       { "type": "separator" },
       { "type": "predefined", "item": "quit" }
     ]
-  }
+  },
+  "tray": {
+    "section": "tray",
+    "items": [
+      { "type": "separator" },
+      { "type": "custom", "id": "tray.custom.settings", "label": "Settings", "enabled": true, "interaction": "click" }
+    ]
+  }  
 }
