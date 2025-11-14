@@ -8,6 +8,7 @@
       "skipLibCheck": true,
       "declaration": false,
       "sourceMap": false,
+      "rootDir": "src-ts",
       "baseUrl": "./src-ts",
       "paths": {
         "@types": ["_types.ts"],

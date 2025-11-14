@@ -1,24 +1,69 @@
-# Bubbledesk Tauri Wrapper Template
+# Bubbledesk
 
-This repository is a template used by Bubbledesk's CI to build native wrappers for arbitrary web apps (by URL) on Windows, macOS and Linux. No customer repository is accessed.
+**bubbledesk** is the official JavaScript/TypeScript SDK for communicating with the native Bubbledesk bridge.  
+It allows any web application to access native desktop features exposed by the Bubbledesk wrapper, using a clean, typed, importable API.
 
-## How it works
-- CI fetches this template into a clean workspace.
-- Replaces placeholders like `{{APP_NAME}}`, `{{APP_URL}}`, `{{APP_ORIGIN}}`, etc.
-- Builds with Tauri v2 and optional plugins enabled via Cargo features.
-- Uploads artifacts to the configured storage.
+If the app is running in a normal browser environment, the SDK provides a safe detection method `isBubbledeskAvailable()` so you can fallback.
 
-## Placeholders
-- `{{APP_NAME}}`          – Product display name
-- `{{APP_ID}}`            – Reverse-DNS identifier (e.g. `app.bubbledesk.desktop`)
-- `{{APP_VERSION}}`       – Semver version
-- `{{APP_URL}}`           – Full URL to load (e.g. `https://app.customer.tld/`)
-- `{{APP_ORIGIN}}`        – Origin derived from APP_URL (e.g. `https://app.customer.tld`)
-- `{{CREATE_UPDATER_ARTIFACTS}}` – `true|false`
-- `{{UPDATER_PUBKEY}}`    – Updater public key (optional)
-- `{{UPDATER_ENDPOINT}}`  – JSON endpoint for updates (optional)
+---
 
-## Notes
-- Capabilities restrict which remote origins can use the Tauri IPC.
-- `build.removeUnusedCommands = true` is enabled to shrink binaries.
-- Plugins are gated by Cargo features to avoid compiling what you don't use.
+## Installation
+
+```bash
+npm install bubbledesk
+```
+
+or
+
+```bash
+yarn add bubbledesk
+```
+
+---
+
+## Usage
+
+```ts
+import { Bubbledesk, isBubbledeskAvailable } from "bubbledesk";
+
+if (isBubbledeskAvailable()) {
+  await Bubbledesk.window.new();
+} else {
+  console.log("Running in browser mode — native features unavailable.");
+}
+```
+
+---
+
+## API Shape
+
+The SDK exposes TypeScript definitions for the entire bridge via `BubbledeskAPI`, ensuring autocomplete and type safety.
+
+---
+
+## Detecting Native Environment
+
+The SDK includes a lightweight helper:
+
+```ts
+isBubbledeskAvailable(): boolean
+```
+
+It **never throws**, even in SSR or when running outside Bubbledesk.
+
+Useful for apps that must run both:
+- as a normal website
+- and as a desktop app wrapped with Bubbledesk
+
+
+### When Bubbledesk Is Not Available
+
+If `Bubbledesk` is missing (e.g. browser mode), trying to call native APIs directly will throw.
+
+Make sure to guard features or provide fallbacks:
+
+```ts
+if (!isBubbledeskAvailable()) return;
+await Bubbledesk.window.new(...);
+```
+
