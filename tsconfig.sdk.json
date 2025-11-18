@@ -10,7 +10,7 @@
     "declaration": true,
     "sourceMap": false,
 
-    "outDir": "dist-sdk",
+    "outDir": "sdk/dist-sdk",
     "rootDir": "src-ts",
 
     "baseUrl": "./src-ts",
@@ -23,11 +23,7 @@
   },
   "include": [
     "src-ts/sdk/**/*",
-    "src-ts/globals.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src-tauri/tsc",
-    "**/*.test.ts"
+    "src-ts/globals.d.ts",
+    "src-ts/modules/rs/**/*"
   ]
 }

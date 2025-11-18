@@ -1,10 +1,6 @@
 {
-  "name": "bubbledesk",
-  "version": "0.1.1",
-  "main": "dist-sdk/sdk/index.js",
-  "types": "dist-sdk/sdk/index.d.ts",
-  "module": "dist-sdk/sdk/index.js",
-  "sideEffects": false,
+  "name": "tauri-skeleton",
+  "version": "0.1.0",
   "devDependencies": {
     "esbuild": "^0.20.2"
   },
@@ -23,8 +19,8 @@
     "build:clean": "npm run build:clean --prefix src-tauri/",
     "build:log": "npm run build:log --prefix src-tauri/",
     "dev:log": "npm run dev:log --prefix src-tauri/",
-    "sdk:build": "rm -rf dist-sdk && tsc -p tsconfig.sdk.json",
-    "sdk:publish": "npm run sdk:build && npm publish --access public",
+    "sdk:build": "npm run build --prefix sdk/",
+    "sdk:publish": "npm run pub --prefix sdk/",
     "cargo:update": "npm run cargo:update --prefix src-tauri/",
     "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
   },

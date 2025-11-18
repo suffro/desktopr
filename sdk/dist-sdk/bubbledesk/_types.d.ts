@@ -14,9 +14,7 @@ import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
 import type { CompanionInterface } from "../modules/rs/companion/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
-
 export type BdPlatform = "macos" | "linux" | "windows";
-
 /**
  * Bubbledesk API exposed in the webview.
  *
@@ -29,33 +27,32 @@ export type BdPlatform = "macos" | "linux" | "windows";
  * - All other modules are cross-platform.
  */
 export type BubbledeskAPI = {
-  readonly isAvailable: boolean;
-  readonly version: string;
-  readonly ready: Promise<true>;
-  invoke<T = unknown>(
-    cmd: string,
-    payload?: Record<string, unknown>
-  ): Promise<T>;
-  isDesktop: Promise<boolean>;
-  notifications: NotificationsInterface;
-  clipboard: ClipboardInterface;
-  files: FilesInterface;
-  app: AppInterface;
-  window: WindowInterface;
-  events: EventsInterface;
-  globalShortcut: ShortcutsInterface;
-  fs: FsInterface;
-  menu: MenuInterface;
-  diagnostics: DiagnosticsInterface;
-  network: NetworkInterface;
-  autostart: AutostartInterface;
-  badge?: BadgeInterface;
-  worker: WorkerInterface;
-  companion: CompanionInterface;
-  contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
+    readonly isAvailable: boolean;
+    readonly version: string;
+    readonly ready: Promise<true>;
+    invoke<T = unknown>(cmd: string, payload?: Record<string, unknown>): Promise<T>;
+    isDesktop: Promise<boolean>;
+    notifications: NotificationsInterface;
+    clipboard: ClipboardInterface;
+    files: FilesInterface;
+    app: AppInterface;
+    window: WindowInterface;
+    events: EventsInterface;
+    globalShortcut: ShortcutsInterface;
+    fs: FsInterface;
+    menu: MenuInterface;
+    diagnostics: DiagnosticsInterface;
+    network: NetworkInterface;
+    autostart: AutostartInterface;
+    badge?: BadgeInterface;
+    worker: WorkerInterface;
+    companion: CompanionInterface;
+    contextMenu: ContextMenuInterface & {
+        listening?: boolean;
+        listener?: EventListenerOrEventListenerObject;
+    };
 };
-
 export interface BubbledeskInstanceInterface {
-  ready: () => boolean;
-  get: () => BubbledeskAPI;
+    ready: () => boolean;
+    get: () => BubbledeskAPI;
 }

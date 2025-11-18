@@ -1,5 +1,5 @@
 // src-ts/sdk/bubbledesk.ts
-import type { BubbledeskAPI } from "@types";
+import type { BubbledeskAPI } from "../_types";
 
 // Internal helper: get a safe window reference
 function getWindow(): Window {
