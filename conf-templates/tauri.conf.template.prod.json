@@ -27,8 +27,20 @@
     "active": true,
     "targets": "all",
     "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
-    "resources": ["resources/menu/menu.config.json"]
+    "resources": ["resources/menu/menu.config.json"],
+    "externalBin": [
+        "binaries/bubbledesk-sidecar"
+    ]
   },
-
-  "plugins": {}
+  "plugins": {
+    "shell": {
+      "scope": [
+        {
+          "name": "binaries/bubbledesk-sidecar",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
+  }
 }

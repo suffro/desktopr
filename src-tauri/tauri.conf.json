@@ -13,6 +13,15 @@
           "bubbledesk"
         ]
       }
+    },
+    "shell": {
+      "scope": [
+        {
+          "name": "binaries/bubbledesk-sidecar",
+          "sidecar": true,
+          "args": true
+        }
+      ]
     }
   },
   "build": {
@@ -48,6 +57,9 @@
     "resources": ["resources/menu/menu.config.json"],
     "icon": [
       "icons/icon.png"
+    ],
+    "externalBin": [
+        "binaries/bubbledesk-sidecar"
     ]
   }
 }

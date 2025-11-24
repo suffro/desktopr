@@ -6,16 +6,20 @@
         "rustbacktrace": "export RUST_BACKTRACE=1",
         "devconf": "npm run devconf --prefix ../",
         "prodconf": "npm run prodconf --prefix ../",
+        "sidecarconf": "npm run sidecarconf --prefix ../",
         "clean": "rm -rf Cargo.lock && rm -rf tsc && rm -rf target && rm -rf gen && rm -rf resources/worker/bd-wasm-runner.worker.js && cargo clean",
         "clean:deep": "rm -rf node_modules && rm -rf ../node_modules && npm run clean",
         "build": "npm run ts:compile && npm run prodconf && npm run build:worker && cargo tauri build",
+        "build:dev": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri build",
+        "build:sidecar": "npm run ts:compile && npm run sidecarconf && npm run build:worker && cargo build --release --bin bubbledesk-sidecar",
         "build:log": "npm run ts:compile && npm run prodconf && npm run rustbacktrace && npm run build:worker && cargo tauri build",
         "dev:log": "npm run ts:compile && npm run devconf && npm run rustbacktrace && cargo tauri dev",
         "dev:keepsandbox": "npm run ts:compile && npm run devconf && npm run build:worker && npm run keepsandbox && cargo tauri dev",
         "dev": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev",
-        "dev:companion": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev -- --bin bubbledesk-wrapper-companion",
+        "dev:sidecar": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev -- --bin bubbledesk-sidecar",
         "dev:clean": "npm run clean && npm run dev",
         "cargo:update": "cargo update",
-        "build:clean": "npm run clean && npm run build"
+        "build:clean": "npm run clean && npm run build",
+        "build:sidecar:clean": "npm run clean && npm run build:sidecar"
     }
 }
