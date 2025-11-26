@@ -13,6 +13,7 @@
     "clean": "npm run clean --prefix src-tauri/",
     "clean:deep": "npm run clean:deep --prefix src-tauri/",
     "build": "npm install && npm run build --prefix src-tauri/",
+    "build:sidecar": "npm run build:sidecar --prefix src-tauri/",
     "build:dev": "npm install && npm run build:dev --prefix src-tauri/",
     "sidecar:ensurebin": "npm run sidecar:ensurebin --prefix src-tauri/",
     "update:sidecar:macosarc": "npm run update:sidecar:macosarc --prefix src-tauri/",
