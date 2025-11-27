@@ -9,6 +9,7 @@ set -euo pipefail
 : "${CARGO_PACKAGE_NAME:=bubbledesk-wrapper}"
 : "${CARGO_PACKAGE_VERSION:=$APP_VERSION}"
 
+cp conf-templates/tauri.conf.template.sidecarbin.json src-tauri/tauri.conf.json
 # -----------------------------
 # Generate files from templates
 # -----------------------------
