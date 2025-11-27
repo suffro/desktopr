@@ -16,7 +16,8 @@ function getGlobalBridge() {
     const bridge = w.Bubbledesk;
     if (!bridge) {
         // Bubbledesk bridge is not yet injected by the wrapper
-        throw new Error("[Bubbledesk] window.Bubbledesk is not available. Is the desktop wrapper loaded?");
+        console.error("[Bubbledesk] window.Bubbledesk is not available. Is the desktop wrapper loaded?");
+        return;
     }
     return bridge;
 }
@@ -35,7 +36,7 @@ function isBubbledeskAvailable() {
 // but from the developer point of view it is strongly typed as BubbledeskAPI.
 exports.Bubbledesk = new Proxy({}, {
     get(_target, prop, _receiver) {
-        const bridge = getGlobalBridge();
+        const bridge = getGlobalBridge() ?? undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const value = bridge[prop];
         // If the property is a function, bind it to the original object
@@ -45,7 +46,7 @@ exports.Bubbledesk = new Proxy({}, {
         return value;
     },
     set(_target, prop, value) {
-        const bridge = getGlobalBridge();
+        const bridge = getGlobalBridge() ?? undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         bridge[prop] = value;
         return true;

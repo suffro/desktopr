@@ -11,15 +11,16 @@ function getWindow(): Window {
 }
 
 // Internal helper: access the real global bridge
-function getGlobalBridge(): BubbledeskAPI {
+function getGlobalBridge(): BubbledeskAPI | undefined {
   const w = getWindow() as any;
   const bridge = w.Bubbledesk;
 
   if (!bridge) {
     // Bubbledesk bridge is not yet injected by the wrapper
-    throw new Error(
+    console.error(
       "[Bubbledesk] window.Bubbledesk is not available. Is the desktop wrapper loaded?"
     );
+    return;
   }
 
   return bridge as BubbledeskAPI;
@@ -42,7 +43,7 @@ export function isBubbledeskAvailable(): boolean {
 // but from the developer point of view it is strongly typed as BubbledeskAPI.
 export const Bubbledesk: BubbledeskAPI = new Proxy({} as BubbledeskAPI, {
   get(_target, prop, _receiver) {
-    const bridge = getGlobalBridge();
+    const bridge = getGlobalBridge() ?? undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const value = (bridge as any)[prop];
 
@@ -55,7 +56,7 @@ export const Bubbledesk: BubbledeskAPI = new Proxy({} as BubbledeskAPI, {
   },
 
   set(_target, prop, value) {
-    const bridge = getGlobalBridge();
+    const bridge = getGlobalBridge() ?? undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (bridge as any)[prop] = value;
     return true;
