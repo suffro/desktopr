@@ -12,7 +12,7 @@ use tauri_plugin_shell::ShellExt;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_shell::process::CommandEvent;
 
-const BUBBLEDESK_SIDECAR_NAME: &str = "bubbledesk-sidecar";
+const BUBBLEDESK_SIDECAR_NAME: &str = "binaries/bubbledesk-sidecar";
 
 /// Launch the Bubbledesk companion application.
 ///

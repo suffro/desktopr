@@ -29,6 +29,16 @@
     
     "autostart:allow-enable",
     "autostart:allow-disable",
-    "autostart:allow-is-enabled"
+    "autostart:allow-is-enabled",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/bubbledesk-sidecar",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
   ]
 }
