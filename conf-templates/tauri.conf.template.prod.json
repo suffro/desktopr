@@ -25,7 +25,7 @@
 
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "app", "deb", "rpm", "appimage"],
     "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
     "resources": ["resources/menu/menu.config.json"],
     "externalBin": [
