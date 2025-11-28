@@ -1,5 +1,5 @@
-import { initContextMenuListener, normalizeEntries, removeContextMenuListener } from "@helpers";
-import type { BubbledeskAPI, CmNode, CmPopupOptions, ContextMenuInterface } from "@types";
+import { initContextMenuListener, normalizeEntries, removeContextMenuListener } from "../../../_helpers";
+import type { BubbledeskAPI, CmNode, CmPopupOptions, ContextMenuInterface } from "../../../_types";
 
 export function buildContextMenu(core: { invoke: BubbledeskAPI["invoke"] }): ContextMenuInterface {
   return {

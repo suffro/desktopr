@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, WindowInterface } from "@types";
+import type { BubbledeskAPI, WindowInterface } from "../../../_types";
 
 export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }): WindowInterface {
   const randomWindowLabel: string = `w_${Math.random().toString(36).substring(2, 2 + 8)}`

@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, NotificationsInterface } from "@types";
+import type { BubbledeskAPI, NotificationsInterface } from "../../../_types";
 
 export function buildNotifications(core: { invoke: BubbledeskAPI["invoke"] }): NotificationsInterface {
   return {

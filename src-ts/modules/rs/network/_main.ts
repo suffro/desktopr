@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, } from "@types";
+import type { BubbledeskAPI, } from "../../../_types";
 import { U64 } from "suffro-lib";
 import { NetworkInterface } from "./_types";
 

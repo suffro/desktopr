@@ -1,5 +1,5 @@
-import { listenForEvent } from "@helpers";
-import { BubbledeskAPI, BubbledeskInstanceInterface } from "@types";
+// import { listenForEvent } from "../_helpers";
+import { BubbledeskAPI, BubbledeskInstanceInterface } from "../_types";
 
 export const BubbledeskInstance: BubbledeskInstanceInterface = {
     ready: (): boolean => {

@@ -1,5 +1,5 @@
-import { initMenuConfig } from "@helpers";
-import type { BubbledeskAPI, MenuConfig, MenuInterface, } from "@types";
+import { initMenuConfig } from "../../../_helpers";
+import type { BubbledeskAPI, MenuConfig, MenuInterface, } from "../../../_types";
 
 export function buildMenu(core: { invoke: BubbledeskAPI["invoke"] }): MenuInterface {
   return {

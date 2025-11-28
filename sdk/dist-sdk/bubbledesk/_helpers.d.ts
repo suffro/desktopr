@@ -1,4 +1,4 @@
-import { BdPlatform } from "@types";
+import { BdPlatform } from "../_types";
 export declare const normalizeString: (str: string, options?: {
     toLowerCase: boolean;
     spacesFiller: string;

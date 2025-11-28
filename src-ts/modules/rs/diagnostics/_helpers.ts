@@ -1,5 +1,5 @@
 // src-ts/_dev_diagnostics.ts
-import { BubbledeskAPI } from "@types";
+import { BubbledeskAPI } from "../../../_types";
 import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
 import { Num } from "suffro-lib";
 

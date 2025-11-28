@@ -1,4 +1,4 @@
-import { BdPlatform } from "@types";
+import { BdPlatform } from "../../../_types";
 import { I32 } from "suffro-lib";
 
 /**

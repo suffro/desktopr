@@ -1,4 +1,4 @@
-import { DragDropPayload } from "@types";
+import { DragDropPayload } from "../../../_types";
 export interface EventsInterface {
     emit: (event: string, payload?: unknown) => Promise<unknown>;
     emitToAll: (event: string, payload?: unknown) => Promise<unknown>;

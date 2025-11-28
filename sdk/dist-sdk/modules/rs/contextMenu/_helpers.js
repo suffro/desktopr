@@ -4,7 +4,7 @@ exports.removeContextMenuListener = exports.initContextMenuListener = exports.CM
 exports.isCmType = isCmType;
 exports.parseCmType = parseCmType;
 exports.normalizeEntries = normalizeEntries;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 const suffro_lib_1 = require("suffro-lib");
 // Keep CM_TYPES as a readonly tuple and assert it matches CmType[]
 exports.CM_TYPES = [

@@ -31,7 +31,7 @@ export type BubbledeskAPI = {
     readonly version: string;
     readonly ready: Promise<true>;
     invoke<T = unknown>(cmd: string, payload?: Record<string, unknown>): Promise<T>;
-    isDesktop: Promise<boolean>;
+    isDesktop: boolean;
     notifications: NotificationsInterface;
     clipboard: ClipboardInterface;
     files: FilesInterface;

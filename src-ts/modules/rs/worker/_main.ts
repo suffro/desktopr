@@ -1,7 +1,7 @@
-import { BubbledeskAPI } from "@types";
+import { BubbledeskAPI } from "../../../_types";
 import { U64, U8 } from "suffro-lib";
 import { WorkerCallPayload, WorkerInterface } from "./_types";
-import { normalizeModuleName } from "@helpers";
+import { normalizeModuleName } from "../../../_helpers";
 
 export function buildWorker(core: { invoke: BubbledeskAPI["invoke"] }) {
     return {

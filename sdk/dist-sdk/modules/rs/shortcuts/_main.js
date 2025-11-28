@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildShortcuts = buildShortcuts;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 function buildShortcuts(core) {
     return {
         register: async (accelerator, cb, options) => {

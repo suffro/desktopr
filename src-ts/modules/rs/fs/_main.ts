@@ -1,5 +1,5 @@
-import { BubbledeskAPI } from "@types";
-import type { FsEntry, FsInterface, FsPaths, FsScopeMethods } from "@types";
+import { BubbledeskAPI } from "../../../_types";
+import type { FsEntry, FsInterface, FsPaths, FsScopeMethods } from "../../../_types";
 
 function scope(core: { invoke: BubbledeskAPI["invoke"] }, permanent: boolean): FsScopeMethods {
   return {

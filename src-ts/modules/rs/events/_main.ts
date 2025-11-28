@@ -1,6 +1,6 @@
-import { BubbledeskAPI } from "@types";
-import { listenForEvent } from "@helpers";
-import type { DragDropPayload, EventsInterface } from "@types";
+import { BubbledeskAPI } from "../../../_types";
+import { listenForEvent } from "../../../_helpers";
+import type { DragDropPayload, EventsInterface } from "../../../_types";
 
 export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }): EventsInterface {
   return {

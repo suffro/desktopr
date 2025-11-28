@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, } from "@types";
+import type { BubbledeskAPI, } from "../../../_types";
 import { AutostartInterface, AutostartMode } from "./_types";
 
 export function buildAutostart(core: { invoke: BubbledeskAPI["invoke"] }): AutostartInterface {

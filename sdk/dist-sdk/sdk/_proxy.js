@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bubbledesk = void 0;
 exports.isBubbledeskAvailable = isBubbledeskAvailable;
+// src-ts/sdk/bubbledesk.ts
+const _helpers_1 = require("../_helpers");
 // Internal helper: get a safe window reference
 function getWindow() {
     if (typeof window === "undefined") {
@@ -24,12 +26,18 @@ function getGlobalBridge() {
 // Public helper to check if the native Bubbledesk bridge is available.
 // This must never throw, even in SSR or when running outside the wrapper.
 function isBubbledeskAvailable() {
-    if (typeof window === "undefined") {
-        // In SSR or non-browser environments the bridge is not available.
+    try {
+        if (typeof window === "undefined")
+            return false;
+        if (!(0, _helpers_1.isTauri)())
+            return false;
+        const w = window;
+        return !!w.Bubbledesk;
+    }
+    catch (error) {
+        console.error(error);
         return false;
     }
-    const w = window;
-    return !!w.Bubbledesk;
 }
 // Public SDK object.
 // At runtime, this is just a Proxy that forwards everything to window.Bubbledesk,

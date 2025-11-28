@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildWorker = buildWorker;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 function buildWorker(core) {
     return {
         call: (method, payload, timeoutMs) => core.invoke("bd_worker_call", { modulePath: (0, _helpers_1.normalizeModuleName)(method), payload, timeoutMs }),

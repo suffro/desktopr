@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, CompanionInterface } from "@types";
+import type { BubbledeskAPI, CompanionInterface } from "../../../_types";
 
 export function buildCompanion(core: { invoke: BubbledeskAPI["invoke"] }): CompanionInterface {
   return {

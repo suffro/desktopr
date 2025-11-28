@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildDragDrop = buildDragDrop;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 // Puoi esportare qui un builder che semplicemente re-esporta quella logica.
 function buildDragDrop() {
     return {

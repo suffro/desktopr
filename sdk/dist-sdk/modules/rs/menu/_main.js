@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildMenu = buildMenu;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 function buildMenu(core) {
     return {
         setEnabled: (id, enabled) => core.invoke("bd_menu_set_enabled", { id, enabled }),

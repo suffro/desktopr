@@ -21,7 +21,6 @@ export declare const tauriReadyCheck: () => boolean;
 export declare const waitTauri: () => Promise<void>;
 /**
  * Detects if running inside a native Tauri WebView.
- * - Fast path: checks global objects (__TAURI__ / __TAURI_INTERNALS__)
- * - Fallback: tries invoking a Tauri command (bd_app_info)
+ * Checks global objects (__TAURI__ / __TAURI_INTERNALS__)
  */
-export declare function isTauri(): Promise<boolean>;
+export declare function isTauri(): boolean;

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildBadge = buildBadge;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 function buildBadge(core) {
     return {
         set: async (count) => {

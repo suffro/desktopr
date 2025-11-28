@@ -1,4 +1,4 @@
-import { BubbledeskAPI, MenuConfig } from "@types"
+import { BubbledeskAPI, MenuConfig } from "../../../_types"
 import { cryptoTools, validate } from "suffro-lib";
 
 

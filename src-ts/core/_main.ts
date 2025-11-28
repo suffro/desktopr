@@ -1,5 +1,5 @@
-import { ensureCore } from "@helpers";
-import type { TauriCore } from "@types";
+import { ensureCore } from "../_helpers";
+import type { TauriCore } from "../_types";
 
 export function buildCore() {
   return {

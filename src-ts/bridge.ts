@@ -1,4 +1,4 @@
-import type { BubbledeskAPI } from "@types";
+import type { BubbledeskAPI } from "./_types";
 import {
     buildCore,
     buildFs,
@@ -17,13 +17,13 @@ import {
     buildBadge,
     buildContextMenu,
     buildCompanion,
-} from "@main";
-import { APP_VERSION } from "@constants";
-import { isTauri, tauriReadyCheck, waitTauri } from "@helpers";
+} from "./_main";
+import { APP_VERSION } from "./_constants";
+import { isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
 import { buildWorker } from "modules/rs/worker/_main";
 
 (() => {
-  if (typeof window === "undefined" || (window as any).Bubbledesk) return;
+  if (!isTauri() || (window as any).Bubbledesk) return;
 
   const core = buildCore();
 

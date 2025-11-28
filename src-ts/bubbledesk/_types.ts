@@ -36,7 +36,7 @@ export type BubbledeskAPI = {
     cmd: string,
     payload?: Record<string, unknown>
   ): Promise<T>;
-  isDesktop: Promise<boolean>;
+  isDesktop: boolean;
   notifications: NotificationsInterface;
   clipboard: ClipboardInterface;
   files: FilesInterface;

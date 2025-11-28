@@ -1,4 +1,4 @@
-import { TauriCore } from "@types";
+import { TauriCore } from "../_types";
 
 export function extractCore(source: unknown): TauriCore | null {
     if (!source) return null;

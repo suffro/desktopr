@@ -1,4 +1,4 @@
-import { AppInfo, BdPlatform } from "@types";
+import { AppInfo, BdPlatform } from "../_types";
 import { isWindowAvailable, validate } from "suffro-lib";
 
 export const normalizeString = (

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildDiagnostics = buildDiagnostics;
 const _helpers_1 = require("./_helpers");
-const _constants_1 = require("@constants");
+const _constants_1 = require("../../../_constants");
 function buildDiagnostics(core) {
     return {
         settings: {

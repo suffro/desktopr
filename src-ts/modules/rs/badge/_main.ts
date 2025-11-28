@@ -1,5 +1,5 @@
-import { platformSpecifcFilter } from "@helpers";
-import { AppInfo, BadgeInterface, BubbledeskAPI } from "@types";
+import { platformSpecifcFilter } from "../../../_helpers";
+import { AppInfo, BadgeInterface, BubbledeskAPI } from "../../../_types";
 import { U32 } from "suffro-lib";
 
 export function buildBadge(core: { invoke: BubbledeskAPI["invoke"] }): BadgeInterface {

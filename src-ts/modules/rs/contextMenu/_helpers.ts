@@ -1,5 +1,5 @@
-import { normalizeString } from "@helpers";
-import { CmListenerCallback, CmListenerCallbackPlayload, CmNode, CmType } from "@types";
+import { normalizeString } from "../../../_helpers";
+import { CmListenerCallback, CmListenerCallbackPlayload, CmNode, CmType } from "../../../_types";
 import { validate } from "suffro-lib";
 
 // Keep CM_TYPES as a readonly tuple and assert it matches CmType[]

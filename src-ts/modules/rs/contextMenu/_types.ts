@@ -1,4 +1,4 @@
-import { CM_TYPES } from "@helpers";
+import { CM_TYPES } from "../../../_helpers";
 
 export type CmType = (typeof CM_TYPES)[number];
 

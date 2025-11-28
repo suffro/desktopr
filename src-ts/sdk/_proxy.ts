@@ -1,4 +1,5 @@
 // src-ts/sdk/bubbledesk.ts
+import { isTauri } from "../_helpers";
 import type { BubbledeskAPI } from "../_types";
 
 // Internal helper: get a safe window reference
@@ -29,13 +30,16 @@ function getGlobalBridge(): BubbledeskAPI | undefined {
 // Public helper to check if the native Bubbledesk bridge is available.
 // This must never throw, even in SSR or when running outside the wrapper.
 export function isBubbledeskAvailable(): boolean {
-  if (typeof window === "undefined") {
-    // In SSR or non-browser environments the bridge is not available.
+  try {
+    if (typeof window === "undefined") return false;
+    if (!isTauri()) return false;
+
+    const w = window as any;
+    return !!w.Bubbledesk;
+  } catch (error) {
+    console.error(error);
     return false;
   }
-
-  const w = window as any;
-  return !!w.Bubbledesk;
 }
 
 // Public SDK object.

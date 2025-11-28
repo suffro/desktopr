@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, ClipboardInterface } from "@types";
+import type { BubbledeskAPI, ClipboardInterface } from "../../../_types";
 
 export function buildClipboard(core: { invoke: BubbledeskAPI["invoke"] }): ClipboardInterface {
   return {

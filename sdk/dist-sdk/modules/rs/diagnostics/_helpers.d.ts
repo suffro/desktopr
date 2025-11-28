@@ -1,4 +1,4 @@
-import { BubbledeskAPI } from "@types";
+import { BubbledeskAPI } from "../../../_types";
 import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
 export declare const diagnosticsSettings: (core: {
     invoke: BubbledeskAPI["invoke"];

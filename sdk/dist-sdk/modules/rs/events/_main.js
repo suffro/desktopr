@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildEvents = buildEvents;
-const _helpers_1 = require("@helpers");
+const _helpers_1 = require("../../../_helpers");
 function buildEvents(core) {
     return {
         emit: (event, payload) => core.invoke("bd_event_emit_to_current_window", { event, payload }),

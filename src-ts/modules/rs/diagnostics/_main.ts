@@ -1,7 +1,7 @@
-import { BubbledeskAPI } from "@types";
+import { BubbledeskAPI } from "../../../_types";
 import { buildDiagnosticsTestFunctions, diagnosticsSettings } from "./_helpers";
 import { AnalyticsPayload, DiagnosticsInterface, ErrorPayload, PrivacySettings } from "./_types";
-import { APP_VERSION } from "@constants";
+import { APP_VERSION } from "../../../_constants";
 
 export function buildDiagnostics(core: { invoke: BubbledeskAPI["invoke"] }): DiagnosticsInterface {
   return {
