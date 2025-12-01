@@ -101,5 +101,5 @@ name = "bubbledesk-wrapper"
 path = "src/main.rs"
 
 [[bin]]
-name = "bubbledesk-sidecar"
+name = "bubbledesk-companion"
 path = "src/main.companion.rs"

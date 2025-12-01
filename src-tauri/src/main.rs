@@ -17,6 +17,8 @@ use helpers::states::*;
 // Deep-link + single-instance
 use tauri_plugin_deep_link::DeepLinkExt;
 
+use tauri_plugin_shell;
+
 use tauri_plugin_prevent_default::{
   Builder as PD, Flags, KeyboardShortcut,
   ModifierKey::{CtrlKey, ShiftKey, AltKey, MetaKey}
@@ -54,6 +56,7 @@ fn main() {
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())
+    .plugin(tauri_plugin_shell::init())
     .plugin(bridge::autostart::init_plugin());
 
   // --- 2) Plugin Deep Link ---
