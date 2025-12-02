@@ -8,20 +8,52 @@ use uuid::Uuid;
 use std::process::Command as DevCommand;
 
 #[cfg(not(debug_assertions))]
-use tauri_plugin_shell::ShellExt;
-#[cfg(not(debug_assertions))]
-use tauri_plugin_shell::process::CommandEvent;
+use std::process::{Command, Stdio};
 
 use tauri::{Emitter, Manager};
 
-const BUBBLEDESK_SIDECAR_DEV_BIN: &str = "bubbledesk-companion";
-const BUBBLEDESK_SIDECAR_NAME: &str = "binaries/bubbledesk-companion";
+const BUBBLEDESK_COMPANION_DEV_BIN: &str = "bubbledesk-companion";
 
 fn log_debug(app: &tauri::AppHandle, msg: &str) {
     println!("[Bubbledesk][DEBUG] {msg}");
     if let Err(e) = app.emit("bubbledesk:debug", msg.to_string()) {
         println!("[Bubbledesk][DEBUG] Failed to emit debug event: {e}");
     }
+}
+
+fn resolve_companion_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to resolve resource_dir: {e}"))?;
+
+    // Try common layouts: Resources/resources/companion and Resources/companion
+    let candidates = [
+        resource_dir.join("resources").join("companion"),
+        resource_dir.join("companion"),
+    ];
+
+    let companion_dir = candidates
+        .into_iter()
+        .find(|p| p.exists())
+        .ok_or_else(|| {
+            format!(
+                "Companion directory not found under resource_dir {:?}",
+                resource_dir
+            )
+        })?;
+
+    #[cfg(target_os = "windows")]
+    let companion_path = companion_dir.join("bubbledesk-companion.exe");
+
+    #[cfg(not(target_os = "windows"))]
+    let companion_path = companion_dir.join("bubbledesk-companion");
+
+    if !companion_path.exists() {
+        return Err(format!("Companion binary not found at {:?}", companion_path));
+    }
+
+    Ok(companion_path)
 }
 
 /// Launch the Bubbledesk companion application.
@@ -86,14 +118,14 @@ pub async fn bd_launch_companion(app: tauri::AppHandle, app_config: serde_json::
             &app,
             &format!(
                 "Dev companion command: cargo tauri dev -- --bin {}",
-                BUBBLEDESK_SIDECAR_DEV_BIN
+                BUBBLEDESK_COMPANION_DEV_BIN
             ),
         );
 
         log_debug(&app, "Spawning dev companion via Cargo...");
 
         let mut child = DevCommand::new("cargo")
-            .args(&["tauri", "dev", "--", "--bin", BUBBLEDESK_SIDECAR_DEV_BIN])
+            .args(&["tauri", "dev", "--", "--bin", BUBBLEDESK_COMPANION_DEV_BIN])
             .env(
                 "COMPANION_APP_CONFIG_PATH",
                 app_config_path.to_str().unwrap_or_default(),
@@ -122,89 +154,93 @@ pub async fn bd_launch_companion(app: tauri::AppHandle, app_config: serde_json::
         });
     }
 
-    // Release path: use a bundled sidecar named `bubbledesk-companion`.
+    // Release path: launch a bundled companion binary from the resources directory.
     #[cfg(not(debug_assertions))]
     {
         log_debug(
             &app,
-            &format!("Launching companion sidecar '{}' in release mode", BUBBLEDESK_SIDECAR_NAME),
+            &format!(
+                "Launching companion (manual) in release mode, session {} in sandbox {:?}",
+                session_id, sandbox_path
+            ),
+        );
+
+        let companion_path = resolve_companion_path(&app)?;
+
+        log_debug(
+            &app,
+            &format!("Resolved companion path: {:?}", companion_path),
         );
 
         let sandbox_for_cleanup = sandbox_path.clone();
 
-        let sidecar_cmd = match app.shell().sidecar(BUBBLEDESK_SIDECAR_NAME) {
-            Ok(cmd) => cmd,
-            Err(e) => {
-                log_debug(
-                    &app,
-                    &format!(
-                        "[ERROR] Failed to create companion sidecar '{}': {e}",
-                        BUBBLEDESK_SIDECAR_NAME
-                    ),
-                );
-                return Err(format!(
-                    "Failed to create companion sidecar '{}': {e}",
-                    BUBBLEDESK_SIDECAR_NAME
-                ));
-            }
-        }
-        .env(
-            "COMPANION_APP_CONFIG_PATH",
-            app_config_path.to_str().unwrap_or_default(),
-        )
-        .env("BUBBLEDESK_COMPANION_SESSION_ID", &session_id);
-
-        log_debug(
-            &app,
-            &format!("Attempting to spawn bundled sidecar '{}'.", BUBBLEDESK_SIDECAR_NAME),
-        );
-
-        let (mut rx, mut child) = sidecar_cmd
+        let mut child = Command::new(&companion_path)
+            .env(
+                "COMPANION_APP_CONFIG_PATH",
+                app_config_path.to_str().unwrap_or_default(),
+            )
+            .env("BUBBLEDESK_COMPANION_SESSION_ID", &session_id)
+            .current_dir(&sandbox_path)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()
-            .map_err(|e| format!("Failed to spawn companion sidecar '{}': {e}", BUBBLEDESK_SIDECAR_NAME))?;
+            .map_err(|e| format!("Failed to spawn companion process: {e}"))?;
 
         log_debug(
             &app,
-            &format!("Sidecar spawned successfully with PID: {:?}", child.pid()),
+            &format!("Companion process spawned with PID: {:?}", child.id()),
         );
 
-        let app_for_events = app.clone();
-        tauri::async_runtime::spawn(async move {
-            while let Some(event) = rx.recv().await {
-                match event {
-                    CommandEvent::Stdout(line) => {
-                        let line_str = String::from_utf8_lossy(&line).to_string();
-                        println!("[bubbledesk-companion stdout] {}", line_str);
+        // Stream stdout
+        if let Some(stdout) = child.stdout.take() {
+            let app_for_events = app.clone();
+            thread::spawn(move || {
+                use std::io::{BufRead, BufReader};
+                let reader = BufReader::new(stdout);
+                for line in reader.lines() {
+                    if let Ok(line) = line {
+                        println!("[bubbledesk-companion stdout] {}", line);
                         let _ = app_for_events.emit(
                             "bubbledesk:debug",
-                            format!("sidecar stdout: {}", line_str),
-                        );
-                    }
-                    CommandEvent::Stderr(line) => {
-                        let line_str = String::from_utf8_lossy(&line).to_string();
-                        eprintln!("[bubbledesk-companion stderr] {}", line_str);
-                        let _ = app_for_events.emit(
-                            "bubbledesk:debug",
-                            format!("sidecar stderr: {}", line_str),
-                        );
-                    }
-                    CommandEvent::Terminated(status) => {
-                        println!("[bubbledesk-companion terminated] status: {:?}", status);
-                        let _ = app_for_events.emit(
-                            "bubbledesk:debug",
-                            format!("sidecar terminated with status: {:?}", status),
-                        );
-                    }
-                    other => {
-                        println!("[bubbledesk-companion event] {:?}", other);
-                        let _ = app_for_events.emit(
-                            "bubbledesk:debug",
-                            format!("sidecar event: {:?}", other),
+                            format!("companion stdout: {}", line),
                         );
                     }
                 }
+            });
+        }
+
+        // Stream stderr
+        if let Some(stderr) = child.stderr.take() {
+            let app_for_events = app.clone();
+            thread::spawn(move || {
+                use std::io::{BufRead, BufReader};
+                let reader = BufReader::new(stderr);
+                for line in reader.lines() {
+                    if let Ok(line) = line {
+                        eprintln!("[bubbledesk-companion stderr] {}", line);
+                        let _ = app_for_events.emit(
+                            "bubbledesk:debug",
+                            format!("companion stderr: {}", line),
+                        );
+                    }
+                }
+            });
+        }
+
+        // Wait for process and cleanup sandbox
+        thread::spawn(move || {
+            if let Ok(status) = child.wait() {
+                println!(
+                    "[Bubbledesk] Companion session {} exited with status {:?}",
+                    session_id, status
+                );
             }
-            let _ = fs::remove_dir_all(&sandbox_for_cleanup);
+            if let Err(e) = fs::remove_dir_all(&sandbox_for_cleanup) {
+                eprintln!(
+                    "[Bubbledesk] Failed to remove companion sandbox {:?}: {}",
+                    sandbox_for_cleanup, e
+                );
+            }
         });
     }
 

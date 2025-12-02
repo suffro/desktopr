@@ -27,6 +27,7 @@ fi
 # -----------------------------
 # Always use PROD templates
 # -----------------------------
+
 TAURI_TEMPLATE="conf-templates/tauri.conf.template.prod.json"
 
 # -----------------------------

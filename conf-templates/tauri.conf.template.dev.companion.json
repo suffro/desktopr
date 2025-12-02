@@ -41,9 +41,7 @@
   "bundle": {
     "active": true,
     "targets": ["dmg"],
-    "resources": [
-      "resources/menu/menu.config.companion.json"
-    ],
+    "resources": [],
     "icon": [
       "icons/icon.png"
     ]

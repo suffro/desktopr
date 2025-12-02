@@ -28,7 +28,6 @@
     "targets": ["nsis", "app", "deb", "rpm", "appimage"],
     "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
     "resources": [
-      "resources/menu/menu.config.json",
       "resources/companion"
     ]
   },

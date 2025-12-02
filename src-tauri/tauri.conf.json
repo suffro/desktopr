@@ -45,12 +45,11 @@
     "targets": [
       "dmg"
     ],
-    "resources": ["resources/menu/menu.config.json"],
+    "resources": [
+      "resources/companion"
+    ],
     "icon": [
       "icons/icon.png"
-    ],
-    "externalBin": [
-        "binaries/bubbledesk-companion"
     ]
   }
 }

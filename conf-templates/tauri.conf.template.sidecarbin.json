@@ -45,7 +45,6 @@
     "targets": [
       "dmg"
     ],
-    "resources": ["resources/menu/menu.config.json"],
     "icon": [
       "icons/icon.png"
     ]
