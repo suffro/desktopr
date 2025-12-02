@@ -1,14 +1,8 @@
 import { BubbledeskAPI } from "@types"
 
-export const launchCompanion = async (core: { invoke: BubbledeskAPI["invoke"] }, appConfig?: object) => {
-    const icon = [
-      "icons/icon-companion.png"
-    ]
-    let config: any = appConfig || {};
+export const launchCompanion = async (core: { invoke: BubbledeskAPI["invoke"] }, config?: object) => {
 
-    config["$schema"]="https://schema.tauri.app/config/2";
+    let appConfig: any = config || {};
 
-    if(!(config?.bundle?.icon)) config["bundle"]["icon"] = icon;
-
-    core.invoke("bd_launch_companion", { config });
+    core.invoke("bd_launch_companion", { appConfig });
 }

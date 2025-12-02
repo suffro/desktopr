@@ -43,7 +43,7 @@
     "targets": ["dmg"],
     "resources": [],
     "icon": [
-      "icons/icon.png"
+      "icons/icon-companion.png"
     ]
   }
 }
