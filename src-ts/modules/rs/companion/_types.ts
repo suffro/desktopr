@@ -1,4 +1,11 @@
 
 export interface CompanionInterface {
-    launch: (appConfig: object) => Promise<void>
+    launch: (appConfig?: CompanionConfig) => Promise<void>
   };
+
+export type CompanionConfig = {
+  title: string;
+  url: string;
+  backgroundColor: string;
+  fullscreen: boolean;
+}
