@@ -1,247 +1,272 @@
 use std::fs;
 use std::path::PathBuf;
-use std::thread;
 
 use uuid::Uuid;
 
-#[cfg(debug_assertions)]
-use std::process::Command as DevCommand;
+use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
-#[cfg(not(debug_assertions))]
-use std::process::{Command, Stdio};
+const COMPANION_LABEL_PREFIX: &str = "bd-companion-";
 
-use tauri::{Emitter, Manager};
-
-const BUBBLEDESK_COMPANION_DEV_BIN: &str = "bubbledesk-companion";
-
-fn log_debug(app: &tauri::AppHandle, msg: &str) {
+fn log_debug(app: &AppHandle, msg: &str) {
+    // [DEBUG] Forward logs both to stdout and to the frontend
     println!("[Bubbledesk][DEBUG] {msg}");
     if let Err(e) = app.emit("bubbledesk:debug", msg.to_string()) {
         println!("[Bubbledesk][DEBUG] Failed to emit debug event: {e}");
     }
 }
 
-fn resolve_companion_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let resource_dir = app
-        .path()
-        .resource_dir()
-        .map_err(|e| format!("Failed to resolve resource_dir: {e}"))?;
-
-    // Try common layouts: Resources/resources/companion and Resources/companion
-    let candidates = [
-        resource_dir.join("resources").join("companion"),
-        resource_dir.join("companion"),
-    ];
-
-    let companion_dir = candidates
-        .into_iter()
-        .find(|p| p.exists())
-        .ok_or_else(|| {
-            format!(
-                "Companion directory not found under resource_dir {:?}",
-                resource_dir
-            )
-        })?;
-
-    #[cfg(target_os = "windows")]
-    let companion_path = companion_dir.join("bubbledesk-companion.exe");
-
-    #[cfg(not(target_os = "windows"))]
-    let companion_path = companion_dir.join("bubbledesk-companion");
-
-    if !companion_path.exists() {
-        return Err(format!("Companion binary not found at {:?}", companion_path));
-    }
-
-    Ok(companion_path)
+/// Simple appearance options parsed from the JSON config passed by the frontend.
+/// This is intentionally minimal and can be extended later.
+#[derive(Debug, Clone)]
+struct CompanionAppearance {
+    title: String,
+    width: f64,
+    height: f64,
+    resizable: bool,
+    open_fullscreen: bool,
+    background_color: Option<String>,
 }
 
-/// Launch the Bubbledesk companion application.
-///
-/// - In **dev builds** (debug assertions enabled), this spawns `cargo tauri dev -- --bin bubbledesk-companion`.
-///   This assumes the developer has the full Rust toolchain and project layout available.
-///
-/// - In **release builds**, this launches a bundled sidecar binary named `bubbledesk-companion`,
-///   which must be configured via `tauri.conf.json > tauri.bundle.externalBin`.
-///
-/// In both cases, a per-session sandbox directory is created (under `/tmp` on Unix or the
-/// system temp dir elsewhere). The given `app_config` is written as
-/// `tauri.conf.companion.json` inside that sandbox, and the companion receives the path via
-/// the `COMPANION_APP_CONFIG_PATH` environment variable, plus a `BUBBLEDESK_COMPANION_SESSION_ID`.
-#[tauri::command]
-pub async fn bd_launch_companion(app: tauri::AppHandle, app_config: serde_json::Value) -> Result<(), String> {
-    // Derive the package name at compile time so we can namespace the sandbox per app.
+impl Default for CompanionAppearance {
+    fn default() -> Self {
+        Self {
+            title: "Bubbledesk Companion".to_string(),
+            width: 1100.0,
+            height: 800.0,
+            resizable: true,
+            open_fullscreen: false,
+            background_color: None,
+        }
+    }
+}
+
+/// Parse appearance options from the JSON config coming from the frontend.
+/// Expected keys (all optional):
+/// - title: string
+/// - width: number
+/// - height: number
+/// - resizable: boolean
+/// - openFullscreen: boolean (or open_fullscreen)
+fn parse_appearance_config(config: &serde_json::Value) -> CompanionAppearance {
+    let mut opts = CompanionAppearance::default();
+
+    if let Some(t) = config.get("title").and_then(|v| v.as_str()) {
+        opts.title = t.to_string();
+    }
+
+    if let Some(w) = config.get("width").and_then(|v| v.as_f64()) {
+        if w > 0.0 {
+            opts.width = w;
+        }
+    }
+
+    if let Some(h) = config.get("height").and_then(|v| v.as_f64()) {
+        if h > 0.0 {
+            opts.height = h;
+        }
+    }
+
+    if let Some(r) = config.get("resizable").and_then(|v| v.as_bool()) {
+        opts.resizable = r;
+    }
+
+    if let Some(f) = config
+        .get("openFullscreen")
+        .or_else(|| config.get("open_fullscreen"))
+        .and_then(|v| v.as_bool())
+    {
+        opts.open_fullscreen = f;
+    }
+
+    if let Some(c) = config.get("backgroundColor").and_then(|v| v.as_str()) {
+        opts.background_color = Some(c.to_string());
+    }
+
+    opts
+}
+
+/// Build a per-session sandbox path for the companion.
+/// On Unix it uses /tmp, on other platforms it uses the system temp dir.
+fn build_sandbox_path(session_id: &str) -> PathBuf {
     let package_name: &str = env!("CARGO_PKG_NAME");
 
-    // Create sandbox path: /tmp/<package_name>/companions/<session_id>
-    let session_id = Uuid::new_v4().to_string();
-
     #[cfg(unix)]
-    let mut sandbox_path = PathBuf::from("/tmp");
+    let mut base = PathBuf::from("/tmp");
     #[cfg(not(unix))]
-    let mut sandbox_path = std::env::temp_dir();
+    let mut base = std::env::temp_dir();
 
-    sandbox_path.push(package_name);
-    sandbox_path.push("companions");
-    sandbox_path.push(&session_id);
+    base.push(package_name);
+    base.push("companions");
+    base.push(session_id);
 
-    log_debug(&app, &format!("Companion sandbox will be created at: {:?}", sandbox_path));
+    base
+}
 
+/// Launch the Bubbledesk companion as a dedicated Tauri window.
+///
+/// This replaces the previous sidecar-based approach:
+/// - No external binary is spawned.
+/// - A new window is created with its own label, URL and appearance.
+/// - A per-session sandbox directory is created and passed to the window.
+///
+/// The `app_config` parameter is a JSON object coming from the frontend that
+/// carries appearance options and any other companion-specific config.
+///
+/// Frontend responsibilities:
+/// - Call this command with a config object (title, width, height, etc.).
+/// - Listen for the `bubbledesk:companion:init` event on the companion window:
+///   - payload contains: sessionId, sandboxPath, config, windowLabel
+/// - Attach a native menu specific to this window using your existing bridge.
+/// - Use `sandboxPath` as the logical root for the companion FS.
+#[tauri::command]
+pub async fn bd_launch_companion(
+    app: AppHandle,
+    app_config: serde_json::Value,
+) -> Result<(), String> {
+    // 1) Generate session id and sandbox path
+    let session_id = Uuid::new_v4().to_string();
+    let sandbox_path = build_sandbox_path(&session_id);
+
+    log_debug(
+        &app,
+        &format!(
+            "Companion session {} will use sandbox path: {:?}",
+            session_id, sandbox_path
+        ),
+    );
+
+    log_debug(&app, &format!("Companion raw config: {app_config}"));
+
+    // 2) Create sandbox directory
     if let Err(e) = fs::create_dir_all(&sandbox_path) {
-        log_debug(&app, &format!("[ERROR] Failed to create companion sandbox {:?}: {}", sandbox_path, e));
+        log_debug(
+            &app,
+            &format!(
+                "[ERROR] Failed to create companion sandbox {:?}: {}",
+                sandbox_path, e
+            ),
+        );
         return Err(format!("Failed to create companion sandbox: {e}"));
     }
-    log_debug(&app, &format!("Sandbox created successfully: {:?}", sandbox_path));
+    log_debug(
+        &app,
+        &format!("Companion sandbox created successfully at {:?}", sandbox_path),
+    );
 
-    // Persist app config into the sandbox so the companion can read it
-    let app_config_path = sandbox_path.join("tauri.conf.companion.json");
-    let cfg_json = serde_json::to_string_pretty(&app_config)
-        .map_err(|e| format!("Failed to serialize companion config: {e}"))?;
+    // 3) Parse appearance options from the config object
+    let appearance = parse_appearance_config(&app_config);
+    log_debug(
+        &app,
+        &format!("Companion appearance options: {:?}", appearance),
+    );
 
-    log_debug(&app, &format!("Writing companion config to {:?}", app_config_path));
+    // 4) Compute a unique window label for this companion instance
+    let window_label = format!("{COMPANION_LABEL_PREFIX}{session_id}");
+    log_debug(
+        &app,
+        &format!("Creating companion window with label '{}'", window_label),
+    );
 
-    if let Err(e) = fs::write(&app_config_path, cfg_json) {
-        log_debug(&app, &format!("[ERROR] Failed to write companion config at {:?}: {}", app_config_path, e));
-        return Err(format!("Failed to write companion config: {e}"));
+    // Register sandbox root for this companion window so filesystem operations can be isolated.
+    register_companion_sandbox(&app, window_label.clone(), sandbox_path.clone());
+
+    // 5) Choose the URL for the companion window.
+    //    Adjust this to match your actual frontend route (e.g. "/companion").
+    // Read URL from config; supports both plain string and object with `href`.
+    let url_str: String = app_config
+        .get("url")
+        .and_then(|v| {
+            if let Some(s) = v.as_str() {
+                Some(s.to_string())
+            } else if let Some(obj) = v.as_object() {
+                obj.get("href")
+                    .and_then(|h| h.as_str())
+                    .map(|s| s.to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "/companion".to_string());
+
+    // Convert to Tauri WebviewUrl
+    let companion_url = if url_str.starts_with("http://") || url_str.starts_with("https://") {
+        WebviewUrl::External(
+            url_str
+                .parse()
+                .expect("Invalid external URL in companion config"),
+        )
+    } else {
+        WebviewUrl::App(url_str.clone().into())
+    };
+
+    log_debug(&app, &format!("Companion window URL: {}", url_str));
+
+    // 6) Create the companion window with its own appearance
+    let mut builder = WebviewWindowBuilder::new(&app, &window_label, companion_url)
+        .title(&appearance.title)
+        .inner_size(appearance.width, appearance.height)
+        .resizable(appearance.resizable);
+
+    if let Some(bg) = &appearance.background_color {
+        if let Ok(col) = bg.parse() {
+            builder = builder.background_color(col);
+        }
     }
-    log_debug(&app, "Companion config written successfully.");
 
-    log_debug(&app, &format!(
-        "Launching companion session {} in sandbox {:?}",
-        session_id, sandbox_path
-    ));
+    builder = builder.visible(true);
 
-    // Development path: use `cargo tauri dev -- --bin bubbledesk-companion`.
-    #[cfg(debug_assertions)]
-    {
+    if appearance.open_fullscreen {
+        // NOTE: If your Tauri version does not support .fullscreen(true) on the builder,
+        // you can remove this block and control fullscreen from the frontend.
+        builder = builder.fullscreen(true);
+    }
+
+    let companion_window = builder
+        .build()
+        .map_err(|e| format!("Failed to create companion window: {e}"))?;
+
+    log_debug(
+        &app,
+        &format!("Companion window '{}' created successfully", window_label),
+    );
+
+    // Unregister the sandbox when the companion window is destroyed.
+    // This keeps the registry clean and avoids leaking stale entries.
+    let app_for_event = app.clone();
+    let label_for_event = window_label.clone();
+    companion_window.on_window_event(move |_, event| {
+        if let &tauri::WindowEvent::Destroyed = event {
+            unregister_companion_sandbox(&app_for_event, &label_for_event);
+        }
+    });
+
+    // 7) Emit an init event to the companion window only.
+    //    The frontend can:
+    //      - Attach a native menu specific to this window.
+    //      - Use sandboxPath as its isolated FS root.
+    //      - Use config for any other behavior.
+    let payload = serde_json::json!({
+        "sessionId": session_id,
+        "sandboxPath": sandbox_path,
+        "config": app_config,
+        "windowLabel": window_label
+    });
+
+    if let Err(e) = companion_window.emit("bubbledesk:companion:init", payload) {
         log_debug(
             &app,
             &format!(
-                "Dev companion command: cargo tauri dev -- --bin {}",
-                BUBBLEDESK_COMPANION_DEV_BIN
+                "[WARN] Failed to emit 'bubbledesk:companion:init' event: {}",
+                e
             ),
         );
-
-        log_debug(&app, "Spawning dev companion via Cargo...");
-
-        let mut child = DevCommand::new("cargo")
-            .args(&["tauri", "dev", "--", "--bin", BUBBLEDESK_COMPANION_DEV_BIN])
-            .env(
-                "COMPANION_APP_CONFIG_PATH",
-                app_config_path.to_str().unwrap_or_default(),
-            )
-            .env("BUBBLEDESK_COMPANION_SESSION_ID", &session_id)
-            .current_dir(".")
-            .spawn()
-            .map_err(|e| format!("Failed to spawn dev companion: {e}"))?;
-
-        log_debug(&app, &format!("Dev companion spawned successfully with PID: {:?}", child.id()));
-
-        let sandbox_for_cleanup = sandbox_path.clone();
-        thread::spawn(move || {
-            if let Ok(status) = child.wait() {
-                println!(
-                    "[Bubbledesk] Companion session {} exited with status {:?}",
-                    session_id, status
-                );
-            }
-            if let Err(e) = fs::remove_dir_all(&sandbox_for_cleanup) {
-                eprintln!(
-                    "[Bubbledesk] Failed to remove companion sandbox {:?}: {}",
-                    sandbox_for_cleanup, e
-                );
-            }
-        });
-    }
-
-    // Release path: launch a bundled companion binary from the resources directory.
-    #[cfg(not(debug_assertions))]
-    {
+        // Not fatal: the window exists, frontend may still recover.
+    } else {
         log_debug(
             &app,
-            &format!(
-                "Launching companion (manual) in release mode, session {} in sandbox {:?}",
-                session_id, sandbox_path
-            ),
+            "Emitted 'bubbledesk:companion:init' event to companion window.",
         );
-
-        let companion_path = resolve_companion_path(&app)?;
-
-        log_debug(
-            &app,
-            &format!("Resolved companion path: {:?}", companion_path),
-        );
-
-        let sandbox_for_cleanup = sandbox_path.clone();
-
-        let mut child = Command::new(&companion_path)
-            .env(
-                "COMPANION_APP_CONFIG_PATH",
-                app_config_path.to_str().unwrap_or_default(),
-            )
-            .env("BUBBLEDESK_COMPANION_SESSION_ID", &session_id)
-            .current_dir(&sandbox_path)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| format!("Failed to spawn companion process: {e}"))?;
-
-        log_debug(
-            &app,
-            &format!("Companion process spawned with PID: {:?}", child.id()),
-        );
-
-        // Stream stdout
-        if let Some(stdout) = child.stdout.take() {
-            let app_for_events = app.clone();
-            thread::spawn(move || {
-                use std::io::{BufRead, BufReader};
-                let reader = BufReader::new(stdout);
-                for line in reader.lines() {
-                    if let Ok(line) = line {
-                        println!("[bubbledesk-companion stdout] {}", line);
-                        let _ = app_for_events.emit(
-                            "bubbledesk:debug",
-                            format!("companion stdout: {}", line),
-                        );
-                    }
-                }
-            });
-        }
-
-        // Stream stderr
-        if let Some(stderr) = child.stderr.take() {
-            let app_for_events = app.clone();
-            thread::spawn(move || {
-                use std::io::{BufRead, BufReader};
-                let reader = BufReader::new(stderr);
-                for line in reader.lines() {
-                    if let Ok(line) = line {
-                        eprintln!("[bubbledesk-companion stderr] {}", line);
-                        let _ = app_for_events.emit(
-                            "bubbledesk:debug",
-                            format!("companion stderr: {}", line),
-                        );
-                    }
-                }
-            });
-        }
-
-        // Wait for process and cleanup sandbox
-        thread::spawn(move || {
-            if let Ok(status) = child.wait() {
-                println!(
-                    "[Bubbledesk] Companion session {} exited with status {:?}",
-                    session_id, status
-                );
-            }
-            if let Err(e) = fs::remove_dir_all(&sandbox_for_cleanup) {
-                eprintln!(
-                    "[Bubbledesk] Failed to remove companion sandbox {:?}: {}",
-                    sandbox_for_cleanup, e
-                );
-            }
-        });
     }
 
     Ok(())

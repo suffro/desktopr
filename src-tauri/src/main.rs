@@ -44,6 +44,9 @@ fn main() {
   builder = builder.manage(LatestWindowLabel {
             label: Mutex::new("main".to_string()),
         });
+
+  builder = builder.manage(CompanionSandboxRegistry::new());
+
   // --- 0) Single-instance PRIMO (importante con deep-link) ---
   builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
     println!("single-instance argv: {argv:?}");
@@ -206,7 +209,7 @@ fn main() {
       bd_fs_diagnostics_list_dir, bd_fs_diagnostics_read_bytes, bd_fs_diagnostics_stat, bd_fs_diagnostics_read_text,
       bd_fs_diagnostics_rm, bd_fs_diagnostics_clear, bd_fs_diagnostics_exists,
       // menu
-      bd_menu_set_enabled, bd_menu_set_checked, bd_init_menu_from_json, bd_init_menu_from_file,
+      bd_menu_set_enabled, bd_menu_set_checked, bd_init_menu_from_json, bd_init_menu_from_file, bd_init_menu_for_window_from_json,
       // diagnostics
       bd_logs_get_privacy, bd_logs_set_privacy, bd_logs_run_retention, bd_logs_list_files, bd_logs_read_file,
       bd_logs_record_js_error, bd_logs_record_native_error, bd_logs_record_error, bd_logs_new_record, bd_logs_export_zip,

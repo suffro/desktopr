@@ -6,7 +6,7 @@ export function buildMenu(core: { invoke: BubbledeskAPI["invoke"] }): MenuInterf
     setEnabled: (id: string, enabled: boolean): Promise<void> => core.invoke("bd_menu_set_enabled", { id, enabled }),
     setChecked: (id: string, checked: boolean): Promise<void> => core.invoke("bd_menu_set_checked", { id, checked }),
     init: {
-      fromConfig: (config: MenuConfig): Promise<void> => initMenuConfig(core, config),
+      fromConfig: (config: MenuConfig, windowLabel?: string): Promise<void> => initMenuConfig(core, config, windowLabel),
       fromJsonFile: (filePath: string): Promise<void> => core.invoke("bd_init_menu_from_file", { filePath })
     }
   };

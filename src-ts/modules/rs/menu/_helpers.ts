@@ -1,16 +1,37 @@
-import { BubbledeskAPI, MenuConfig } from "../../../_types"
+import { BubbledeskAPI, MenuConfig } from "../../../_types";
 import { cryptoTools, validate } from "suffro-lib";
 
 
-export const initMenuConfig = async (core: { invoke: BubbledeskAPI["invoke"] }, menuConfig: MenuConfig): Promise<void> => {
-    validateMenuConfig(menuConfig);
-    // const jsonString: string = JSON.stringify(menuConfig);
-    // console.log("Converted to JSON");
-    // const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
-    // console.log("Encoded to base64");
-    await core.invoke("bd_init_menu_from_json", { cfgJson: menuConfig/*, is_base64: false*/ });
+function isMacOS(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  return true;
 }
 
+export const initMenuConfig = async (
+  core: { invoke: BubbledeskAPI["invoke"] },
+  menuConfig: MenuConfig,
+  windowLabel?: string
+): Promise<void> => {
+  validateMenuConfig(menuConfig);
+  if (windowLabel) {
+    if (isMacOS()) {
+      console.warn(
+        "[Bubbledesk] Native window-specific menus are not supported on macOS."
+      );
+      return;
+    }
+    await core.invoke("bd_init_menu_for_window_from_json", {
+      windowLabel,
+      cfgJson: menuConfig /*, is_base64: false*/,
+    });
+  } else{
+    await core.invoke("bd_init_menu_from_json", {
+      cfgJson: menuConfig /*, is_base64: false*/,
+    });
+  }
+};
 
 /**
  * Public entry point — validates a menu configuration object before sending it
@@ -26,7 +47,8 @@ function _validateMenuConfig(config: any): void {
   if (typeof config !== "object" || config === null)
     throw new Error("Menu config must be an object.");
 
-  if (validate.emptyObject(config)) throw new Error(`Menu config is an empty object:\n\n${config}`);
+  if (validate.emptyObject(config))
+    throw new Error(`Menu config is an empty object:\n\n${config}`);
 
   if (typeof config.enabled !== "boolean")
     throw new Error("Missing or invalid 'enabled' (boolean required).");
@@ -73,24 +95,44 @@ function validateItems(items: any[], path: string): void {
 
     switch (type) {
       case "custom": {
-        if (typeof item.id !== "string") throw new Error(`${loc} missing 'id' (string).`);
-        if (typeof item.label !== "string") throw new Error(`${loc} missing 'label' (string).`);
+        if (typeof item.id !== "string")
+          throw new Error(`${loc} missing 'id' (string).`);
+        if (typeof item.label !== "string")
+          throw new Error(`${loc} missing 'label' (string).`);
         if (item.enabled !== undefined && typeof item.enabled !== "boolean")
           throw new Error(`${loc} invalid 'enabled' type (boolean expected).`);
-        if (item.interaction !== undefined && !["click", "check"].includes(item.interaction))
+        if (
+          item.interaction !== undefined &&
+          !["click", "check"].includes(item.interaction)
+        )
           throw new Error(`${loc} invalid 'interaction' value.`);
-        if (item.interaction === "check" && item.checked !== undefined && typeof item.checked !== "boolean")
-          throw new Error(`${loc} invalid 'checked' for checkable item (boolean expected).`);
-        if (item.accelerator !== undefined && typeof item.accelerator !== "string")
-          throw new Error(`${loc} invalid 'accelerator' type (string expected).`);
+        if (
+          item.interaction === "check" &&
+          item.checked !== undefined &&
+          typeof item.checked !== "boolean"
+        )
+          throw new Error(
+            `${loc} invalid 'checked' for checkable item (boolean expected).`
+          );
+        if (
+          item.accelerator !== undefined &&
+          typeof item.accelerator !== "string"
+        )
+          throw new Error(
+            `${loc} invalid 'accelerator' type (string expected).`
+          );
         break;
       }
       case "submenu": {
-        if (typeof item.label !== "string") throw new Error(`${loc} submenu missing 'label' (string).`);
-        if (!Array.isArray(item.items)) throw new Error(`${loc} submenu missing 'items' array.`);
+        if (typeof item.label !== "string")
+          throw new Error(`${loc} submenu missing 'label' (string).`);
+        if (!Array.isArray(item.items))
+          throw new Error(`${loc} submenu missing 'items' array.`);
         for (const sub of item.items) {
           if (sub.type === "submenu") {
-            throw new Error(`${loc} submenu contains another submenu — only one level of depth allowed.`);
+            throw new Error(
+              `${loc} submenu contains another submenu — only one level of depth allowed.`
+            );
           }
         }
         break;
@@ -98,8 +140,13 @@ function validateItems(items: any[], path: string): void {
       case "predefined": {
         if (typeof item.item !== "string")
           throw new Error(`${loc} predefined item missing 'item' field.`);
-        if (item.customLabel !== undefined && typeof item.customLabel !== "string")
-          throw new Error(`${loc} invalid 'customLabel' type (string expected).`);
+        if (
+          item.customLabel !== undefined &&
+          typeof item.customLabel !== "string"
+        )
+          throw new Error(
+            `${loc} invalid 'customLabel' type (string expected).`
+          );
         break;
       }
       case "separator":

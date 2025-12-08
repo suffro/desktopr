@@ -4,6 +4,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 use tauri::{AppHandle, Manager};
+use crate::helpers::states::resolve_companion_sandbox;
 use std::io::{Read, Write};
 use base64::{engine::general_purpose, Engine as _}; // Cargo.toml: base64 = "0.22"
 use walkdir::WalkDir;
@@ -37,6 +38,60 @@ fn ensure_base_exists(app: &AppHandle, permanent: bool) -> Result<PathBuf, Strin
         fs::create_dir_all(&base).map_err(|e| e.to_string())?;
     }
     Ok(base)
+}
+
+/// Restituisce la base dir tenendo conto di un'eventuale window specifica (es. companion).
+/// - Se permanent=false e la window ha una sandbox registrata -> usa la sandbox come base.
+/// - Altrimenti usa la logica standard di base_dir/ensure_base_exists.
+fn base_dir_scoped(
+    app: &AppHandle,
+    permanent: bool,
+    window_label: &Option<String>,
+) -> Result<PathBuf, String> {
+    // For non-permanent scope (cache-like), prefer a companion sandbox if available.
+    if !permanent {
+        if let Some(label) = window_label.as_ref() {
+            if let Some(root) = resolve_companion_sandbox(app, label) {
+                if !root.exists() {
+                    fs::create_dir_all(&root).map_err(|e| e.to_string())?;
+                }
+                return Ok(root);
+            }
+        }
+    }
+
+    // Fallback: default app data/cache dirs.
+    let base = base_dir(app, permanent);
+    if !base.exists() {
+        fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+    }
+    Ok(base)
+}
+
+/// Path che DEVE ESISTERE (listDir/stat) tenendo conto della window (es. companion sandbox).
+fn resolve_existing_scoped(
+    app: &AppHandle,
+    rel: &str,
+    permanent: bool,
+    window_label: &Option<String>,
+) -> Result<PathBuf, String> {
+    let base = base_dir_scoped(app, permanent, window_label)?;
+    let p = safe_join(&base, rel)?;
+    if !p.exists() {
+        return Err("No such file or directory".into());
+    }
+    Ok(p)
+}
+
+/// Path che PUÒ NON ESISTERE (mkdir/rm target) tenendo conto della window (es. companion sandbox).
+fn resolve_any_scoped(
+    app: &AppHandle,
+    rel: &str,
+    permanent: bool,
+    window_label: &Option<String>,
+) -> Result<PathBuf, String> {
+    let base = base_dir_scoped(app, permanent, window_label)?;
+    safe_join(&base, rel)
 }
 
 /// Join "sicuro" base + rel (no assoluti, no uscita dalla base, non richiede esistenza).
@@ -81,8 +136,13 @@ fn resolve_any(app: &AppHandle, rel: &str, permanent: bool) -> Result<PathBuf, S
 }
 
 #[tauri::command]
-pub fn bd_fs_list_dir(app: AppHandle, rel: String, permanent: bool) -> Result<Vec<FsEntry>, String> {
-    let dir = resolve_existing(&app, &rel, permanent)?;
+pub fn bd_fs_list_dir(
+    app: AppHandle,
+    rel: String,
+    permanent: bool,
+    window_label: Option<String>,
+) -> Result<Vec<FsEntry>, String> {
+    let dir = resolve_existing_scoped(&app, &rel, permanent, &window_label)?;
     let mut out = Vec::new();
     for e in fs::read_dir(&dir).map_err(|e| e.to_string())? {
         let e = e.map_err(|e| e.to_string())?;
@@ -97,14 +157,25 @@ pub fn bd_fs_list_dir(app: AppHandle, rel: String, permanent: bool) -> Result<Ve
 }
 
 #[tauri::command]
-pub fn bd_fs_mkdir(app: AppHandle, rel: String, permanent: bool) -> Result<(), String> {
-    let dir = resolve_any(&app, &rel, permanent)?;
+pub fn bd_fs_mkdir(
+    app: AppHandle,
+    rel: String,
+    permanent: bool,
+    window_label: Option<String>,
+) -> Result<(), String> {
+    let dir = resolve_any_scoped(&app, &rel, permanent, &window_label)?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_fs_rm(app: AppHandle, rel: String, permanent: bool, recursive: bool) -> Result<(), String> {
-    let p = resolve_any(&app, &rel, permanent)?;
+pub fn bd_fs_rm(
+    app: AppHandle,
+    rel: String,
+    permanent: bool,
+    recursive: bool,
+    window_label: Option<String>,
+) -> Result<(), String> {
+    let p = resolve_any_scoped(&app, &rel, permanent, &window_label)?;
     if !p.exists() {
         return Ok(()); // idempotente
     }
@@ -131,8 +202,13 @@ pub fn bd_fs_rm(app: AppHandle, rel: String, permanent: bool, recursive: bool) -
 }
 
 #[tauri::command]
-pub fn bd_fs_stat(app: AppHandle, rel: String, permanent: bool) -> Result<FsEntry, String> {
-    let p = resolve_existing(&app, &rel, permanent)?;
+pub fn bd_fs_stat(
+    app: AppHandle,
+    rel: String,
+    permanent: bool,
+    window_label: Option<String>,
+) -> Result<FsEntry, String> {
+    let p = resolve_existing_scoped(&app, &rel, permanent, &window_label)?;
     let md = fs::metadata(&p).map_err(|e| e.to_string())?;
     Ok(FsEntry {
         name: p.file_name().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default(),
@@ -151,9 +227,10 @@ pub fn bd_fs_write_text(
   contents: String,
   create_dirs: Option<bool>,
   append: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<(), String> {
   let permanent = permanent.unwrap_or(false);
-  let path = resolve_any(&app, &rel, permanent)?;
+  let path = resolve_any_scoped(&app, &rel, permanent, &window_label)?;
   if create_dirs.unwrap_or(true) {
     if let Some(parent) = path.parent() { std::fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
   }
@@ -172,9 +249,10 @@ pub fn bd_fs_read_text(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<String, String> {
   let permanent = permanent.unwrap_or(false);
-  let path = resolve_existing(&app, &rel, permanent)?;
+  let path = resolve_existing_scoped(&app, &rel, permanent, &window_label)?;
   std::fs::read_to_string(path).map_err(|e| e.to_string())
 }
 
@@ -186,9 +264,10 @@ pub fn bd_fs_write_bytes(
   permanent: Option<bool>,
   data_base64: String,
   create_dirs: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<(), String> {
   let permanent = permanent.unwrap_or(false);
-  let path = resolve_any(&app, &rel, permanent)?;
+  let path = resolve_any_scoped(&app, &rel, permanent, &window_label)?;
   if create_dirs.unwrap_or(true) {
     if let Some(parent) = path.parent() { std::fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
   }
@@ -204,9 +283,10 @@ pub fn bd_fs_read_bytes(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<String, String> {
   let permanent = permanent.unwrap_or(false);
-  let path = resolve_existing(&app, &rel, permanent)?;
+  let path = resolve_existing_scoped(&app, &rel, permanent, &window_label)?;
   let mut f = std::fs::File::open(path).map_err(|e| e.to_string())?;
   let mut buf = Vec::new();
   f.read_to_end(&mut buf).map_err(|e| e.to_string())?;
@@ -219,9 +299,10 @@ pub fn bd_fs_exists(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<bool, String> {
   let permanent = permanent.unwrap_or(false);
-  let path = resolve_any(&app, &rel, permanent)?; // non richiede esistenza
+  let path = resolve_any_scoped(&app, &rel, permanent, &window_label)?; // non richiede esistenza
   Ok(path.exists())
 }
 
@@ -234,10 +315,11 @@ pub fn bd_fs_move(
   permanent: Option<bool>,
   create_dirs: Option<bool>,
   overwrite: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<(), String> {
   let permanent = permanent.unwrap_or(false);
-  let src_path = resolve_existing(&app, &src, permanent)?;
-  let mut dest_path = resolve_any(&app, &dest, permanent)?;
+  let src_path = resolve_existing_scoped(&app, &src, permanent, &window_label)?;
+  let mut dest_path = resolve_any_scoped(&app, &dest, permanent, &window_label)?;
   let create_dirs = create_dirs.unwrap_or(true);
   let overwrite = overwrite.unwrap_or(false);
 
@@ -283,10 +365,11 @@ pub fn bd_fs_copy(
   recursive: Option<bool>,
   create_dirs: Option<bool>,
   overwrite: Option<bool>,
+  window_label: Option<String>,
 ) -> Result<(), String> {
   let permanent = permanent.unwrap_or(false);
-  let src_path = resolve_existing(&app, &src, permanent)?;
-  let mut dest_path = resolve_any(&app, &dest, permanent)?;
+  let src_path = resolve_existing_scoped(&app, &src, permanent, &window_label)?;
+  let mut dest_path = resolve_any_scoped(&app, &dest, permanent, &window_label)?;
   let recursive = recursive.unwrap_or(false);
   let create_dirs = create_dirs.unwrap_or(true);
   let overwrite = overwrite.unwrap_or(false);

@@ -1,6 +1,5 @@
 use std::path::Path;
 
-
 use serde::Serialize;
 use tauri::{
   App, AppHandle, Wry, Emitter, Manager,
@@ -137,6 +136,74 @@ fn apply_menu_config(app: &AppHandle<Wry>, cfg: MenuConfig) -> tauri::Result<()>
   Ok(())
 }
 
+// Applies a MenuConfig only to a specific window.
+// It builds a menu from the given config and attaches it to the target window,
+// without touching the global app menu or shared MenuIndex/CheckState state.
+fn apply_menu_config_to_window(
+  app: &AppHandle<Wry>,
+  window_label: &str,
+  cfg: MenuConfig,
+) -> tauri::Result<()> {
+  // On macOS window-specific native menus are not supported, so we skip any work here.
+  #[cfg(target_os = "macos")]
+  {
+    eprintln!(
+      "[Bubbledesk][menu] Window-specific native menu is not supported on macOS; \
+bd_init_menu_for_window_from_json is a no-op on this platform."
+    );
+    return Ok(());
+  }
+
+  #[cfg(not(target_os = "macos"))]
+  {
+    if !cfg.enabled || !is_current_platform_in(&cfg.platforms) {
+      return Ok(());
+    }
+
+    // Resolve target window
+    let window = app
+      .get_webview_window(window_label)
+      .ok_or_else(|| {
+        let e: tauri::Error = anyhow::anyhow!(
+          "Window '{}' not found while initializing window-specific menu",
+          window_label
+        ).into();
+        e
+      })?;
+
+    let mut subs: Vec<tauri::menu::Submenu<Wry>> = Vec::new();
+
+    #[cfg(target_os = "macos")]
+    if let Some(sec) = cfg.macos_root.as_ref() {
+      subs.push(build_submenu_from_section_handle(app, "Bubbledesk", sec)?);
+    }
+
+    if let Some(sec) = cfg.file.as_ref() {
+      subs.push(build_submenu_from_section_handle(app, "File", sec)?);
+    }
+    if let Some(sec) = cfg.edit.as_ref() {
+      subs.push(build_submenu_from_section_handle(app, "Edit", sec)?);
+    }
+    if let Some(sec) = cfg.view.as_ref() {
+      subs.push(build_submenu_from_section_handle(app, "View", sec)?);
+    }
+    if let Some(sec) = cfg.window.as_ref() {
+      subs.push(build_submenu_from_section_handle(app, "Window", sec)?);
+    }
+
+    // NB: tray is still managed by the global menu; we do not touch it here.
+
+    let refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
+      subs.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<Wry>).collect();
+
+    // Build menu in the context of the target window
+    let root = tauri::menu::Menu::with_items(&window, &refs)?;
+    window.set_menu(root)?;
+
+    Ok(())
+  }
+}
+
 // Internal helpers for menu initialization from file and JSON
 fn init_menu_from_file_internal(app: &AppHandle<Wry>, path: &Path) -> tauri::Result<()> {
   let s = fs::read_to_string(path).map_err(|e| -> tauri::Error {
@@ -166,6 +233,21 @@ fn init_menu_from_json_internal(app: &AppHandle<Wry>, cfg_json: &serde_json::Val
   apply_menu_config(app, cfg)
 }
 
+fn init_menu_for_window_from_json_internal(
+  app: &AppHandle<Wry>,
+  window_label: &str,
+  cfg_json: &serde_json::Value,
+) -> tauri::Result<()> {
+  let cfg: MenuConfig = serde_json::from_value(cfg_json.clone()).map_err(|e| -> tauri::Error {
+    anyhow::anyhow!(
+      "Impossibile fare il parse della configurazione del menu da JSON (window '{}'): {}",
+      window_label,
+      e
+    ).into()
+  })?;
+  apply_menu_config_to_window(app, window_label, cfg)
+}
+
 #[tauri::command]
 pub fn bd_init_menu_from_file(app: AppHandle<Wry>, path: String) -> Result<(), String> {
   let path_ref = Path::new(&path);
@@ -175,6 +257,16 @@ pub fn bd_init_menu_from_file(app: AppHandle<Wry>, path: String) -> Result<(), S
 #[tauri::command]
 pub fn bd_init_menu_from_json(app: AppHandle<Wry>, cfg_json: serde_json::Value) -> Result<(), String> {
   init_menu_from_json_internal(&app, &cfg_json).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn bd_init_menu_for_window_from_json(
+  app: AppHandle<Wry>,
+  window_label: String,
+  cfg_json: serde_json::Value,
+) -> Result<(), String> {
+  init_menu_for_window_from_json_internal(&app, &window_label, &cfg_json)
+    .map_err(|e| e.to_string())
 }
 
 pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
@@ -627,4 +719,3 @@ pub fn bd_menu_set_enabled(app: AppHandle<Wry>, id: String, enabled: bool) -> Re
 pub fn bd_menu_set_checked(app: AppHandle<Wry>, id: String, checked: bool) -> Result<(), String> {
   set_checked(&app, &id, checked).map_err(|e| e.to_string())
 }
-
