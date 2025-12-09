@@ -41,22 +41,20 @@ fn ensure_base_exists(app: &AppHandle, permanent: bool) -> Result<PathBuf, Strin
 }
 
 /// Restituisce la base dir tenendo conto di un'eventuale window specifica (es. companion).
-/// - Se permanent=false e la window ha una sandbox registrata -> usa la sandbox come base.
+/// - Se esiste una sandbox registrata per la window -> usa sempre quella come base (sia per permanent=true che false).
 /// - Altrimenti usa la logica standard di base_dir/ensure_base_exists.
 fn base_dir_scoped(
     app: &AppHandle,
     permanent: bool,
     window_label: &Option<String>,
 ) -> Result<PathBuf, String> {
-    // For non-permanent scope (cache-like), prefer a companion sandbox if available.
-    if !permanent {
-        if let Some(label) = window_label.as_ref() {
-            if let Some(root) = resolve_companion_sandbox(app, label) {
-                if !root.exists() {
-                    fs::create_dir_all(&root).map_err(|e| e.to_string())?;
-                }
-                return Ok(root);
+    // If a companion sandbox is registered for this window, always prefer it.
+    if let Some(label) = window_label.as_ref() {
+        if let Some(root) = resolve_companion_sandbox(app, label) {
+            if !root.exists() {
+                fs::create_dir_all(&root).map_err(|e| e.to_string())?;
             }
+            return Ok(root);
         }
     }
 

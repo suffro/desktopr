@@ -73,6 +73,10 @@ fn main() {
     // Menu nativo
     // crate::bridge::menu::init_menu(app)?;
     
+    // Initialize persistent env store
+    let env_state = crate::bridge::global_vars::EnvState::init(&app.handle())
+      .expect("Failed to init EnvState for global_vars module");
+    app.manage(env_state);
     
     let version = app.package_info().version.to_string();
     start_heartbeat(app.handle().clone());
@@ -193,6 +197,8 @@ fn main() {
       bd_file_open, bd_file_save, bd_file_open_with_bytes,
       // app
       bd_app_info, bd_app_exit,
+      // global_vars
+      bd_global_vars_get, bd_global_vars_set, bd_global_vars_remove, bd_global_vars_list,
       // window
       bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
       bd_toggle_devtools, bd_open_devtools, bd_close_devtools, bd_win_get_info,

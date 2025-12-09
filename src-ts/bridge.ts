@@ -17,6 +17,7 @@ import {
     buildBadge,
     buildContextMenu,
     buildCompanion,
+    buildGlobVar,
 } from "./_main";
 import { APP_VERSION } from "./_constants";
 import { isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
@@ -35,23 +36,24 @@ import { getCompanionContext } from "_companion_context";
       return core.ready; 
     },
     invoke: core.invoke,
-    isDesktop:     isTauri(),
-    notifications: buildNotifications(core),
-    clipboard:     buildClipboard(core),
-    files:         buildFiles(core),
-    app:           buildAppInfo(core),
-    window:        buildWindow(core),
-    events:        buildEvents(core),
-    globalShortcut:buildShortcuts(core),
-    fs:            buildFs(core),
-    menu:          buildMenu(core),
-    diagnostics:   buildDiagnostics(core),
-    network:       buildNetwork(core),
-    autostart:     buildAutostart(core),
-    badge:         buildBadge(core),
-    worker:        buildWorker(core),
-    contextMenu:   buildContextMenu(core),
-    companion:     buildCompanion(core)
+    isDesktop:        isTauri(),
+    notifications:    buildNotifications(core),
+    clipboard:        buildClipboard(core),
+    files:            buildFiles(core),
+    app:              buildAppInfo(core),
+    window:           buildWindow(core),
+    events:           buildEvents(core),
+    globalShortcut:   buildShortcuts(core),
+    fs:               buildFs(core),
+    menu:             buildMenu(core),
+    diagnostics:      buildDiagnostics(core),
+    network:          buildNetwork(core),
+    autostart:        buildAutostart(core),
+    badge:            buildBadge(core),
+    worker:           buildWorker(core),
+    contextMenu:      buildContextMenu(core),
+    companion:        buildCompanion(core),
+    globalVariables:  buildGlobVar(core)
   };
 
   Object.defineProperty(window, "Bubbledesk", {
