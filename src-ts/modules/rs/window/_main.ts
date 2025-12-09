@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, WindowInterface } from "../../../_types";
+import type { BubbledeskAPI, WindowInfo, WindowInterface } from "../../../_types";
 
 export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }): WindowInterface {
   const randomWindowLabel: string = `w_${Math.random().toString(36).substring(2, 2 + 8)}`
@@ -21,5 +21,7 @@ export function buildWindow(core: { invoke: BubbledeskAPI["invoke"] }): WindowIn
       url: (options?.url) ?? "",
     }),
     close: (label: string): Promise<void> => core.invoke("bd_win_close", { label }),
+    getInfo: (label?: string): Promise<WindowInfo> => core.invoke("bd_win_get_info", { label }),
+    companionState: {}
   };
 }

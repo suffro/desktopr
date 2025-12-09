@@ -1,6 +1,5 @@
 import { BubbledeskAPI, CompanionConfig } from "../../../_types"
 
-
 /**
  * Validate whether a string is:
  * - a valid absolute URL (http/https)

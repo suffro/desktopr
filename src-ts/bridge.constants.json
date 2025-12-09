@@ -1,5 +1,6 @@
 
 {
     "appUrl": "http://blank.html",
-    "appVersion": "0.2.1"
+    "appVersion": "0.2.1",
+    "companionWindowLabelPrefix": "bd-companion-"
 }

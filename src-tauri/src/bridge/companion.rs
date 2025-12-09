@@ -235,8 +235,8 @@ pub async fn bd_launch_companion(
     // This keeps the registry clean and avoids leaking stale entries.
     let app_for_event = app.clone();
     let label_for_event = window_label.clone();
-    companion_window.on_window_event(move |_, event| {
-        if let &tauri::WindowEvent::Destroyed = event {
+    companion_window.on_window_event(move |event| {
+        if let tauri::WindowEvent::Destroyed = event {
             unregister_companion_sandbox(&app_for_event, &label_for_event);
         }
     });
@@ -247,6 +247,7 @@ pub async fn bd_launch_companion(
     //      - Use sandboxPath as its isolated FS root.
     //      - Use config for any other behavior.
     let payload = serde_json::json!({
+        "isCompanion": true,
         "sessionId": session_id,
         "sandboxPath": sandbox_path,
         "config": app_config,

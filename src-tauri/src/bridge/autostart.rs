@@ -29,7 +29,7 @@ struct AutostartSettings {
 const SETTINGS_REL_PATH: &str = "settings/autostart.json";
 
 fn load_settings(app: &AppHandle) -> AutostartSettings {
-  match bd_fs_read_text(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true)) {
+  match bd_fs_read_text(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true), None) {
     Ok(text) => serde_json::from_str::<AutostartSettings>(&text)
       .unwrap_or(AutostartSettings { autostart_mode: AutostartMode::Shown }),
     Err(_) => AutostartSettings { autostart_mode: AutostartMode::Shown },
@@ -46,6 +46,7 @@ fn save_settings(app: &AppHandle, s: &AutostartSettings) -> Result<(), String> {
     json,
     Some(true),
     Some(false),
+    None
   )
 }
 

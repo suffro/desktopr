@@ -1,11 +1,13 @@
+import { CompanionState } from "../../../_companion_context";
 
 export interface CompanionInterface {
-    launch: (appConfig?: CompanionConfig) => Promise<void>
-  };
+  launch: (appConfig?: CompanionConfig) => Promise<void>;
+  state: CompanionState;
+}
 
-export type CompanionConfig = 
-{
-  /** 
+
+export type CompanionConfig = {
+  /**
    * URL da caricare nella companion window.
    * Può essere:
    *  - una stringa ("/companion", "/settings", "https://example.com")

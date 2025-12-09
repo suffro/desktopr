@@ -195,7 +195,7 @@ fn main() {
       bd_app_info, bd_app_exit,
       // window
       bd_win_minimize, bd_win_maximize, bd_win_fullscreen, bd_win_open, bd_win_close,
-      bd_toggle_devtools, bd_open_devtools, bd_close_devtools,
+      bd_toggle_devtools, bd_open_devtools, bd_close_devtools, bd_win_get_info,
       // events
       bd_event_emit, bd_event_emit_to, bd_event_emit_to_current_window,
       // fs

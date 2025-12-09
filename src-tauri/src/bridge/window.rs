@@ -1,5 +1,39 @@
+use serde::Serialize;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WebviewWindow};
 use url::Url;
+
+#[derive(Serialize)]
+pub struct WindowSizeInfo {
+  pub width: u32,
+  pub height: u32,
+}
+
+#[derive(Serialize)]
+pub struct WindowPositionInfo {
+  pub x: i32,
+  pub y: i32,
+}
+
+#[derive(Serialize)]
+pub struct WindowInfo {
+  pub label: String,
+  pub title: Option<String>,
+  pub url: Option<String>,
+  pub visible: Option<bool>,
+  pub focused: Option<bool>,
+  pub minimized: Option<bool>,
+  pub maximized: Option<bool>,
+  pub fullscreen: Option<bool>,
+  pub decorated: Option<bool>,
+  pub resizable: Option<bool>,
+  pub enabled: Option<bool>,
+  pub always_on_top: Option<bool>,
+  pub inner_size: Option<WindowSizeInfo>,
+  pub outer_size: Option<WindowSizeInfo>,
+  pub inner_position: Option<WindowPositionInfo>,
+  pub outer_position: Option<WindowPositionInfo>,
+  pub scale_factor: Option<f64>,
+}
 
 #[tauri::command]
 pub fn bd_win_minimize(app: AppHandle, label: String) -> Result<(), String> {
@@ -98,4 +132,79 @@ pub fn bd_toggle_devtools(app: tauri::AppHandle, label: String) -> Result<(), St
     }
   }
   Ok(())
+}
+
+#[tauri::command]
+pub fn bd_win_get_info(window: WebviewWindow, label: Option<String>) -> Result<WindowInfo, String> {
+  let app = window.app_handle();
+
+  // Decide which window to inspect:
+  // - If a label is provided, try to resolve that window.
+  // - Otherwise, use the current window that invoked the command.
+  let target = if let Some(ref lbl) = label {
+    app.get_webview_window(lbl)
+  } else {
+    Some(window)
+  };
+
+  if let Some(win) = target {
+    // Basic metadata
+    let label_str = win.label().to_string();
+    let title = win.title().ok();
+    let url = win.url().ok().map(|u| u.to_string());
+
+    // Visibility and state
+    let visible = win.is_visible().ok();
+    let focused = win.is_focused().ok();
+    let minimized = win.is_minimized().ok();
+    let maximized = win.is_maximized().ok();
+    let fullscreen = win.is_fullscreen().ok();
+    let decorated = win.is_decorated().ok();
+    let resizable = win.is_resizable().ok();
+    let enabled = win.is_enabled().ok();
+    let always_on_top = win.is_always_on_top().ok();
+
+    // Geometry
+    let inner_size = win.inner_size().ok().map(|s| WindowSizeInfo {
+      width: s.width,
+      height: s.height,
+    });
+    let outer_size = win.outer_size().ok().map(|s| WindowSizeInfo {
+      width: s.width,
+      height: s.height,
+    });
+    let inner_position = win.inner_position().ok().map(|p| WindowPositionInfo {
+      x: p.x,
+      y: p.y,
+    });
+    let outer_position = win.outer_position().ok().map(|p| WindowPositionInfo {
+      x: p.x,
+      y: p.y,
+    });
+
+    let scale_factor = win.scale_factor().ok();
+
+    Ok(WindowInfo {
+      label: label_str,
+      title,
+      url,
+      visible,
+      focused,
+      minimized,
+      maximized,
+      fullscreen,
+      decorated,
+      resizable,
+      enabled,
+      always_on_top,
+      inner_size,
+      outer_size,
+      inner_position,
+      outer_position,
+      scale_factor,
+    })
+  } else {
+    let requested = label.unwrap_or_else(|| "<current>".to_string());
+    Err(format!("Window '{}' not found", requested))
+  }
 }

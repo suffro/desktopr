@@ -1,33 +1,41 @@
+import { CompanionState } from "../../../_companion_context";
 import { BubbledeskAPI } from "../../../_types";
 import type { FsEntry, FsInterface, FsPaths, FsScopeMethods } from "../../../_types";
 
+const getWindowLabelIfCompanion = (): string | undefined => {
+  const compState: CompanionState = window?.Bubbledesk?.window?.companionState as CompanionState;
+  let label: string | undefined = undefined;
+  if(compState && compState?.windowLabel?.trim() && compState?.isCompanion) label = compState.windowLabel;
+  return label;
+}
+
 function scope(core: { invoke: BubbledeskAPI["invoke"] }, permanent: boolean): FsScopeMethods {
   return {
-    listContent: (rel: string = "") => core.invoke<FsEntry[]>("bd_fs_list_dir", { rel, permanent }),
-    newDirectory: (rel: string) => core.invoke<void>("bd_fs_mkdir", { rel, permanent }),
-    remove: (rel: string, recursive = false) => core.invoke<void>("bd_fs_rm", { rel, recursive, permanent }),
-    stat: (rel: string = "") => core.invoke<FsEntry>("bd_fs_stat", { rel, permanent }),
+    listContent: (rel: string = "") => core.invoke<FsEntry[]>("bd_fs_list_dir", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
+    newDirectory: (rel: string) => core.invoke<void>("bd_fs_mkdir", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
+    remove: (rel: string, recursive = false) => core.invoke<void>("bd_fs_rm", { rel, recursive, permanent, windowLabel: getWindowLabelIfCompanion() }),
+    stat: (rel: string = "") => core.invoke<FsEntry>("bd_fs_stat", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
     writeText: (rel, contents, opts) =>
       core.invoke<void>("bd_fs_write_text", {
         rel, permanent, contents,
-        createDirs: opts?.createDirs, append: opts?.append,
+        createDirs: opts?.createDirs, append: opts?.append, windowLabel: getWindowLabelIfCompanion()
       }),
-    readText: (rel) => core.invoke<string>("bd_fs_read_text", { rel, permanent }),
+    readText: (rel) => core.invoke<string>("bd_fs_read_text", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
     writeBytes: (rel, base64, opts) =>
       core.invoke<void>("bd_fs_write_bytes", {
-        rel, permanent, dataBase64: base64, createDirs: opts?.createDirs,
+        rel, permanent, dataBase64: base64, createDirs: opts?.createDirs, windowLabel: getWindowLabelIfCompanion()
       }),
-    readBytes: (rel) => core.invoke<string>("bd_fs_read_bytes", { rel, permanent }),
-    exists: (rel) => core.invoke<boolean>("bd_fs_exists", { rel, permanent }),
+    readBytes: (rel) => core.invoke<string>("bd_fs_read_bytes", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
+    exists: (rel) => core.invoke<boolean>("bd_fs_exists", { rel, permanent, windowLabel: getWindowLabelIfCompanion() }),
     move: (src, dest, opts) =>
       core.invoke<void>("bd_fs_move", {
         src, dest, permanent,
-        createDirs: opts?.createDirs, overwrite: opts?.overwrite,
+        createDirs: opts?.createDirs, overwrite: opts?.overwrite, windowLabel: getWindowLabelIfCompanion()
       }),
     copy: (src, dest, opts) =>
       core.invoke<void>("bd_fs_copy", {
         src, dest, permanent,
-        recursive: opts?.recursive, createDirs: opts?.createDirs, overwrite: opts?.overwrite,
+        recursive: opts?.recursive, createDirs: opts?.createDirs, overwrite: opts?.overwrite, windowLabel: getWindowLabelIfCompanion()
       }),
     path: async () => {
       const p = await core.invoke<FsPaths>("bd_fs_paths");
