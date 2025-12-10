@@ -16,7 +16,7 @@ import {
     buildAutostart,
     buildBadge,
     buildContextMenu,
-    buildCompanion,
+    // buildCompanion,
     buildGlobVar,
 } from "./_main";
 import { APP_VERSION } from "./_constants";
@@ -52,7 +52,7 @@ import { getCompanionContext } from "_companion_context";
     badge:            buildBadge(core),
     worker:           buildWorker(core),
     contextMenu:      buildContextMenu(core),
-    companion:        buildCompanion(core),
+    // companion:        buildCompanion(core),
     globalVariables:  buildGlobVar(core)
   };
 

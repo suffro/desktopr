@@ -4,25 +4,25 @@ import { COMAPNION_WINDOW_LABEL_PREFIX } from "./_constants";
 import { WindowInfo } from "./_types";
 
 export type CompanionState = {
-  isCompanion?: boolean;
+  isCacheOnly?: boolean;
   sessionId?: string;
   windowLabel?: string;
 };
 
 let state: CompanionState = {
-  isCompanion: false,
+  isCacheOnly: false,
 };
 
 function parseCompanionWindowLabel(label: string): CompanionState {
         const prefix = COMAPNION_WINDOW_LABEL_PREFIX.trim();
         if (!label.startsWith(prefix)) {
-            return { isCompanion: false };
+            return { isCacheOnly: false };
         }
         const sessionId = label.slice(prefix.length);
         if (!sessionId) {
-            return { isCompanion: false, windowLabel: label };
+            return { isCacheOnly: false, windowLabel: label };
         }
-        return { isCompanion: true, sessionId, windowLabel: label };
+        return { isCacheOnly: true, sessionId, windowLabel: label };
     }
 
 let initialized = false;
@@ -38,20 +38,20 @@ export async function getCompanionContext(): Promise<void> {
     const windowInfo: WindowInfo = await window.Bubbledesk.window.getInfo();
     const compState = parseCompanionWindowLabel(windowInfo.label);
 
-    if(window?.Bubbledesk?.window?.companionState) window.Bubbledesk.window.companionState = compState;
-    if(window?.Bubbledesk?.companion?.state) window.Bubbledesk.companion.state = compState;
+    if(window?.Bubbledesk?.window?.state) window.Bubbledesk.window.state = compState;
+    // if(window?.Bubbledesk?.companion?.state) window.Bubbledesk.companion.state = compState;
 }
 
 // Simple getters
 
-export function isCompanionWindow(): boolean {
-  return (state?.isCompanion) ?? false;
+export function isCacheOnlyWindow(): boolean {
+  return (state?.isCacheOnly) ?? false;
 }
 
-export function getCompanionWindowLabel(): string | undefined {
+export function getCacheOnlyWindowLabel(): string | undefined {
   return state?.windowLabel;
 }
 
-export function getCompanionSessionId(): string | undefined {
+export function getCacheOnlySessionId(): string | undefined {
   return state?.sessionId;
 }

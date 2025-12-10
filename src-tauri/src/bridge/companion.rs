@@ -6,7 +6,7 @@ use uuid::Uuid;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
-const COMPANION_LABEL_PREFIX: &str = "bd-companion-";
+const COMPANION_LABEL_PREFIX: &str = "bd-cache-only-win-";
 
 fn log_debug(app: &AppHandle, msg: &str) {
     // [DEBUG] Forward logs both to stdout and to the frontend
@@ -31,7 +31,7 @@ struct CompanionAppearance {
 impl Default for CompanionAppearance {
     fn default() -> Self {
         Self {
-            title: "Bubbledesk Companion".to_string(),
+            title: "Cache-only Window".to_string(),
             width: 1100.0,
             height: 800.0,
             resizable: true,
@@ -97,7 +97,7 @@ fn build_sandbox_path(session_id: &str) -> PathBuf {
     let mut base = std::env::temp_dir();
 
     base.push(package_name);
-    base.push("companions");
+    base.push("cache-only");
     base.push(session_id);
 
     base
@@ -131,41 +131,41 @@ pub async fn bd_launch_companion(
     log_debug(
         &app,
         &format!(
-            "Companion session {} will use sandbox path: {:?}",
+            "Cache-only session {} will use sandbox path: {:?}",
             session_id, sandbox_path
         ),
     );
 
-    log_debug(&app, &format!("Companion raw config: {app_config}"));
+    log_debug(&app, &format!("cache-only window raw config: {app_config}"));
 
     // 2) Create sandbox directory
     if let Err(e) = fs::create_dir_all(&sandbox_path) {
         log_debug(
             &app,
             &format!(
-                "[ERROR] Failed to create companion sandbox {:?}: {}",
+                "[ERROR] Failed to create cache-only sandbox {:?}: {}",
                 sandbox_path, e
             ),
         );
-        return Err(format!("Failed to create companion sandbox: {e}"));
+        return Err(format!("Failed to create cache-only sandbox: {e}"));
     }
     log_debug(
         &app,
-        &format!("Companion sandbox created successfully at {:?}", sandbox_path),
+        &format!("Cache-only window sandbox created successfully at {:?}", sandbox_path),
     );
 
     // 3) Parse appearance options from the config object
     let appearance = parse_appearance_config(&app_config);
     log_debug(
         &app,
-        &format!("Companion appearance options: {:?}", appearance),
+        &format!("Cache-only appearance options: {:?}", appearance),
     );
 
     // 4) Compute a unique window label for this companion instance
     let window_label = format!("{COMPANION_LABEL_PREFIX}{session_id}");
     log_debug(
         &app,
-        &format!("Creating companion window with label '{}'", window_label),
+        &format!("Creating cache-only window with label '{}'", window_label),
     );
 
     // Register sandbox root for this companion window so filesystem operations can be isolated.
@@ -187,20 +187,20 @@ pub async fn bd_launch_companion(
                 None
             }
         })
-        .unwrap_or_else(|| "/companion".to_string());
+        .unwrap_or_else(|| "/cache-only/blank.html".to_string());
 
     // Convert to Tauri WebviewUrl
     let companion_url = if url_str.starts_with("http://") || url_str.starts_with("https://") {
         WebviewUrl::External(
             url_str
                 .parse()
-                .expect("Invalid external URL in companion config"),
+                .expect("Invalid external URL in cache-only config"),
         )
     } else {
         WebviewUrl::App(url_str.clone().into())
     };
 
-    log_debug(&app, &format!("Companion window URL: {}", url_str));
+    log_debug(&app, &format!("Cache-only window URL: {}", url_str));
 
     // 6) Create the companion window with its own appearance
     let mut builder = WebviewWindowBuilder::new(&app, &window_label, companion_url)
@@ -224,11 +224,11 @@ pub async fn bd_launch_companion(
 
     let companion_window = builder
         .build()
-        .map_err(|e| format!("Failed to create companion window: {e}"))?;
+        .map_err(|e| format!("Failed to create cache-only window: {e}"))?;
 
     log_debug(
         &app,
-        &format!("Companion window '{}' created successfully", window_label),
+        &format!("Cache-only window '{}' created successfully", window_label),
     );
 
     // Unregister the sandbox when the companion window is destroyed.
@@ -247,18 +247,18 @@ pub async fn bd_launch_companion(
     //      - Use sandboxPath as its isolated FS root.
     //      - Use config for any other behavior.
     let payload = serde_json::json!({
-        "isCompanion": true,
+        "isCacheOnly": true,
         "sessionId": session_id,
         "sandboxPath": sandbox_path,
         "config": app_config,
         "windowLabel": window_label
     });
 
-    if let Err(e) = companion_window.emit("bubbledesk:companion:init", payload) {
+    if let Err(e) = companion_window.emit("bubbledesk:window:cacheonly:init", payload) {
         log_debug(
             &app,
             &format!(
-                "[WARN] Failed to emit 'bubbledesk:companion:init' event: {}",
+                "[WARN] Failed to emit 'bubbledesk:window:cacheonly:init' event: {}",
                 e
             ),
         );
@@ -266,7 +266,7 @@ pub async fn bd_launch_companion(
     } else {
         log_debug(
             &app,
-            "Emitted 'bubbledesk:companion:init' event to companion window.",
+            "Emitted 'bubbledesk:window:cacheonly:init' event to companion window.",
         );
     }
 

@@ -10,20 +10,14 @@ export interface WindowInterface {
     close: (label?: string) => Promise<void>;
   };
   new: (
-    options?:
-      | {
-          label?: string | undefined;
-          fullscreen?: boolean | undefined;
-          url?: string | undefined;
-        }
-      | undefined
+    options?: NewWindowOptions
   ) => Promise<void>;
   close: (label: string) => Promise<void>;
   minimize: () => Promise<void>;
   maximizeToggle: () => Promise<void>;
   fullscreen: (enable: boolean) => Promise<void>;
   getInfo: (label?: string) => Promise<WindowInfo>;
-  companionState: CompanionState;
+  state: CompanionState;
 }
 
 // Comments are in English
@@ -56,3 +50,10 @@ export type WindowInfo = {
   outer_position?: WindowPositionInfo | null;
   scale_factor?: number | null;
 };
+
+export type NewWindowOptions = {
+      label?: string;
+      fullscreen?: boolean;
+      url?: string;
+      cacheOnly?: boolean;
+    }

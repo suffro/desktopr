@@ -52,7 +52,7 @@ export type BubbledeskAPI = {
   autostart: AutostartInterface;
   badge?: BadgeInterface;
   worker: WorkerInterface;
-  companion: CompanionInterface;
+  // companion: CompanionInterface;
   globalVariables: GlobalVariablesInterface;
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
 };
