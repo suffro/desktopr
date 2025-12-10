@@ -23,7 +23,6 @@ sed -e "s|%%APP_URL%%|${APP_URL}|g" \
 
 
 cp conf-templates/tauri.conf.template.dev.json src-tauri/tauri.conf.json
-cp conf-templates/tauri.conf.template.dev.companion.json src-tauri/tauri.conf.companion.json
 
 cp conf-templates/menu.config.dev.json src-tauri/resources/menu/menu.config.json
 

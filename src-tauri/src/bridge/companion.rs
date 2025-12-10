@@ -6,7 +6,7 @@ use uuid::Uuid;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
-const COMPANION_LABEL_PREFIX: &str = "bd-cache-only-win-";
+const COMPANION_LABEL_PREFIX: &str = "bd-cache-only-window-";
 
 fn log_debug(app: &AppHandle, msg: &str) {
     // [DEBUG] Forward logs both to stdout and to the frontend

@@ -99,7 +99,3 @@ tauri-build = { version = "2", features = [] }
 [[bin]]
 name = "bubbledesk-wrapper"
 path = "src/main.rs"
-
-[[bin]]
-name = "bubbledesk-companion"
-path = "src/main.companion.rs"

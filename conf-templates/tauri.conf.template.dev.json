@@ -45,9 +45,6 @@
     "targets": [
       "dmg"
     ],
-    "resources": [
-      "resources/companion"
-    ],
     "icon": [
       "icons/icon.png"
     ]
