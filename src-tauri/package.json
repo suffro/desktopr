@@ -6,6 +6,7 @@
         "rustbacktrace": "export RUST_BACKTRACE=1",
         "devconf": "npm run devconf --prefix ../",
         "prodconf": "npm run prodconf --prefix ../",
+        "localdevconf": "npm run localdevconf --prefix ../",
         "clean": "rm -rf Cargo.lock && rm -rf tsc && rm -rf target && rm -rf gen && rm -rf resources/worker/bd-wasm-runner.worker.js && cargo clean",
         "clean:deep": "rm -rf node_modules && rm -rf ../node_modules && npm run clean",
         "build": "npm run ts:compile && npm run prodconf && npm run build:worker && cargo tauri build",
@@ -14,6 +15,7 @@
         "dev:log": "npm run ts:compile && npm run devconf && npm run rustbacktrace && cargo tauri dev",
         "dev:keepsandbox": "npm run ts:compile && npm run devconf && npm run build:worker && npm run keepsandbox && cargo tauri dev",
         "dev": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri dev",
+        "dev:local": "npm run ts:compile && npm run localdevconf && npm run build:worker && cargo tauri dev",
         "dev:clean": "npm run clean && npm run dev",
         "cargo:update": "cargo update",
         "build:clean": "npm run clean && npm run build"

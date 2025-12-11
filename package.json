@@ -5,7 +5,10 @@
     "esbuild": "^0.20.2"
   },
   "scripts": {
+    "build:frontend": "npm ci --prefix frontend/ && npm run build --prefix frontend/",
+    "dev:frontend": "npm run dev --prefix frontend/",
     "devconf": "bash scripts/dev-conf.sh",
+    "localdevconf": "bash scripts/local-dev-conf.sh",
     "prodconf": "bash scripts/prod-conf.sh",
     "ts:compile": "npm run ts:compile --prefix src-tauri/",
     "build:worker": "npm run build:worker --prefix src-tauri/",
@@ -15,6 +18,7 @@
     "build:dev": "npm install && npm run build:dev --prefix src-tauri/",
     "dev:keepsandbox": "npm run dev:keepsandbox --prefix src-tauri/",
     "dev": "npm run dev --prefix src-tauri/",
+    "dev:local": "npm run dev:local --prefix src-tauri/",
     "dev:clean": "npm run dev:clean --prefix src-tauri/",
     "build:clean": "npm run build:clean --prefix src-tauri/",
     "build:log": "npm run build:log --prefix src-tauri/",

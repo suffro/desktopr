@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Bubbledesk dev",
+  "productName": "Bubbledesk Companion",
   "version": "0.2.1",
   "identifier": "app.bubbledesk.dashboard",
   "plugins": {
@@ -16,6 +16,8 @@
     }
   },
   "build": {
+    "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:5173",
     "removeUnusedCommands": true
   },
   "app": {
@@ -29,14 +31,13 @@
     "windows": [
       {
         "label": "main",
-        "title": "Bubbledesk Dev",
+        "title": "Bubbledesk Companion",
         "visible": false,
         "width": 1200,
         "height": 800,
         "backgroundColor": "#171717",
         "resizable": true,
-        "fullscreen": false,
-        "url": "./blank.html"
+        "fullscreen": false
       }
     ]
   },
@@ -46,7 +47,7 @@
       "dmg"
     ],
     "icon": [
-      "icons/icon.png"
+      "icons/icon-companion.png"
     ]
   }
 }
