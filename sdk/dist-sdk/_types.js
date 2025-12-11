@@ -32,3 +32,4 @@ __exportStar(require("./modules/rs/badge/_types"), exports);
 __exportStar(require("./modules/rs/worker/_types"), exports);
 __exportStar(require("./modules/rs/contextMenu/_types"), exports);
 __exportStar(require("./modules/rs/companion/_types"), exports);
+__exportStar(require("./modules/rs/globalVariables/_types"), exports);

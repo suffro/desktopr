@@ -27,7 +27,7 @@ function parseCompanionWindowLabel(label: string): CompanionState {
 
 let initialized = false;
 
-export async function getCompanionContext(): Promise<void> {
+export async function getCacheOnlyWindowContext(): Promise<void> {
   if (initialized) return;
   initialized = true;
 

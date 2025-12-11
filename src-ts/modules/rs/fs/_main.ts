@@ -9,9 +9,9 @@ import type {
 
 const getWindowLabelIfCompanion = (): string | undefined => {
   const compState: CompanionState = window?.Bubbledesk?.window
-    ?.companionState as CompanionState;
+    ?.state as CompanionState;
   let label: string | undefined = undefined;
-  if (compState && compState?.windowLabel?.trim() && compState?.isCompanion) label = compState.windowLabel.trim();
+  if (compState && compState?.windowLabel?.trim() && compState?.isCacheOnly) label = compState.windowLabel.trim();
   return label;
 };
 

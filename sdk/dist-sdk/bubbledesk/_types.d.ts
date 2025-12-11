@@ -11,9 +11,9 @@ import type { DiagnosticsInterface } from "../modules/rs/diagnostics/_types";
 import type { BadgeInterface } from "../modules/rs/badge/_types";
 import type { WorkerInterface } from "../modules/rs/worker/_types";
 import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
-import type { CompanionInterface } from "../modules/rs/companion/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
+import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";
 export type BdPlatform = "macos" | "linux" | "windows";
 /**
  * Bubbledesk API exposed in the webview.
@@ -46,7 +46,7 @@ export type BubbledeskAPI = {
     autostart: AutostartInterface;
     badge?: BadgeInterface;
     worker: WorkerInterface;
-    companion: CompanionInterface;
+    globalVariables: GlobalVariablesInterface;
     contextMenu: ContextMenuInterface & {
         listening?: boolean;
         listener?: EventListenerOrEventListenerObject;

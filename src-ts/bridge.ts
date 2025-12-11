@@ -22,7 +22,7 @@ import {
 import { APP_VERSION } from "./_constants";
 import { isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
 import { buildWorker } from "modules/rs/worker/_main";
-import { getCompanionContext } from "_companion_context";
+import { getCacheOnlyWindowContext } from "_companion_context";
 
 (() => {
   if (!isTauri() || (window as any).Bubbledesk) return;
@@ -60,7 +60,7 @@ import { getCompanionContext } from "_companion_context";
     value: api, enumerable: false, configurable: false, writable: false,
   });
 
-  getCompanionContext();
+  getCacheOnlyWindowContext();
 
 })();
 

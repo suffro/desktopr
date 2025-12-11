@@ -1,5 +1,7 @@
+import { CompanionState } from "../../../_companion_context";
 export interface CompanionInterface {
     launch: (appConfig?: CompanionConfig) => Promise<void>;
+    state: CompanionState;
 }
 export type CompanionConfig = {
     /**

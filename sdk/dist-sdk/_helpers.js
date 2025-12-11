@@ -35,6 +35,7 @@ __exportStar(require("./modules/rs/badge/_helpers"), exports);
 __exportStar(require("./modules/rs/worker/_helpers"), exports);
 __exportStar(require("./modules/rs/contextMenu/_helpers"), exports);
 __exportStar(require("./modules/rs/companion/_helpers"), exports);
+__exportStar(require("./modules/rs/globalVariables/_helpers"), exports);
 const suffro_lib_1 = require("suffro-lib");
 const tauriReadyCheck = () => (typeof window !== "undefined" && (window.__TAURI__) && (window.Bubbledesk));
 exports.tauriReadyCheck = tauriReadyCheck;

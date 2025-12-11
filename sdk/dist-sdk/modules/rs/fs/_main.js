@@ -1,39 +1,138 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildFs = buildFs;
+const getWindowLabelIfCompanion = () => {
+    const compState = window?.Bubbledesk?.window
+        ?.state;
+    let label = undefined;
+    if (compState && compState?.windowLabel?.trim() && compState?.isCacheOnly)
+        label = compState.windowLabel.trim();
+    return label;
+};
+// Comments are in English
 function scope(core, permanent) {
+    // Guard that prevents persistent data operations from isolated (companion) windows.
+    const ensureDataNotIsolated = () => {
+        if (!permanent)
+            return;
+        const label = getWindowLabelIfCompanion();
+        if (label && label.trim().length > 0) {
+            throw new Error("Persistent data operations are not available in isolated companion windows. Use the cache scope (Bubbledesk.fs.cache) for per-session storage.");
+        }
+    };
     return {
-        listContent: (rel = "") => core.invoke("bd_fs_list_dir", { rel, permanent }),
-        newDirectory: (rel) => core.invoke("bd_fs_mkdir", { rel, permanent }),
-        remove: (rel, recursive = false) => core.invoke("bd_fs_rm", { rel, recursive, permanent }),
-        stat: (rel = "") => core.invoke("bd_fs_stat", { rel, permanent }),
-        writeText: (rel, contents, opts) => core.invoke("bd_fs_write_text", {
-            rel, permanent, contents,
-            createDirs: opts?.createDirs, append: opts?.append,
-        }),
-        readText: (rel) => core.invoke("bd_fs_read_text", { rel, permanent }),
-        writeBytes: (rel, base64, opts) => core.invoke("bd_fs_write_bytes", {
-            rel, permanent, dataBase64: base64, createDirs: opts?.createDirs,
-        }),
-        readBytes: (rel) => core.invoke("bd_fs_read_bytes", { rel, permanent }),
-        exists: (rel) => core.invoke("bd_fs_exists", { rel, permanent }),
-        move: (src, dest, opts) => core.invoke("bd_fs_move", {
-            src, dest, permanent,
-            createDirs: opts?.createDirs, overwrite: opts?.overwrite,
-        }),
-        copy: (src, dest, opts) => core.invoke("bd_fs_copy", {
-            src, dest, permanent,
-            recursive: opts?.recursive, createDirs: opts?.createDirs, overwrite: opts?.overwrite,
-        }),
+        listContent: (rel = "") => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_list_dir", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        newDirectory: (rel) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_mkdir", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        remove: (rel, recursive = false) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_rm", {
+                rel,
+                recursive,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        stat: (rel = "") => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_stat", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        writeText: (rel, contents, opts) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_write_text", {
+                rel,
+                permanent,
+                contents,
+                createDirs: opts?.createDirs,
+                append: opts?.append,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        readText: (rel) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_read_text", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        writeBytes: (rel, base64, opts) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_write_bytes", {
+                rel,
+                permanent,
+                dataBase64: base64,
+                createDirs: opts?.createDirs,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        readBytes: (rel) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_read_bytes", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        exists: (rel) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_exists", {
+                rel,
+                permanent,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        move: (src, dest, opts) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_move", {
+                src,
+                dest,
+                permanent,
+                createDirs: opts?.createDirs,
+                overwrite: opts?.overwrite,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
+        copy: (src, dest, opts) => {
+            ensureDataNotIsolated();
+            return core.invoke("bd_fs_copy", {
+                src,
+                dest,
+                permanent,
+                recursive: opts?.recursive,
+                createDirs: opts?.createDirs,
+                overwrite: opts?.overwrite,
+                windowLabel: getWindowLabelIfCompanion(),
+            });
+        },
         path: async () => {
+            ensureDataNotIsolated();
             const p = await core.invoke("bd_fs_paths");
             return permanent ? p.data : p.cache;
         },
         clear: async () => {
-            if (permanent)
-                core.invoke("bd_fs_clear_data");
-            else
-                core.invoke("bd_fs_clear_cache");
+            ensureDataNotIsolated();
+            if (permanent) {
+                return core.invoke("bd_fs_clear_data");
+            }
+            return core.invoke("bd_fs_clear_cache");
         },
         base: permanent ? ".data" : ".cache",
     };
@@ -63,6 +162,6 @@ function buildFs(core) {
             exists: async (rel = "") => core.invoke("bd_fs_diagnostics_exists", { rel }),
             readText: async (rel) => core.invoke("bd_fs_diagnostics_read_text", { rel }),
             readBytes: async (rel) => core.invoke("bd_fs_diagnostics_read_bytes", { rel }),
-        }
+        },
     };
 }

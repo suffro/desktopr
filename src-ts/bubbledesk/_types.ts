@@ -11,7 +11,7 @@ import type { DiagnosticsInterface } from "../modules/rs/diagnostics/_types";
 import type { BadgeInterface } from "../modules/rs/badge/_types";
 import type { WorkerInterface } from "../modules/rs/worker/_types";
 import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
-import type { CompanionInterface } from "../modules/rs/companion/_types";
+// import type { CompanionInterface } from "../modules/rs/companion/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
 import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";

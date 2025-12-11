@@ -2,13 +2,29 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initMenuConfig = void 0;
 const suffro_lib_1 = require("suffro-lib");
-const initMenuConfig = async (core, menuConfig) => {
+function isMacOS() {
+    if (typeof navigator === "undefined") {
+        return false;
+    }
+    return true;
+}
+const initMenuConfig = async (core, menuConfig, windowLabel) => {
     validateMenuConfig(menuConfig);
-    // const jsonString: string = JSON.stringify(menuConfig);
-    // console.log("Converted to JSON");
-    // const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
-    // console.log("Encoded to base64");
-    await core.invoke("bd_init_menu_from_json", { cfgJson: menuConfig /*, is_base64: false*/ });
+    if (windowLabel) {
+        if (isMacOS()) {
+            console.warn("[Bubbledesk] Native window-specific menus are not supported on macOS.");
+            return;
+        }
+        await core.invoke("bd_init_menu_for_window_from_json", {
+            windowLabel,
+            cfgJson: menuConfig /*, is_base64: false*/,
+        });
+    }
+    else {
+        await core.invoke("bd_init_menu_from_json", {
+            cfgJson: menuConfig /*, is_base64: false*/,
+        });
+    }
 };
 exports.initMenuConfig = initMenuConfig;
 /**
@@ -65,11 +81,15 @@ function validateItems(items, path) {
                     throw new Error(`${loc} missing 'label' (string).`);
                 if (item.enabled !== undefined && typeof item.enabled !== "boolean")
                     throw new Error(`${loc} invalid 'enabled' type (boolean expected).`);
-                if (item.interaction !== undefined && !["click", "check"].includes(item.interaction))
+                if (item.interaction !== undefined &&
+                    !["click", "check"].includes(item.interaction))
                     throw new Error(`${loc} invalid 'interaction' value.`);
-                if (item.interaction === "check" && item.checked !== undefined && typeof item.checked !== "boolean")
+                if (item.interaction === "check" &&
+                    item.checked !== undefined &&
+                    typeof item.checked !== "boolean")
                     throw new Error(`${loc} invalid 'checked' for checkable item (boolean expected).`);
-                if (item.accelerator !== undefined && typeof item.accelerator !== "string")
+                if (item.accelerator !== undefined &&
+                    typeof item.accelerator !== "string")
                     throw new Error(`${loc} invalid 'accelerator' type (string expected).`);
                 break;
             }
@@ -88,7 +108,8 @@ function validateItems(items, path) {
             case "predefined": {
                 if (typeof item.item !== "string")
                     throw new Error(`${loc} predefined item missing 'item' field.`);
-                if (item.customLabel !== undefined && typeof item.customLabel !== "string")
+                if (item.customLabel !== undefined &&
+                    typeof item.customLabel !== "string")
                     throw new Error(`${loc} invalid 'customLabel' type (string expected).`);
                 break;
             }

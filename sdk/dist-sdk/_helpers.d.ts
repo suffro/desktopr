@@ -17,6 +17,7 @@ export * from "./modules/rs/badge/_helpers";
 export * from "./modules/rs/worker/_helpers";
 export * from "./modules/rs/contextMenu/_helpers";
 export * from "./modules/rs/companion/_helpers";
+export * from "./modules/rs/globalVariables/_helpers";
 export declare const tauriReadyCheck: () => boolean;
 export declare const waitTauri: () => Promise<void>;
 /**
