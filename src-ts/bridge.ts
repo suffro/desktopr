@@ -20,7 +20,7 @@ import {
     buildGlobVar,
 } from "./_main";
 import { APP_VERSION } from "./_constants";
-import { getWindowTauri, isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
+import { windowTauriProxy, isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
 import { buildWorker } from "modules/rs/worker/_main";
 import { getCacheOnlyWindowContext } from "_companion_context";
 
@@ -52,7 +52,7 @@ import { getCacheOnlyWindowContext } from "_companion_context";
     badge:            buildBadge(core),
     worker:           buildWorker(core),
     contextMenu:      buildContextMenu(core),
-    tauri:            getWindowTauri(),
+    tauri:            windowTauriProxy,
     // companion:        buildCompanion(core),
     globalVariables:  buildGlobVar(core)
   };

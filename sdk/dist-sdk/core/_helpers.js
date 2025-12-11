@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWindowTauri = exports.ensureCore = void 0;
+exports.windowTauriProxy = exports.ensureCore = void 0;
 exports.extractCore = extractCore;
 function extractCore(source) {
     if (!source)
@@ -29,15 +29,19 @@ const ensureCore = () => new Promise((resolve, reject) => {
     })();
 });
 exports.ensureCore = ensureCore;
-const getWindowTauri = () => {
-    try {
-        if (!window || !window?.__TAURI__)
-            throw "window.__TAURI__ not found";
-        else
-            return window.__TAURI__;
+// [Unverified] Universal Proxy for window.__TAURI__
+exports.windowTauriProxy = new Proxy({}, {
+    get(_target, prop) {
+        const tauri = window.__TAURI__;
+        if (!tauri) {
+            console.warn("window.__TAURI__ is not available");
+            return undefined;
+        }
+        const value = tauri[prop];
+        // If it's a function, bind correct 'this'
+        if (typeof value === "function") {
+            return value.bind(tauri);
+        }
+        return value;
     }
-    catch (error) {
-        console.error(error);
-    }
-};
-exports.getWindowTauri = getWindowTauri;
+});

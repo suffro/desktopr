@@ -24,11 +24,26 @@ export function extractCore(source: unknown): TauriCore | null {
       })();
     });
 
-export const getWindowTauri = (): any => {
-  try {
-    if(!window || !window?.__TAURI__) throw "window.__TAURI__ not found";
-    else return window.__TAURI__;
-  } catch (error) {
-    console.error(error);
+// [Unverified] Universal Proxy for window.__TAURI__
+export const windowTauriProxy = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const tauri = window.__TAURI__;
+
+      if (!tauri) {
+        console.warn("window.__TAURI__ is not available");
+        return undefined;
+      }
+
+      const value = tauri[prop];
+
+      // If it's a function, bind correct 'this'
+      if (typeof value === "function") {
+        return value.bind(tauri);
+      }
+
+      return value;
+    }
   }
-}
+);
