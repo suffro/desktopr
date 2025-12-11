@@ -11,6 +11,7 @@
         "clean:deep": "rm -rf node_modules && rm -rf ../node_modules && npm run clean",
         "build": "npm run ts:compile && npm run prodconf && npm run build:worker && cargo tauri build",
         "build:dev": "npm run ts:compile && npm run devconf && npm run build:worker && cargo tauri build",
+        "build:local": "npm run ts:compile && npm run localdevconf && npm run build:worker && cargo tauri build",
         "build:log": "npm run ts:compile && npm run prodconf && npm run rustbacktrace && npm run build:worker && cargo tauri build",
         "dev:log": "npm run ts:compile && npm run devconf && npm run rustbacktrace && cargo tauri dev",
         "dev:keepsandbox": "npm run ts:compile && npm run devconf && npm run build:worker && npm run keepsandbox && cargo tauri dev",
