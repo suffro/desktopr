@@ -56,6 +56,7 @@ export type BubbledeskAPI = {
   // companion: CompanionInterface;
   globalVariables: GlobalVariablesInterface;
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
+  openBrowser: (url: string) => Promise<void>;
 };
 
 export interface BubbledeskInstanceInterface {

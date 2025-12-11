@@ -52,6 +52,7 @@ export type BubbledeskAPI = {
         listening?: boolean;
         listener?: EventListenerOrEventListenerObject;
     };
+    openBrowser: (url: string) => Promise<void>;
 };
 export interface BubbledeskInstanceInterface {
     ready: () => boolean;

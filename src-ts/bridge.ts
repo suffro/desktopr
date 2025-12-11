@@ -54,7 +54,8 @@ import { getCacheOnlyWindowContext } from "_companion_context";
     contextMenu:      buildContextMenu(core),
     tauri:            windowTauriProxy,
     // companion:        buildCompanion(core),
-    globalVariables:  buildGlobVar(core)
+    globalVariables:  buildGlobVar(core),
+    openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell.open(url)
   };
 
   Object.defineProperty(window, "Bubbledesk", {

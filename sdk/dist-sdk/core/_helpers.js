@@ -29,7 +29,7 @@ const ensureCore = () => new Promise((resolve, reject) => {
     })();
 });
 exports.ensureCore = ensureCore;
-// [Unverified] Universal Proxy for window.__TAURI__
+// Universal Proxy for window.__TAURI__
 exports.windowTauriProxy = new Proxy({}, {
     get(_target, prop) {
         const tauri = window.__TAURI__;
