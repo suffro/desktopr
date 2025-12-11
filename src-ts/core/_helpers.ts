@@ -24,7 +24,7 @@ export function extractCore(source: unknown): TauriCore | null {
       })();
     });
 
-// [Unverified] Universal Proxy for window.__TAURI__
+// Universal Proxy for window.__TAURI__
 export const windowTauriProxy = new Proxy(
   {},
   {
