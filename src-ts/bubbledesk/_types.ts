@@ -15,6 +15,7 @@ import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
 import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";
+import { WindowTauri } from "../core/_types";
 
 export type BdPlatform = "macos" | "linux" | "windows";
 
@@ -52,7 +53,7 @@ export type BubbledeskAPI = {
   autostart: AutostartInterface;
   badge?: BadgeInterface;
   worker: WorkerInterface;
-  tauri?: any;
+  tauri?: WindowTauri;
   // companion: CompanionInterface;
   globalVariables: GlobalVariablesInterface;
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};

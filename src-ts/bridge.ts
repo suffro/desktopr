@@ -1,4 +1,4 @@
-import type { BubbledeskAPI } from "./_types";
+import type { BubbledeskAPI, WindowTauri } from "./_types";
 import {
     buildCore,
     buildFs,
@@ -52,7 +52,7 @@ import { getCacheOnlyWindowContext } from "_companion_context";
     badge:            buildBadge(core),
     worker:           buildWorker(core),
     contextMenu:      buildContextMenu(core),
-    tauri:            windowTauriProxy,
+    tauri:            windowTauriProxy as WindowTauri,
     // companion:        buildCompanion(core),
     globalVariables:  buildGlobVar(core),
     openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell.open(url)
