@@ -23,3 +23,12 @@ export function extractCore(source: unknown): TauriCore | null {
         requestAnimationFrame(tick);
       })();
     });
+
+export const getWindowTauri = (): any => {
+  try {
+    if(!window || !window?.__TAURI__) throw "window.__TAURI__ not found";
+    else return window.__TAURI__;
+  } catch (error) {
+    console.error(error);
+  }
+}

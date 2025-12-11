@@ -1,6 +1,6 @@
 {
   "name": "bubbledesk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Official JS/TS SDK for the Bubbledesk native bridge",
   "main": "dist-sdk/sdk/index.js",
   "types": "dist-sdk/sdk/index.d.ts",

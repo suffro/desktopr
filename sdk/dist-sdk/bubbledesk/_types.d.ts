@@ -46,6 +46,7 @@ export type BubbledeskAPI = {
     autostart: AutostartInterface;
     badge?: BadgeInterface;
     worker: WorkerInterface;
+    tauri?: any;
     globalVariables: GlobalVariablesInterface;
     contextMenu: ContextMenuInterface & {
         listening?: boolean;

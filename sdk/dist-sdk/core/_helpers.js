@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ensureCore = void 0;
+exports.getWindowTauri = exports.ensureCore = void 0;
 exports.extractCore = extractCore;
 function extractCore(source) {
     if (!source)
@@ -29,3 +29,15 @@ const ensureCore = () => new Promise((resolve, reject) => {
     })();
 });
 exports.ensureCore = ensureCore;
+const getWindowTauri = () => {
+    try {
+        if (!window || !window?.__TAURI__)
+            throw "window.__TAURI__ not found";
+        else
+            return window.__TAURI__;
+    }
+    catch (error) {
+        console.error(error);
+    }
+};
+exports.getWindowTauri = getWindowTauri;
