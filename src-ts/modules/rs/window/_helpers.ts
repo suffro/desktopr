@@ -1,11 +1,11 @@
 import { COMAPNION_WINDOW_LABEL_PREFIX } from "../../../_constants";
-import { BubbledeskAPI } from "../../../bubbledesk/_types";
+import { DesktoprAPI } from "../../../desktopr/_types";
 import { wait } from "suffro-lib/utils";
 
 export const tauriReadyCheck = (): boolean =>
   typeof window !== "undefined" &&
   (window as any).__TAURI__ &&
-  (window as any).Bubbledesk;
+  (window as any).Desktopr;
 
 export const waitTauri = async () => {
   const interval: number = 500;
@@ -17,7 +17,7 @@ export const waitTauri = async () => {
 };
 
 export const newWindow = async (
-  core: { invoke: BubbledeskAPI["invoke"] },
+  core: { invoke: DesktoprAPI["invoke"] },
   options?: {
     label?: string;
     fullscreen?: boolean;
@@ -36,7 +36,7 @@ export const newWindow = async (
     .toString(36)
     .substring(2, 2 + 8)}`;
 
-  core.invoke("bd_win_open", {
+  core.invoke("dtr_win_open", {
     label: options?.label ?? randomWindowLabel,
     fullscreen: options?.fullscreen || false,
     url: options?.url ?? "",

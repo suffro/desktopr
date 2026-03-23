@@ -6,8 +6,8 @@ use serde_json::{json, Value};
 use tokio::time::sleep;
 use std::time::Duration;
 
-use crate::bridge::fs::{bd_fs_read_text, bd_fs_write_text};
-use crate::bridge::events::{bd_event_emit};
+use crate::bridge::fs::{dtr_fs_read_text, dtr_fs_write_text};
+use crate::bridge::events::{dtr_event_emit};
 
 // ✅ Correct trait for v2 to access autostart manager via `app.autolaunch()`
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -29,7 +29,7 @@ struct AutostartSettings {
 const SETTINGS_REL_PATH: &str = "settings/autostart.json";
 
 fn load_settings(app: &AppHandle) -> AutostartSettings {
-  match bd_fs_read_text(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true), None) {
+  match dtr_fs_read_text(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true), None) {
     Ok(text) => serde_json::from_str::<AutostartSettings>(&text)
       .unwrap_or(AutostartSettings { autostart_mode: AutostartMode::Shown }),
     Err(_) => AutostartSettings { autostart_mode: AutostartMode::Shown },
@@ -39,7 +39,7 @@ fn load_settings(app: &AppHandle) -> AutostartSettings {
 fn save_settings(app: &AppHandle, s: &AutostartSettings) -> Result<(), String> {
   let json = serde_json::to_string_pretty(s).map_err(|e| e.to_string())?;
   // create_dirs = true, append = false
-  bd_fs_write_text(
+  dtr_fs_write_text(
     app.clone(),
     SETTINGS_REL_PATH.to_string(),
     Some(true),
@@ -121,7 +121,7 @@ pub fn run_from_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Er
         sleep(std::time::Duration::from_millis(50)).await;
       }
       // Optional: emit a diagnostics event if the window never appeared.
-      let _ = bd_event_emit(handle, "autostart".to_string(), Some(serde_json::json!({
+      let _ = dtr_event_emit(handle, "autostart".to_string(), Some(serde_json::json!({
         "mode": "manual",
         "note": "main window not found within retry window"
       })));
@@ -133,23 +133,23 @@ pub fn run_from_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Er
 // ---------- Commands (Rust only; your TS bridge uses `invoke`) ----------
 
 #[tauri::command]
-pub fn bd_autostart_enable(app: AppHandle) -> Result<(), String> {
+pub fn dtr_autostart_enable(app: AppHandle) -> Result<(), String> {
   // ✅ v2: use the autostart manager from the extension trait
   app.autolaunch().enable().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_autostart_disable(app: AppHandle) -> Result<(), String> {
+pub fn dtr_autostart_disable(app: AppHandle) -> Result<(), String> {
   app.autolaunch().disable().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_autostart_status(app: AppHandle) -> Result<bool, String> {
+pub fn dtr_autostart_status(app: AppHandle) -> Result<bool, String> {
   app.autolaunch().is_enabled().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_get_autostart_mode(app: AppHandle) -> Result<String, String> {
+pub fn dtr_get_autostart_mode(app: AppHandle) -> Result<String, String> {
   let s = load_settings(&app);
   Ok(match s.autostart_mode {
     AutostartMode::Shown => "shown",
@@ -159,7 +159,7 @@ pub fn bd_get_autostart_mode(app: AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn bd_set_autostart_mode(app: AppHandle, mode: String) -> Result<(), String> {
+pub fn dtr_set_autostart_mode(app: AppHandle, mode: String) -> Result<(), String> {
   let mut s = load_settings(&app);
   s.autostart_mode = match mode.as_str() {
     "shown" => AutostartMode::Shown,

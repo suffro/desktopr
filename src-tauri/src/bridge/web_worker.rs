@@ -11,7 +11,7 @@ use serde_json::json;
 use anyhow::{anyhow, Context, Result};
 
 // Reuse your helper
-use crate::bridge::files::bd_file_open_with_bytes;
+use crate::bridge::files::dtr_file_open_with_bytes;
 
 // One-shot mailbox used by the webview to signal readiness
 static READY_TX: std::sync::Mutex<Option<tokio::sync::oneshot::Sender<()>>> = std::sync::Mutex::new(None);
@@ -110,7 +110,7 @@ fn ensure_response_listener(app: &AppHandle) {
     .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
     .is_ok()
   {
-    let _unlisten = app.listen("bd:worker:resp", move |ev| {
+    let _unlisten = app.listen("dtr:worker:resp", move |ev| {
       // ev.payload() is a &str with serialized JSON
       let payload = ev.payload();
       if let Ok(val) = serde_json::from_str::<serde_json::Value>(payload) {
@@ -133,7 +133,7 @@ fn ensure_response_listener(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn bd_worker_status() -> serde_json::Value {
+pub fn dtr_worker_status() -> serde_json::Value {
   serde_json::json!({
     "ready": WORKER_READY.load(std::sync::atomic::Ordering::SeqCst),
     "pending": pending_len()
@@ -142,14 +142,14 @@ pub fn bd_worker_status() -> serde_json::Value {
 
 
 #[tauri::command]
-pub async fn bd_worker_restart(app: AppHandle) -> Result<bool, String> {
+pub async fn dtr_worker_restart(app: AppHandle) -> Result<bool, String> {
   // All comments in English.
   // 1) Close existing window if present and wait until it's actually gone
-  if let Some(win) = app.get_webview_window("bd-worker") {
+  if let Some(win) = app.get_webview_window("dtr-worker") {
     let _ = win.close();
     // Poll until manager no longer returns the window (up to ~2s)
     for _ in 0..40 {
-      if app.get_webview_window("bd-worker").is_none() { break; }
+      if app.get_webview_window("dtr-worker").is_none() { break; }
       tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
   }
@@ -211,7 +211,7 @@ fn wipe_worker_sandbox_all(app: &AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn bd_worker_ready(_app: tauri::AppHandle) -> Result<bool, String> {
+pub async fn dtr_worker_ready(_app: tauri::AppHandle) -> Result<bool, String> {
   if let Some(tx) = READY_TX.lock().unwrap().take() {
     let _ = tx.send(());
     WORKER_READY.store(true, Ordering::SeqCst);
@@ -235,14 +235,14 @@ async fn ensure_worker_ready(app: &AppHandle) -> Result<(), String> {
   *READY_TX.lock().unwrap() = Some(tx);
 
   // Spawn the window (no-op if already present). This also injects the
-  // script and host-side `eval` that will call `bd_worker_ready` repeatedly.
+  // script and host-side `eval` that will call `dtr_worker_ready` repeatedly.
   spawn_hidden_worker_window(app).map_err(|e| e.to_string())?;
 
   // Wait for the ready signal (with safety timeout)
   let res = tokio::time::timeout(std::time::Duration::from_millis(10_000), rx).await;
   match res {
     Ok(Ok(())) => Ok(()),
-    _ => Err("bd-worker not ready".into()),
+    _ => Err("dtr-worker not ready".into()),
   }
 }
 
@@ -256,71 +256,71 @@ pub fn kickoff_worker_readiness(app: &AppHandle) {
   // Ensure the response listener is installed once
   ensure_response_listener(app);
 
-  // Prepare a fresh mailbox so the webview's invoke("bd_worker_ready") has somewhere to send to.
+  // Prepare a fresh mailbox so the webview's invoke("dtr_worker_ready") has somewhere to send to.
   let (tx, rx) = tokio::sync::oneshot::channel::<()>();
   *READY_TX.lock().unwrap() = Some(tx);
 
-  // Spawn (or no-op if already present). This injects the script and eval that will invoke bd_worker_ready repeatedly.
-  if let Err(e) = spawn_hidden_worker_window(app) { eprintln!("[bd-worker] eager spawn failed: {e}"); }
+  // Spawn (or no-op if already present). This injects the script and eval that will invoke dtr_worker_ready repeatedly.
+  if let Err(e) = spawn_hidden_worker_window(app) { eprintln!("[dtr-worker] eager spawn failed: {e}"); }
 
   // Wait in background; don't block setup.
   let _app = app.clone();
   tauri::async_runtime::spawn(async move {
     let _ = tokio::time::timeout(std::time::Duration::from_millis(10_000), rx).await;
-    // Note: on success, bd_worker_ready() sets WORKER_READY itself. On timeout, we simply log next call will retry.
+    // Note: on success, dtr_worker_ready() sets WORKER_READY itself. On timeout, we simply log next call will retry.
     let _ = _app; // keep handle owned for lifetime symmetry
   });
 }
 
 // Call this at setup (once) to spawn the hidden webview
 pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
-  if app.get_webview_window("bd-worker").is_some() {
+  if app.get_webview_window("dtr-worker").is_some() {
     return Ok(());
   }
 
   // Embed the bundled worker code (ensure `pnpm build:worker` ran so this file exists)
-  const WORKER_BUNDLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/worker/bd-wasm-runner.worker.js"));
+  const WORKER_BUNDLE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/resources/worker/dtr-wasm-runner.worker.js"));
   // JSON-stringify the code to produce a safe JS string literal
   let worker_code_js_literal = serde_json::to_string(WORKER_BUNDLE).unwrap_or_else(|_| "\"\"".into());
 
   // Build an initialization script that:
   // - announces readiness
-  // - listens for bd:worker:req
+  // - listens for dtr:worker:req
   // - creates a Worker from an in-memory Blob of the bundled JS (so we don't rely on asset URLs)
   let init_js = format!(r#"
     (() => {{
       try {{
-        console.log("[bd-worker bootstrap] injected script running");
+        console.log("[dtr-worker bootstrap] injected script running");
         const T = window.__TAURI__;
         // Proactively invoke the Rust-side ready command a few times to guarantee handshake
-        try {{ T?.core?.invoke("bd_worker_ready"); }} catch (_) {{}}
-        setTimeout(() => {{ try {{ T?.core?.invoke("bd_worker_ready"); }} catch (_) {{}} }}, 50);
-        setTimeout(() => {{ try {{ T?.core?.invoke("bd_worker_ready"); }} catch (_) {{}} }}, 200);
-        console.log("[bd-worker bootstrap] typeof window.__TAURI__ =", typeof T);
+        try {{ T?.core?.invoke("dtr_worker_ready"); }} catch (_) {{}}
+        setTimeout(() => {{ try {{ T?.core?.invoke("dtr_worker_ready"); }} catch (_) {{}} }}, 50);
+        setTimeout(() => {{ try {{ T?.core?.invoke("dtr_worker_ready"); }} catch (_) {{}} }}, 200);
+        console.log("[dtr-worker bootstrap] typeof window.__TAURI__ =", typeof T);
         if (!T || !T.event || !T.core) {{
-          console.warn("[bd-worker] __TAURI__ not ready at injection time; scheduling delayed ready emits");
+          console.warn("[dtr-worker] __TAURI__ not ready at injection time; scheduling delayed ready emits");
         }}
         const WORKER_CODE = {worker_code};
 
-        let __bd_worker;
+        let __dtr_worker;
         function getWorker() {{
-          if (__bd_worker) return __bd_worker;
+          if (__dtr_worker) return __dtr_worker;
           const blob = new Blob([WORKER_CODE], {{ type: "text/javascript" }});
           const url = URL.createObjectURL(blob);
-          __bd_worker = new Worker(url, {{ type: "module" }});
-          console.log("[bd-worker bootstrap] worker created via Blob URL");
-          return __bd_worker;
+          __dtr_worker = new Worker(url, {{ type: "module" }});
+          console.log("[dtr-worker bootstrap] worker created via Blob URL");
+          return __dtr_worker;
         }}
 
         // Tell Rust we're ready to receive jobs (emit repeatedly to avoid race)
         const emitReady = () => {{
           try {{
             const TT = window.__TAURI__;
-            if (!TT || !TT.event) {{ console.warn("[bd-worker] emitReady: __TAURI__.event missing"); return; }}
-            TT.event.emit("bd:worker:ready");
-            console.log("[bd-worker bootstrap] emitted bd:worker:ready");
+            if (!TT || !TT.event) {{ console.warn("[dtr-worker] emitReady: __TAURI__.event missing"); return; }}
+            TT.event.emit("dtr:worker:ready");
+            console.log("[dtr-worker bootstrap] emitted dtr:worker:ready");
           }} catch (e) {{
-            console.error("[bd-worker] emitReady error:", e);
+            console.error("[dtr-worker] emitReady error:", e);
           }}
         }};
         emitReady();
@@ -332,7 +332,7 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
 
         // Also try after DOMContentLoaded just in case
         window.addEventListener("DOMContentLoaded", () => {{
-          console.log("[bd-worker bootstrap] DOMContentLoaded -> emit ready");
+          console.log("[dtr-worker bootstrap] DOMContentLoaded -> emit ready");
           emitReady();
         }});
 
@@ -341,11 +341,11 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
           try {{
             const TT = window.__TAURI__;
             if (!TT || !TT.event || !TT.core) {{
-              console.warn("[bd-worker] attachListener: __TAURI__ not ready yet");
+              console.warn("[dtr-worker] attachListener: __TAURI__ not ready yet");
               setTimeout(attachListener, 100);
               return;
             }}
-            TT.event.listen("bd:worker:req", (ev) => {{
+            TT.event.listen("dtr:worker:req", (ev) => {{
               try {{
                 const req = ev.payload;
                 const w = getWorker();
@@ -353,11 +353,11 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
                 const chan = new MessageChannel();
                 chan.port1.onmessage = async (msg) => {{
                   const out = Object.assign({{ id: req.id }}, msg.data || {{}});
-                  TT.event.emit("bd:worker:resp", out);
+                  TT.event.emit("dtr:worker:resp", out);
                   chan.port1.close();
                 }};
 
-                console.log("[bd-worker bootstrap] received job", req?.id);
+                console.log("[dtr-worker bootstrap] received job", req?.id);
                 w.postMessage(
                   {{
                     id: req.id,
@@ -369,19 +369,19 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
                   [chan.port2]
                 );
               }} catch (e) {{
-                console.error("[bd-worker] job handler error:", e);
-                TT.event.emit("bd:worker:resp", {{ id: "unknown", ok: false, error: String(e) }});
+                console.error("[dtr-worker] job handler error:", e);
+                TT.event.emit("dtr:worker:resp", {{ id: "unknown", ok: false, error: String(e) }});
               }}
             }});
-            console.log("[bd-worker bootstrap] listener attached");
+            console.log("[dtr-worker bootstrap] listener attached");
           }} catch (e) {{
-            console.error("[bd-worker] attachListener error:", e);
+            console.error("[dtr-worker] attachListener error:", e);
           }}
         }};
         attachListener();
-        console.log("[bd-worker bootstrap] init script end");
+        console.log("[dtr-worker bootstrap] init script end");
       }} catch (e) {{
-        console.error("[bd-worker] init error:", e);
+        console.error("[dtr-worker] init error:", e);
       }}
     }})();
   "#, worker_code = worker_code_js_literal);
@@ -392,8 +392,8 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
   #[cfg(not(debug_assertions))]
   let (visible, devtools) = (false, false); // prod environment
 
-  let win = WebviewWindowBuilder::new(app, "bd-worker", WebviewUrl::App("blank.html".into()))
-    .title("Bubbledesk Worker")
+  let win = WebviewWindowBuilder::new(app, "dtr-worker", WebviewUrl::App("blank.html".into()))
+    .title("Desktopr Worker")
     .visible(visible)
     .resizable(false)
     .devtools(devtools)
@@ -405,12 +405,12 @@ pub fn spawn_hidden_worker_window(app: &AppHandle) -> tauri::Result<()> {
     let _ = win.open_devtools();
   }
 
-  // Also poke from host side: call bd_worker_ready a few times from inside the webview
+  // Also poke from host side: call dtr_worker_ready a few times from inside the webview
   let _ = win.eval(r#"
     (function pokeReady(){
       let n = 0;
       const tick = () => {
-        try { window.__TAURI__?.core?.invoke('bd_worker_ready'); } catch (e) {}
+        try { window.__TAURI__?.core?.invoke('dtr_worker_ready'); } catch (e) {}
         if (++n < 40) setTimeout(tick, 50);
       };
       tick();
@@ -432,7 +432,7 @@ fn read_wasm_module(app: &AppHandle, name: &str) -> anyhow::Result<Vec<u8>> {
 
 // Command: Rust -> hidden window -> worker; await response
 #[tauri::command]
-pub async fn bd_worker_call(
+pub async fn dtr_worker_call(
   app: AppHandle,
   module_path: String,
   payload: serde_json::Value,
@@ -467,7 +467,7 @@ pub async fn bd_worker_call(
   }
 
   // emit to hidden window
-  app.emit_to("bd-worker", "bd:worker:req", req.clone()).map_err(|e| e.to_string())?;
+  app.emit_to("dtr-worker", "dtr:worker:req", req.clone()).map_err(|e| e.to_string())?;
 
   // wait for response or timeout
   let dur = std::time::Duration::from_millis(req.timeout_ms + 5000);
@@ -483,7 +483,7 @@ pub async fn bd_worker_call(
 
 // Command: called from hidden window to deliver result
 #[tauri::command]
-pub async fn bd_worker_delivery(_app: AppHandle, id: String, result: serde_json::Value) -> Result<bool, String> {
+pub async fn dtr_worker_delivery(_app: AppHandle, id: String, result: serde_json::Value) -> Result<bool, String> {
   let p = pending();
   let tx_opt = {
     let mut guard = p.map.lock().unwrap();
@@ -503,7 +503,7 @@ pub fn spawn_hidden_worker_window_from_app(app: &mut tauri::App) -> tauri::Resul
 }
 
 #[tauri::command]
-pub fn bd_worker_add_module(app: AppHandle, name: String, contents: Vec<u8>) -> Result<bool, String> {
+pub fn dtr_worker_add_module(app: AppHandle, name: String, contents: Vec<u8>) -> Result<bool, String> {
     // ---- size limit: 20 MB default
     let max_size: usize = 20 * 1024 * 1024;
     if contents.len() > max_size {
@@ -526,13 +526,13 @@ pub fn bd_worker_add_module(app: AppHandle, name: String, contents: Vec<u8>) -> 
 }
 
 #[tauri::command]
-pub async fn bd_worker_pick_and_add_module(
+pub async fn dtr_worker_pick_and_add_module(
     app: AppHandle,
     default_name: Option<String>,
     max_bytes: Option<u64>,
 ) -> Result<serde_json::Value, String> {
     let allowed = Some(vec!["wasm".to_string()]);
-    let picked = bd_file_open_with_bytes(app.clone(), false, allowed, max_bytes).await?;
+    let picked = dtr_file_open_with_bytes(app.clone(), false, allowed, max_bytes).await?;
 
     let file = match picked.files.into_iter().next() {
         Some(f) => f,
@@ -569,7 +569,7 @@ pub async fn bd_worker_pick_and_add_module(
 }
 
 #[tauri::command]
-pub fn bd_worker_remove_module(app: AppHandle, name: String) -> Result<bool, String> {
+pub fn dtr_worker_remove_module(app: AppHandle, name: String) -> Result<bool, String> {
     let base = external_modules_dir(&app).map_err(|e| e.to_string())?;
     if name.contains(std::path::is_separator) { return Err("Invalid module name".into()); }
     let target = base.join(&name);
@@ -578,7 +578,7 @@ pub fn bd_worker_remove_module(app: AppHandle, name: String) -> Result<bool, Str
 }
 
 #[tauri::command]
-pub fn bd_worker_paths(app: AppHandle) -> Result<serde_json::Value, String> {
+pub fn dtr_worker_paths(app: AppHandle) -> Result<serde_json::Value, String> {
     let m = external_modules_dir(&app).map_err(|e| e.to_string())?;
     let s = worker_sandbox_dir(&app).map_err(|e| e.to_string())?;
     Ok(serde_json::json!({
@@ -588,7 +588,7 @@ pub fn bd_worker_paths(app: AppHandle) -> Result<serde_json::Value, String> {
 }
 
 #[tauri::command]
-pub fn bd_worker_clear_all(app: AppHandle) -> Result<bool, String> {
+pub fn dtr_worker_clear_all(app: AppHandle) -> Result<bool, String> {
     wipe_worker_sandbox_all(&app).map_err(|e| e.to_string())?;
     Ok(true)
 }
@@ -599,7 +599,7 @@ pub fn worker_sandbox_cleanup_on_boot(app: &AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn bd_worker_list_modules(app: AppHandle) -> Result<Vec<String>, String> {
+pub fn dtr_worker_list_modules(app: AppHandle) -> Result<Vec<String>, String> {
     let dir = external_modules_dir(&app).map_err(|e| e.to_string())?;
     let mut out = vec![];
     for entry in fs::read_dir(dir).map_err(|e| e.to_string())? {

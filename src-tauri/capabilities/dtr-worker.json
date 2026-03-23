@@ -1,0 +1,10 @@
+{
+  "identifier": "dtr-worker",
+  "description": "Permessi minimi per la webview nascosta dtr-worker",
+  "platforms": ["linux", "macOS", "windows"],
+  "windows": ["dtr-worker"],
+  "permissions": [
+    "core:default",
+    "core:event:default"
+  ]
+}

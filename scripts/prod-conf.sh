@@ -6,9 +6,9 @@ set -euo pipefail
 # -----------------------------
 : "${APP_URL:=http://blank.html}"
 : "${APP_VERSION:=0.1.0}"
-: "${CARGO_PACKAGE_NAME:=bubbledesk-wrapper}"
+: "${CARGO_PACKAGE_NAME:=desktopr-wrapper}"
 : "${CARGO_PACKAGE_VERSION:=$APP_VERSION}"
-: "${APP_IDENTIFIER:=app.bubbledesk.app}"
+: "${APP_IDENTIFIER:=app.desktopr.app}"
 : "${UPDATE_ENDPOINT:?Missing UPDATE_ENDPOINT (set by CI)}"
 : "${TAURI_SIGNING_PUBLIC_KEY:=}"
 if [ -z "${ED25519_PUBKEY:-}" ] && [ -n "${TAURI_SIGNING_PUBLIC_KEY:-}" ]; then
@@ -16,7 +16,7 @@ if [ -z "${ED25519_PUBKEY:-}" ] && [ -n "${TAURI_SIGNING_PUBLIC_KEY:-}" ]; then
 fi
 : "${ED25519_PUBKEY:?Missing ED25519_PUBKEY (CI var/secret)}"
 : "${DEEPLINK_SCHEME:=}"
-: "${MAIN_WINDOW_TITLE:=Bubbledesk}"
+: "${MAIN_WINDOW_TITLE:=Desktopr}"
 : "${MAIN_WINDOW_WIDTH:=1200}"
 : "${MAIN_WINDOW_HEIGHT:=800}"
 : "${MAIN_WINDOW_BG_COLOR:=#ffffff}"

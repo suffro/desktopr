@@ -267,7 +267,7 @@ fn build_submenu<R: Runtime>(
 /// Usage from JS:
 /// ```ts
 /// import { invoke } from '@tauri-apps/api/core';
-/// const choice = await invoke<string | null>('bd_context_menu_popup', {
+/// const choice = await invoke<string | null>('dtr_context_menu_popup', {
 ///   items: [
 ///     { type: 'Item', id: 'do-add', text: 'Add', enabled: true },
 ///     { type: 'Item', id: 'do-remove', text: 'Remove', enabled: true, shortcut: 'CmdOrCtrl+Backspace' },
@@ -279,7 +279,7 @@ fn build_submenu<R: Runtime>(
 /// });
 /// ```
 #[tauri::command]
-pub async fn bd_context_menu_popup(
+pub async fn dtr_context_menu_popup(
   app: AppHandle,
   items: Vec<CmNode>,
   options: Option<CmPopupOptions>,

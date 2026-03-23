@@ -1,8 +1,8 @@
-import type { BubbledeskAPI, ClipboardInterface } from "../../../_types";
+import type { DesktoprAPI, ClipboardInterface } from "../../../_types";
 
-export function buildClipboard(core: { invoke: BubbledeskAPI["invoke"] }): ClipboardInterface {
+export function buildClipboard(core: { invoke: DesktoprAPI["invoke"] }): ClipboardInterface {
   return {
-    readText: (): Promise<string> => core.invoke("bd_clipboard_read"),
-    writeText: (text: string): Promise<void> => core.invoke("bd_clipboard_write", { text }),
+    readText: (): Promise<string> => core.invoke("dtr_clipboard_read"),
+    writeText: (text: string): Promise<void> => core.invoke("dtr_clipboard_write", { text }),
   };
 }

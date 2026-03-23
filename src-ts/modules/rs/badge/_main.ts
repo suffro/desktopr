@@ -1,16 +1,16 @@
 import { platformSpecifcFilter } from "../../../_helpers";
-import { AppInfo, BadgeInterface, BubbledeskAPI } from "../../../_types";
+import { AppInfo, BadgeInterface, DesktoprAPI } from "../../../_types";
 import { U32 } from "suffro-lib/utils";
 
-export function buildBadge(core: { invoke: BubbledeskAPI["invoke"] }): BadgeInterface {
+export function buildBadge(core: { invoke: DesktoprAPI["invoke"] }): BadgeInterface {
     return {
       set: async (count: U32): Promise<void> => {
         await platformSpecifcFilter(["macos"]);
-        core.invoke("bd_badge_set", {count});
+        core.invoke("dtr_badge_set", {count});
       },
       clear: async (): Promise<void> => {
         await platformSpecifcFilter(["macos"]);
-        core.invoke("bd_badge_clear");
+        core.invoke("dtr_badge_clear");
       },
     };
   }

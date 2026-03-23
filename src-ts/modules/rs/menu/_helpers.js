@@ -8,7 +8,7 @@ const initMenuConfig = async (core, menuConfig) => {
     // console.log("Converted to JSON");
     // const jsonBase64: string = cryptoTools.base64.encode(jsonString?.trim());
     // console.log("Encoded to base64");
-    await core.invoke("bd_init_menu_from_json", { cfgJson: menuConfig /*, is_base64: false*/ });
+    await core.invoke("dtr_init_menu_from_json", { cfgJson: menuConfig /*, is_base64: false*/ });
 };
 exports.initMenuConfig = initMenuConfig;
 /**

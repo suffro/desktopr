@@ -1,8 +1,8 @@
 [package]
-name = "bubbledesk-wrapper"
+name = "desktopr-wrapper"
 version = "0.2.1"
 edition = "2021"
-default-run = "bubbledesk-wrapper"
+default-run = "desktopr-wrapper"
 
 [target.'cfg(windows)'.dependencies]
 tauri-plugin-prevent-default = { version = "3", features = ["platform-windows"], optional = true }
@@ -97,5 +97,5 @@ tauri-build = { version = "2", features = [] }
 
 
 [[bin]]
-name = "bubbledesk-wrapper"
+name = "desktopr-wrapper"
 path = "src/main.rs"

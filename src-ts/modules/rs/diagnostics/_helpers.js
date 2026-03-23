@@ -10,7 +10,7 @@ const diagnosticsSettings = async (core, settings) => {
         throw ("[retentionDaysLogs] the value must be a U32 integer number");
     if (settings?.retentionDaysCrashes && !suffro_lib_1.Num.isU32(settings.retentionDaysCrashes))
         throw ("[retentionDaysCrashes] the value must be a U32 integer number");
-    return await core.invoke("bd_logs_set_privacy", {
+    return await core.invoke("dtr_logs_set_privacy", {
         patch: {
             analytics_enabled: settings?.analyticsEnabled,
             crash_reports_enabled: settings?.crashReportsEnabled,
@@ -26,13 +26,13 @@ exports.diagnosticsSettings = diagnosticsSettings;
 // ==============================
 function buildDiagnosticsTestFunctions(core) {
     return {
-        testGenerateRecords: (n = 200) => core.invoke("bd_logs_test_record_n", { n }),
+        testGenerateRecords: (n = 200) => core.invoke("dtr_logs_test_record_n", { n }),
         // Questa può semplicemente lanciare un errore JS: non serve invoke.
         testThrowJsError: async () => {
             throw new Error("DEV: test JS error");
         },
-        testPanicRust: () => core.invoke("bd_logs_test_panic", {}),
-        testExportZip: (path) => core.invoke("bd_logs_export_zip", { target_zip_path: path }),
-        testForceRetention: (area) => core.invoke("bd_logs_test_force_retention", { area }),
+        testPanicRust: () => core.invoke("dtr_logs_test_panic", {}),
+        testExportZip: (path) => core.invoke("dtr_logs_export_zip", { target_zip_path: path }),
+        testForceRetention: (area) => core.invoke("dtr_logs_test_force_retention", { area }),
     };
 }

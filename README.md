@@ -1,7 +1,7 @@
-# Bubbledesk
+# Desktopr
 
-**bubbledesk** is the official JavaScript/TypeScript SDK for communicating with the native Bubbledesk bridge.  
-It allows any web application to access native desktop features exposed by the Bubbledesk wrapper, using a clean, typed, importable API.
+**desktopr** is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
+It allows any web application to access native desktop features exposed by the Desktopr wrapper, using a clean, typed, importable API.
 
 If the app is running in a normal browser environment, the SDK provides a safe detection method `isBubbledeskAvailable()` so you can fallback.
 
@@ -10,13 +10,13 @@ If the app is running in a normal browser environment, the SDK provides a safe d
 ## Installation
 
 ```bash
-npm install bubbledesk
+npm install desktopr
 ```
 
 or
 
 ```bash
-yarn add bubbledesk
+yarn add desktopr
 ```
 
 ---
@@ -24,10 +24,10 @@ yarn add bubbledesk
 ## Usage
 
 ```ts
-import { Bubbledesk, isBubbledeskAvailable } from "bubbledesk";
+import { Desktopr, isBubbledeskAvailable } from "desktopr";
 
 if (isBubbledeskAvailable()) {
-  await Bubbledesk.window.new();
+  await Desktopr.window.new();
 } else {
   console.log("Running in browser mode — native features unavailable.");
 }
@@ -37,7 +37,7 @@ if (isBubbledeskAvailable()) {
 
 ## API Shape
 
-The SDK exposes TypeScript definitions for the entire bridge via `BubbledeskAPI`, ensuring autocomplete and type safety.
+The SDK exposes TypeScript definitions for the entire bridge via `DesktoprAPI`, ensuring autocomplete and type safety.
 
 ---
 
@@ -49,21 +49,21 @@ The SDK includes a lightweight helper:
 isBubbledeskAvailable(): boolean
 ```
 
-It **never throws**, even in SSR or when running outside Bubbledesk.
+It **never throws**, even in SSR or when running outside Desktopr.
 
 Useful for apps that must run both:
 - as a normal website
-- and as a desktop app wrapped with Bubbledesk
+- and as a desktop app wrapped with Desktopr
 
 
-### When Bubbledesk Is Not Available
+### When Desktopr Is Not Available
 
-If `Bubbledesk` is missing (e.g. browser mode), trying to call native APIs directly will throw.
+If `Desktopr` is missing (e.g. browser mode), trying to call native APIs directly will throw.
 
 Make sure to guard features or provide fallbacks:
 
 ```ts
 if (!isBubbledeskAvailable()) return;
-await Bubbledesk.window.new(...);
+await Desktopr.window.new(...);
 ```
 

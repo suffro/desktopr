@@ -3,7 +3,7 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { Bubbledesk } from 'bubbledesk';
+	import { Desktopr } from 'desktopr';
 
 	let { children } = $props();
 </script>

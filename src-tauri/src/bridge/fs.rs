@@ -134,7 +134,7 @@ fn resolve_any(app: &AppHandle, rel: &str, permanent: bool) -> Result<PathBuf, S
 }
 
 #[tauri::command]
-pub fn bd_fs_list_dir(
+pub fn dtr_fs_list_dir(
     app: AppHandle,
     rel: String,
     permanent: bool,
@@ -155,7 +155,7 @@ pub fn bd_fs_list_dir(
 }
 
 #[tauri::command]
-pub fn bd_fs_mkdir(
+pub fn dtr_fs_mkdir(
     app: AppHandle,
     rel: String,
     permanent: bool,
@@ -166,7 +166,7 @@ pub fn bd_fs_mkdir(
 }
 
 #[tauri::command]
-pub fn bd_fs_rm(
+pub fn dtr_fs_rm(
     app: AppHandle,
     rel: String,
     permanent: bool,
@@ -200,7 +200,7 @@ pub fn bd_fs_rm(
 }
 
 #[tauri::command]
-pub fn bd_fs_stat(
+pub fn dtr_fs_stat(
     app: AppHandle,
     rel: String,
     permanent: bool,
@@ -218,7 +218,7 @@ pub fn bd_fs_stat(
 
 // ---- WRITE TEXT ----
 #[tauri::command]
-pub fn bd_fs_write_text(
+pub fn dtr_fs_write_text(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -243,7 +243,7 @@ pub fn bd_fs_write_text(
 
 // ---- READ TEXT ----
 #[tauri::command]
-pub fn bd_fs_read_text(
+pub fn dtr_fs_read_text(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -256,7 +256,7 @@ pub fn bd_fs_read_text(
 
 // ---- WRITE BYTES (base64) ----
 #[tauri::command]
-pub fn bd_fs_write_bytes(
+pub fn dtr_fs_write_bytes(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -277,7 +277,7 @@ pub fn bd_fs_write_bytes(
 
 // ---- READ BYTES (base64) ----
 #[tauri::command]
-pub fn bd_fs_read_bytes(
+pub fn dtr_fs_read_bytes(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -293,7 +293,7 @@ pub fn bd_fs_read_bytes(
 
 // ---- EXISTS ----
 #[tauri::command]
-pub fn bd_fs_exists(
+pub fn dtr_fs_exists(
   app: AppHandle,
   rel: String,
   permanent: Option<bool>,
@@ -306,7 +306,7 @@ pub fn bd_fs_exists(
 
 // ---- MOVE ----
 #[tauri::command]
-pub fn bd_fs_move(
+pub fn dtr_fs_move(
   app: AppHandle,
   src: String,
   dest: String,
@@ -355,7 +355,7 @@ pub fn bd_fs_move(
 
 // ---- COPY ----
 #[tauri::command]
-pub fn bd_fs_copy(
+pub fn dtr_fs_copy(
   app: AppHandle,
   src: String,
   dest: String,
@@ -433,7 +433,7 @@ pub fn bd_fs_copy(
 }
 
 #[tauri::command]
-pub fn bd_fs_clear_cache(app: AppHandle) -> Result<(), String> {
+pub fn dtr_fs_clear_cache(app: AppHandle) -> Result<(), String> {
     let base = base_dir(&app, false);
     if base.exists() {
         fs::remove_dir_all(&base).map_err(|e| e.to_string())?;
@@ -443,7 +443,7 @@ pub fn bd_fs_clear_cache(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_fs_clear_data(app: AppHandle) -> Result<(), String> {
+pub fn dtr_fs_clear_data(app: AppHandle) -> Result<(), String> {
     let data = ensure_base_exists(&app, true)?;
     let trash = trash_dir(&app)?; // _trash al pari di data/cache
 
@@ -464,7 +464,7 @@ pub fn bd_fs_clear_data(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_fs_data_clear_trash(app: AppHandle) -> Result<(), String> {
+pub fn dtr_fs_data_clear_trash(app: AppHandle) -> Result<(), String> {
     let trash = trash_dir(&app)?;
     if trash.exists() {
         std::fs::remove_dir_all(&trash).map_err(|e| e.to_string())?;
@@ -474,7 +474,7 @@ pub fn bd_fs_data_clear_trash(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_fs_data_recover_trash(app: AppHandle, trash_rel_path: String) -> Result<(), String> {
+pub fn dtr_fs_data_recover_trash(app: AppHandle, trash_rel_path: String) -> Result<(), String> {
     let data = ensure_base_exists(&app, true)?;
     let trash = trash_dir(&app)?;
 
@@ -518,7 +518,7 @@ pub struct FsPaths {
 }
 
 #[tauri::command]
-pub fn bd_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
+pub fn dtr_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
     let cache = base_dir(&app, false);
     let data = base_dir(&app, true);
     Ok(FsPaths {
@@ -528,23 +528,23 @@ pub fn bd_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
 }
 
 // Espone la base dir "data" (persistente) usando la stessa logica interna
-pub fn bd_fs_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub fn dtr_fs_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
   ensure_base_exists(app, true)
 }
 
 // Espone la base dir "cache" (non persistente)
-pub fn bd_fs_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub fn dtr_fs_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
   ensure_base_exists(app, false)
 }
 
 // Join sicuro (stessa logica di safe_join) rispetto a "data"
-pub fn bd_fs_safe_join_data(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
+pub fn dtr_fs_safe_join_data(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
   let base = ensure_base_exists(app, true)?;
   safe_join(&base, rel)
 }
 
 // Join sicuro (stessa logica di safe_join) rispetto a "cache"
-pub fn bd_fs_safe_join_cache(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
+pub fn dtr_fs_safe_join_cache(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
   let base = ensure_base_exists(app, false)?;
   safe_join(&base, rel)
 }
@@ -621,7 +621,7 @@ fn move_rel_in_data_to_trash(app: &AppHandle, rel: &str) -> Result<(), String> {
 
 // ---- LIST DIR nel contesto _trash ----
 #[tauri::command]
-pub fn bd_fs_trash_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
+pub fn dtr_fs_trash_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
   let trash = trash_dir(&app)?;
   let dir = {
     let p = safe_join(&trash, &rel)?;
@@ -649,7 +649,7 @@ pub fn bd_fs_trash_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>,
 
 // Stat nel contesto _trash
 #[tauri::command]
-pub fn bd_fs_trash_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> {
+pub fn dtr_fs_trash_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> {
   let trash = trash_dir(&app)?;
   let p = safe_join(&trash, &rel)?;
   if !p.exists() {
@@ -666,7 +666,7 @@ pub fn bd_fs_trash_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> 
 
 // Exists nel contesto _trash
 #[tauri::command]
-pub fn bd_fs_trash_exists(app: AppHandle, rel: String) -> Result<bool, String> {
+pub fn dtr_fs_trash_exists(app: AppHandle, rel: String) -> Result<bool, String> {
   let trash = trash_dir(&app)?;
   let p = safe_join(&trash, &rel)?;
   Ok(p.exists())
@@ -674,7 +674,7 @@ pub fn bd_fs_trash_exists(app: AppHandle, rel: String) -> Result<bool, String> {
 
 // Read text nel contesto _trash
 #[tauri::command]
-pub fn bd_fs_trash_read_text(app: AppHandle, rel: String) -> Result<String, String> {
+pub fn dtr_fs_trash_read_text(app: AppHandle, rel: String) -> Result<String, String> {
   let trash = trash_dir(&app)?;
   let p = safe_join(&trash, &rel)?;
   if !p.exists() {
@@ -688,7 +688,7 @@ pub fn bd_fs_trash_read_text(app: AppHandle, rel: String) -> Result<String, Stri
 
 // Read bytes (base64) nel contesto _trash
 #[tauri::command]
-pub fn bd_fs_trash_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
+pub fn dtr_fs_trash_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
   let trash = trash_dir(&app)?;
   let p = safe_join(&trash, &rel)?;
   if !p.exists() {
@@ -720,7 +720,7 @@ fn diagnostics_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 // Join sicuro rispetto a _diagnostics
-pub fn bd_fs_safe_join_diagnostics(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
+pub fn dtr_fs_safe_join_diagnostics(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
   let base = diagnostics_dir(app)?;
   safe_join(&base, rel)
 }
@@ -748,8 +748,8 @@ fn move_rel_in_diagnostics_to_trash(app: &AppHandle, rel: &str) -> Result<(), St
 
 // --- list dir in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
-  let dir = bd_fs_safe_join_diagnostics(&app, &rel)?;
+pub fn dtr_fs_diagnostics_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
+  let dir = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if !dir.exists() {
     return Err("No such file or directory in _diagnostics".into());
   }
@@ -768,8 +768,8 @@ pub fn bd_fs_diagnostics_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsE
 
 // --- stat in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> {
-  let p = bd_fs_safe_join_diagnostics(&app, &rel)?;
+pub fn dtr_fs_diagnostics_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> {
+  let p = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if !p.exists() {
     return Err("No such file or directory in _diagnostics".into());
   }
@@ -784,14 +784,14 @@ pub fn bd_fs_diagnostics_stat(app: AppHandle, rel: String) -> Result<FsEntry, St
 
 // --- write text in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_write_text(
+pub fn dtr_fs_diagnostics_write_text(
   app: AppHandle,
   rel: String,
   contents: String,
   create_dirs: Option<bool>,
   append: Option<bool>,
 ) -> Result<(), String> {
-  let path = bd_fs_safe_join_diagnostics(&app, &rel)?;
+  let path = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if create_dirs.unwrap_or(true) {
     if let Some(parent) = path.parent() { std::fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
   }
@@ -805,8 +805,8 @@ pub fn bd_fs_diagnostics_write_text(
 
 // --- read text in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_read_text(app: AppHandle, rel: String) -> Result<String, String> {
-  let path = bd_fs_safe_join_diagnostics(&app, &rel)?;
+pub fn dtr_fs_diagnostics_read_text(app: AppHandle, rel: String) -> Result<String, String> {
+  let path = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if !path.exists() {
     return Err("No such file or directory in _diagnostics".into());
   }
@@ -815,13 +815,13 @@ pub fn bd_fs_diagnostics_read_text(app: AppHandle, rel: String) -> Result<String
 
 // --- write bytes base64 in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_write_bytes(
+pub fn dtr_fs_diagnostics_write_bytes(
   app: AppHandle,
   rel: String,
   data_base64: String,
   create_dirs: Option<bool>,
 ) -> Result<(), String> {
-  let path = bd_fs_safe_join_diagnostics(&app, &rel)?;
+  let path = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if create_dirs.unwrap_or(true) {
     if let Some(parent) = path.parent() { std::fs::create_dir_all(parent).map_err(|e| e.to_string())?; }
   }
@@ -833,8 +833,8 @@ pub fn bd_fs_diagnostics_write_bytes(
 
 // --- read bytes base64 in _diagnostics ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
-  let path = bd_fs_safe_join_diagnostics(&app, &rel)?;
+pub fn dtr_fs_diagnostics_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
+  let path = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if !path.exists() {
     return Err("No such file or directory in _diagnostics".into());
   }
@@ -846,8 +846,8 @@ pub fn bd_fs_diagnostics_read_bytes(app: AppHandle, rel: String) -> Result<Strin
 
 // --- rm relativo in _diagnostics (sposta in _trash, non definitiva) ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_rm(app: AppHandle, rel: String, recursive: bool) -> Result<(), String> {
-  let p = bd_fs_safe_join_diagnostics(&app, &rel)?;
+pub fn dtr_fs_diagnostics_rm(app: AppHandle, rel: String, recursive: bool) -> Result<(), String> {
+  let p = dtr_fs_safe_join_diagnostics(&app, &rel)?;
   if !p.exists() {
     return Ok(());
   }
@@ -862,7 +862,7 @@ pub fn bd_fs_diagnostics_rm(app: AppHandle, rel: String, recursive: bool) -> Res
 
 // --- clear totale di _diagnostics (sposta tutto in _trash) ---
 #[tauri::command]
-pub fn bd_fs_diagnostics_clear(app: AppHandle) -> Result<(), String> {
+pub fn dtr_fs_diagnostics_clear(app: AppHandle) -> Result<(), String> {
   let diag = diagnostics_dir(&app)?;
   let trash = trash_dir(&app)?;
   for entry in std::fs::read_dir(&diag).map_err(|e| e.to_string())? {
@@ -882,7 +882,7 @@ pub fn bd_fs_diagnostics_clear(app: AppHandle) -> Result<(), String> {
 
 // Exists nel contesto _diagnostics
 #[tauri::command]
-pub fn bd_fs_diagnostics_exists(app: AppHandle, rel: String) -> Result<bool, String> {
+pub fn dtr_fs_diagnostics_exists(app: AppHandle, rel: String) -> Result<bool, String> {
   let diag = diagnostics_dir(&app)?;
   let p = safe_join(&diag, &rel)?;
   Ok(p.exists())
@@ -908,7 +908,7 @@ fn sandbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
 
 // Read text nel contesto _sanbox
 #[tauri::command]
-pub fn bd_fs_sandbox_read_text(app: AppHandle, rel: String) -> Result<String, String> {
+pub fn dtr_fs_sandbox_read_text(app: AppHandle, rel: String) -> Result<String, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
   let p = safe_join(&sandbox_dir_base, &rel)?;
   if !p.exists() {
@@ -922,7 +922,7 @@ pub fn bd_fs_sandbox_read_text(app: AppHandle, rel: String) -> Result<String, St
 
 // Read meta.txt nel contesto _sanbox
 #[tauri::command]
-pub fn bd_fs_sandbox_read_meta(app: AppHandle, job_id: String) -> Result<String, String> {
+pub fn dtr_fs_sandbox_read_meta(app: AppHandle, job_id: String) -> Result<String, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
   let rel = format!("{}/{}", job_id, ("_meta.txt".to_string()));
   let p = safe_join(&sandbox_dir_base, &rel)?;
@@ -937,7 +937,7 @@ pub fn bd_fs_sandbox_read_meta(app: AppHandle, job_id: String) -> Result<String,
 
 // Read stdin.json nel contesto _sanbox
 #[tauri::command]
-pub fn bd_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String, String> {
+pub fn dtr_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
   let rel = format!("{}/{}", job_id, ("_stdin.json".to_string()));
   let p = safe_join(&sandbox_dir_base, &rel)?;
@@ -953,7 +953,7 @@ pub fn bd_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String
 
 // ---- LIST DIR nel contesto _sandbox ----
 #[tauri::command]
-pub fn bd_fs_sandbox_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
+pub fn dtr_fs_sandbox_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
   let sandbox_dir_base = sandbox_dir(&app)?;
   let dir = {
     let p = safe_join(&sandbox_dir_base, &rel)?;

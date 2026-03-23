@@ -31,15 +31,15 @@ export async function getCacheOnlyWindowContext(): Promise<void> {
   if (initialized) return;
   initialized = true;
 
-  if (typeof window === 'undefined' || !window?.Bubbledesk) {
-    console.error("Error executing setupCompanionContext():\nwindow.Bubbledesk undefined or not yet initialized.")
+  if (typeof window === 'undefined' || !window?.Desktopr) {
+    console.error("Error executing setupCompanionContext():\nwindow.Desktopr undefined or not yet initialized.")
     return;
   }
-    const windowInfo: WindowInfo = await window.Bubbledesk.window.getInfo();
+    const windowInfo: WindowInfo = await window.Desktopr.window.getInfo();
     const compState = parseCompanionWindowLabel(windowInfo.label);
 
-    if(window?.Bubbledesk?.window?.state) window.Bubbledesk.window.state = compState;
-    // if(window?.Bubbledesk?.companion?.state) window.Bubbledesk.companion.state = compState;
+    if(window?.Desktopr?.window?.state) window.Desktopr.window.state = compState;
+    // if(window?.Desktopr?.companion?.state) window.Desktopr.companion.state = compState;
 }
 
 // Simple getters

@@ -1,4 +1,4 @@
-import { BubbledeskAPI, CompanionConfig } from "../../../_types"
+import { DesktoprAPI, CompanionConfig } from "../../../_types"
 
 /**
  * Validate whether a string is:
@@ -42,12 +42,12 @@ export function validateUrlOrPath(input?: string):
   return { kind: "invalid" };
 }
 
-export const launchCompanion = async (core: { invoke: BubbledeskAPI["invoke"] }, config?: CompanionConfig) => {
+export const launchCompanion = async (core: { invoke: DesktoprAPI["invoke"] }, config?: CompanionConfig) => {
 	const urlValidation = validateUrlOrPath(config?.url);
 	if(config?.url && urlValidation.kind=="invalid") throw new Error(`Invalid URL [${config.url}]`);
 	
 	let appConfig = config;
 	if(appConfig && config?.url) appConfig["url"] = urlValidation.value || "";
 
-    core.invoke("bd_launch_companion", { appConfig });
+    core.invoke("dtr_launch_companion", { appConfig });
 }

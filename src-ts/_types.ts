@@ -1,5 +1,5 @@
 export * from "./core/_types";
-export * from "./bubbledesk/_types";
+export * from "./desktopr/_types";
 export * from "./modules/rs/files/_types";
 export * from "./modules/rs/events/_types";
 export * from "./modules/rs/fs/_types";

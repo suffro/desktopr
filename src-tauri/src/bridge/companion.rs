@@ -6,13 +6,13 @@ use uuid::Uuid;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
-const COMPANION_LABEL_PREFIX: &str = "bd-cache-only-window-";
+const COMPANION_LABEL_PREFIX: &str = "dtr-cache-only-window-";
 
 fn log_debug(app: &AppHandle, msg: &str) {
     // [DEBUG] Forward logs both to stdout and to the frontend
-    println!("[Bubbledesk][DEBUG] {msg}");
-    if let Err(e) = app.emit("bubbledesk:debug", msg.to_string()) {
-        println!("[Bubbledesk][DEBUG] Failed to emit debug event: {e}");
+    println!("[Desktopr][DEBUG] {msg}");
+    if let Err(e) = app.emit("desktopr:debug", msg.to_string()) {
+        println!("[Desktopr][DEBUG] Failed to emit debug event: {e}");
     }
 }
 
@@ -103,7 +103,7 @@ fn build_sandbox_path(session_id: &str) -> PathBuf {
     base
 }
 
-/// Launch the Bubbledesk companion as a dedicated Tauri window.
+/// Launch the Desktopr companion as a dedicated Tauri window.
 ///
 /// This replaces the previous sidecar-based approach:
 /// - No external binary is spawned.
@@ -115,12 +115,12 @@ fn build_sandbox_path(session_id: &str) -> PathBuf {
 ///
 /// Frontend responsibilities:
 /// - Call this command with a config object (title, width, height, etc.).
-/// - Listen for the `bubbledesk:companion:init` event on the companion window:
+/// - Listen for the `desktopr:companion:init` event on the companion window:
 ///   - payload contains: sessionId, sandboxPath, config, windowLabel
 /// - Attach a native menu specific to this window using your existing bridge.
 /// - Use `sandboxPath` as the logical root for the companion FS.
 #[tauri::command]
-pub async fn bd_launch_companion(
+pub async fn dtr_launch_companion(
     app: AppHandle,
     app_config: serde_json::Value,
 ) -> Result<(), String> {
@@ -254,11 +254,11 @@ pub async fn bd_launch_companion(
         "windowLabel": window_label
     });
 
-    if let Err(e) = companion_window.emit("bubbledesk:window:cacheonly:init", payload) {
+    if let Err(e) = companion_window.emit("desktopr:window:cacheonly:init", payload) {
         log_debug(
             &app,
             &format!(
-                "[WARN] Failed to emit 'bubbledesk:window:cacheonly:init' event: {}",
+                "[WARN] Failed to emit 'desktopr:window:cacheonly:init' event: {}",
                 e
             ),
         );
@@ -266,7 +266,7 @@ pub async fn bd_launch_companion(
     } else {
         log_debug(
             &app,
-            "Emitted 'bubbledesk:window:cacheonly:init' event to companion window.",
+            "Emitted 'desktopr:window:cacheonly:init' event to companion window.",
         );
     }
 

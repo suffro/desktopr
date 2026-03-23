@@ -1,8 +1,8 @@
-import { BdPlatform } from "../../../_types";
+import { DtrPlatform } from "../../../_types";
 import { I32 } from "suffro-lib/utils";
 
 /**
- * Information about a window managed by Bubbledesk.
+ * Information about a window managed by Desktopr.
  */
 export type AppWindowInfo = {
   label: string;
@@ -29,7 +29,7 @@ export type AppScreenInfo = {
 };
 
 /**
- * Information about the current Bubbledesk runtime environment.
+ * Information about the current Desktopr runtime environment.
  */
 export type AppInfo = {
   arch: string;                     // e.g. "aarch64"
@@ -40,7 +40,7 @@ export type AppInfo = {
   is_debug: boolean;
   name: string;
   now_unix_ms: number;              // Unix timestamp in milliseconds
-  os: BdPlatform | string;
+  os: DtrPlatform | string;
   pid: number;
   primary_screen: AppScreenInfo;
   screens: AppScreenInfo[];

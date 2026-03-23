@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.waitTauri = exports.tauriReadyCheck = void 0;
 const suffro_lib_1 = require("suffro-lib");
-const tauriReadyCheck = () => (typeof window !== "undefined" && (window.__TAURI__) && (window.Bubbledesk));
+const tauriReadyCheck = () => (typeof window !== "undefined" && (window.__TAURI__) && (window.Desktopr));
 exports.tauriReadyCheck = tauriReadyCheck;
 const waitTauri = async () => {
     const interval = 500;

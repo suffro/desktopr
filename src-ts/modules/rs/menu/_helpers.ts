@@ -1,4 +1,4 @@
-import { BubbledeskAPI, MenuConfig } from "../../../_types";
+import { DesktoprAPI, MenuConfig } from "../../../_types";
 import { cryptoTools, validate } from "suffro-lib/utils";
 
 
@@ -10,7 +10,7 @@ function isMacOS(): boolean {
 }
 
 export const initMenuConfig = async (
-  core: { invoke: BubbledeskAPI["invoke"] },
+  core: { invoke: DesktoprAPI["invoke"] },
   menuConfig: MenuConfig,
   windowLabel?: string
 ): Promise<void> => {
@@ -18,16 +18,16 @@ export const initMenuConfig = async (
   if (windowLabel) {
     if (isMacOS()) {
       console.warn(
-        "[Bubbledesk] Native window-specific menus are not supported on macOS."
+        "[Desktopr] Native window-specific menus are not supported on macOS."
       );
       return;
     }
-    await core.invoke("bd_init_menu_for_window_from_json", {
+    await core.invoke("dtr_init_menu_for_window_from_json", {
       windowLabel,
       cfgJson: menuConfig /*, is_base64: false*/,
     });
   } else{
-    await core.invoke("bd_init_menu_from_json", {
+    await core.invoke("dtr_init_menu_from_json", {
       cfgJson: menuConfig /*, is_base64: false*/,
     });
   }

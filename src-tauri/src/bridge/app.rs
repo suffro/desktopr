@@ -72,7 +72,7 @@ fn monitor_to_info(m: &Monitor) -> ScreenInfo {
 }
 
 #[tauri::command]
-pub fn bd_app_info(app: AppHandle) -> Result<AppInfo, String> {
+pub fn dtr_app_info(app: AppHandle) -> Result<AppInfo, String> {
   // Package info
   let pkg = app.package_info();
 
@@ -149,7 +149,7 @@ pub fn bd_app_info(app: AppHandle) -> Result<AppInfo, String> {
 }
 
 #[tauri::command]
-pub fn bd_app_exit(app: AppHandle, code: i32) -> Result<(), String> {
+pub fn dtr_app_exit(app: AppHandle, code: i32) -> Result<(), String> {
   app.exit(code);
   Ok(())
 }

@@ -1,5 +1,5 @@
 export * from "./core/_helpers";
-export * from "./bubbledesk/_helpers";
+export * from "./desktopr/_helpers";
 export * from "./modules/rs/files/_helpers";
 export * from "./modules/rs/events/_helpers";
 export * from "./modules/rs/fs/_helpers";
@@ -22,7 +22,7 @@ export * from "./modules/rs/globalVariables/_helpers";
 
 import { wait } from "suffro-lib/utils";
 
-export const tauriReadyCheck = (): boolean => (typeof window !== "undefined" && ((window as any).__TAURI__) && ((window as any).Bubbledesk));
+export const tauriReadyCheck = (): boolean => (typeof window !== "undefined" && ((window as any).__TAURI__) && ((window as any).Desktopr));
 
 export const waitTauri = async () => {
   const interval: number=500;

@@ -1,4 +1,4 @@
-import type { BubbledeskAPI, WindowTauri } from "./_types";
+import type { DesktoprAPI, WindowTauri } from "./_types";
 import {
     buildCore,
     buildFs,
@@ -10,7 +10,7 @@ import {
     buildShortcuts,
     buildAppInfo,
     buildMenu,
-    bdInitiators,
+    dtrInitiators,
     buildDiagnostics,
     buildNetwork,
     buildAutostart,
@@ -25,11 +25,11 @@ import { buildWorker } from "modules/rs/worker/_main";
 import { getCacheOnlyWindowContext } from "_companion_context";
 
 (() => {
-  if (!isTauri() || (window as any).Bubbledesk) return;
+  if (!isTauri() || (window as any).Desktopr) return;
 
   const core = buildCore();
 
-  const api: BubbledeskAPI = {
+  const api: DesktoprAPI = {
     get isAvailable() { return true; },
     version: APP_VERSION,
     get ready() {
@@ -58,7 +58,7 @@ import { getCacheOnlyWindowContext } from "_companion_context";
     openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell.open(url)
   };
 
-  Object.defineProperty(window, "Bubbledesk", {
+  Object.defineProperty(window, "Desktopr", {
     value: api, enumerable: false, configurable: false, writable: false,
   });
 
@@ -69,5 +69,5 @@ import { getCacheOnlyWindowContext } from "_companion_context";
 
 (async () => {
   await waitTauri();
-  if(tauriReadyCheck()) bdInitiators();
+  if(tauriReadyCheck()) dtrInitiators();
 })();

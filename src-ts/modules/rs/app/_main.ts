@@ -1,10 +1,10 @@
-import { AppInfo, AppInterface, BubbledeskAPI } from "../../../_types";
+import { AppInfo, AppInterface, DesktoprAPI } from "../../../_types";
 import { I32 } from "suffro-lib/utils";
 
-export function buildAppInfo(core: { invoke: BubbledeskAPI["invoke"] }): AppInterface {
+export function buildAppInfo(core: { invoke: DesktoprAPI["invoke"] }): AppInterface {
     return {
-      info: (): Promise<AppInfo> => core.invoke("bd_app_info"),
-      exit: (code?: I32): Promise<void> => core.invoke("bd_app_exit", {code: code??0})
+      info: (): Promise<AppInfo> => core.invoke("dtr_app_info"),
+      exit: (code?: I32): Promise<void> => core.invoke("dtr_app_exit", {code: code??0})
     };
   }
   

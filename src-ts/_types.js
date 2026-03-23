@@ -15,7 +15,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./core/_types"), exports);
-__exportStar(require("./bubbledesk/_types"), exports);
+__exportStar(require("./desktopr/_types"), exports);
 __exportStar(require("./modules/rs/files/_types"), exports);
 __exportStar(require("./modules/rs/events/_types"), exports);
 __exportStar(require("./modules/rs/fs/_types"), exports);

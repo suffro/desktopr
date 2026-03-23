@@ -53,11 +53,11 @@ const onCmClick = (ev: MouseEvent, callback: CmListenerCallback, preventDefault:
     // elemento effettivo bersaglio (può essere text node -> cast a HTMLElement)
     const target = ev.target as HTMLElement | null;
 
-    // se vuoi risalire fino a un elemento significativo (con attributo data-bd-context)
+    // se vuoi risalire fino a un elemento significativo (con attributo data-dtr-context)
     const ancestorActionable =
-      target?.closest<HTMLElement>("[data-bd-contextmenu]") ?? null;
+      target?.closest<HTMLElement>("[data-dtr-contextmenu]") ?? null;
     const descendantActionable =
-      target?.querySelector<HTMLElement>("[data-bd-contextmenu]") ?? null;
+      target?.querySelector<HTMLElement>("[data-dtr-contextmenu]") ?? null;
 
     const info = {
       targetTag: target?.tagName ?? null,
@@ -77,9 +77,9 @@ const onCmClick = (ev: MouseEvent, callback: CmListenerCallback, preventDefault:
       shiftKey: ev.shiftKey,
       metaKey: ev.metaKey,
     };
-    if (!window?.Bubbledesk)
-      throw new Error("[contextmenu listener] Bubbledesk not found");
-    window.Bubbledesk.events.emit("cm:click", info);
+    if (!window?.Desktopr)
+      throw new Error("[contextmenu listener] Desktopr not found");
+    window.Desktopr.events.emit("cm:click", info);
     const callbackPlayload: CmListenerCallbackPlayload = {
         event: ev,
         ...info
@@ -91,23 +91,23 @@ const onCmClick = (ev: MouseEvent, callback: CmListenerCallback, preventDefault:
 };
 
 export const initContextMenuListener = (callback: CmListenerCallback, preventDefault: boolean = true) => {
-  if (!window?.Bubbledesk)
-    throw new Error("[contextmenu listener] Bubbledesk not found");
-  const listening = window.Bubbledesk.contextMenu.listening;
+  if (!window?.Desktopr)
+    throw new Error("[contextmenu listener] Desktopr not found");
+  const listening = window.Desktopr.contextMenu.listening;
   if (listening) return console.warn("[contextmenu listener] already initialized");
   // listener globale: intercetta i click col destro su qualunque elemento della pagina
   const listener = (ev: MouseEvent) => onCmClick(ev, callback, preventDefault);
-  window.Bubbledesk.contextMenu.listener = listener as EventListenerOrEventListenerObject;
+  window.Desktopr.contextMenu.listener = listener as EventListenerOrEventListenerObject;
   document.addEventListener("contextmenu", listener);
-  window.Bubbledesk.contextMenu.listening = true;
+  window.Desktopr.contextMenu.listening = true;
 };
 
 export const removeContextMenuListener = () => {
-  if (!window?.Bubbledesk) throw new Error("[contextmenu listener] Bubbledesk not found");
-  const listening = window.Bubbledesk.contextMenu.listening;
+  if (!window?.Desktopr) throw new Error("[contextmenu listener] Desktopr not found");
+  const listening = window.Desktopr.contextMenu.listening;
   if(!listening) return;
-  const listener = window.Bubbledesk.contextMenu.listener ?? (()=>{});
+  const listener = window.Desktopr.contextMenu.listener ?? (()=>{});
   document.removeEventListener("contextmenu", listener);
-  window.Bubbledesk.contextMenu.listening = false;
-  window.Bubbledesk.contextMenu.listener = undefined;
+  window.Desktopr.contextMenu.listening = false;
+  window.Desktopr.contextMenu.listener = undefined;
 }

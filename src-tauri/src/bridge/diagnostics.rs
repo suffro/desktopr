@@ -16,8 +16,8 @@ use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 use base64::{engine::general_purpose, Engine as _};
 
-use crate::bridge::fs as bdfs;
-use crate::bridge::app::{bd_app_info, AppInfo as AppInfoStruct};
+use crate::bridge::fs as dtrfs;
+use crate::bridge::app::{dtr_app_info, AppInfo as AppInfoStruct};
 
 // ==============================
 // Centralized relative paths
@@ -84,12 +84,12 @@ static HEARTBEAT_STOP: AtomicBool = AtomicBool::new(false);
 
 fn diagnostics_root(app: &AppHandle) -> PathBuf {
     // ottiene la root assoluta di _diagnostics
-    bdfs::bd_fs_safe_join_diagnostics(app, ".").expect("_diagnostics base dir not available")
+    dtrfs::dtr_fs_safe_join_diagnostics(app, ".").expect("_diagnostics base dir not available")
 }
 
-/// helper: scrive testo via bdfs (scope _diagnostics, create_dirs=true, append flag)
+/// helper: scrive testo via dtrfs (scope _diagnostics, create_dirs=true, append flag)
 fn fs_write_text(app: &AppHandle, rel: &str, contents: &str, append: bool) -> Result<(), String> {
-    bdfs::bd_fs_diagnostics_write_text(
+    dtrfs::dtr_fs_diagnostics_write_text(
         app.clone(),
         rel.to_string(),
         contents.to_string(),
@@ -98,14 +98,14 @@ fn fs_write_text(app: &AppHandle, rel: &str, contents: &str, append: bool) -> Re
     )
 }
 
-/// helper: legge testo via bdfs (scope _diagnostics)
+/// helper: legge testo via dtrfs (scope _diagnostics)
 fn fs_read_text(app: &AppHandle, rel: &str) -> Result<String, String> {
-    bdfs::bd_fs_diagnostics_read_text(app.clone(), rel.to_string())
+    dtrfs::dtr_fs_diagnostics_read_text(app.clone(), rel.to_string())
 }
 
-/// helper: legge bytes via bdfs (scope _diagnostics)
+/// helper: legge bytes via dtrfs (scope _diagnostics)
 fn fs_read_bytes(app: &AppHandle, rel: &str) -> Result<Vec<u8>, String> {
-    let b64 = bdfs::bd_fs_diagnostics_read_bytes(app.clone(), rel.to_string())?;
+    let b64 = dtrfs::dtr_fs_diagnostics_read_bytes(app.clone(), rel.to_string())?;
     general_purpose::STANDARD
         .decode(b64.as_bytes())
         .map_err(|e| e.to_string())
@@ -211,7 +211,7 @@ static ROTATE_MAX_BYTES: usize = 10 * 1024 * 1024; // 10 MB
 static LOG_MUTEX: Mutex<()> = Mutex::new(());
 
 /// Rename "<file>.jsonl" -> "<file>.partN.jsonl" when size exceeds threshold.
-/// Uses absolute path resolved via bdfs::bd_fs_safe_join_diagnostics.
+/// Uses absolute path resolved via dtrfs::dtr_fs_safe_join_diagnostics.
 fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
     if let Ok(meta) = fs::metadata(abs_path) {
         if meta.len() as usize >= ROTATE_MAX_BYTES {
@@ -239,7 +239,7 @@ fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
 /// Append JSONL via diagnostics scope (append=true) + rotate on absolute path.
 fn append_jsonl(app: &AppHandle, rel_path: &str, value: &serde_json::Value) -> Result<(), String> {
     let _guard = LOG_MUTEX.lock().unwrap();
-    let abs = bdfs::bd_fs_safe_join_diagnostics(app, rel_path)?;
+    let abs = dtrfs::dtr_fs_safe_join_diagnostics(app, rel_path)?;
     rotate_with_part_suffix(&abs).map_err(|e| e.to_string())?;
     let line = serde_json::to_string(value).unwrap() + "\n";
     fs_write_text(app, rel_path, &line, true)
@@ -252,8 +252,8 @@ fn new_log_data(
     env: Option<String>,
     app_version: Option<String>,
 ) -> LogData {
-    // bd_app_info(AppHandle) -> Result<AppInfoStruct, String>
-    let app_info_json: Option<Value> = bd_app_info(app.clone())
+    // dtr_app_info(AppHandle) -> Result<AppInfoStruct, String>
+    let app_info_json: Option<Value> = dtr_app_info(app.clone())
         .ok()
         .and_then(|ai: AppInfoStruct| serde_json::to_value(ai).ok());
 
@@ -293,8 +293,8 @@ pub fn start_heartbeat(app: AppHandle) {
     }
 
     // reset shutdown.ok e rimuovi heartbeat precedente (nel cestino)
-    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_shutdown_ok_rel().into(), false);
-    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_shutdown_ok_rel().into(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
 
     // background ticker
     thread::spawn(move || {
@@ -305,7 +305,7 @@ pub fn start_heartbeat(app: AppHandle) {
         }
         // on stop
         let _ = fs_write_text(&app, &runtime_shutdown_ok_rel(), "ok", false);
-        let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+        let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
     });
 }
 
@@ -313,7 +313,7 @@ pub fn start_heartbeat(app: AppHandle) {
 pub fn mark_clean_shutdown_now(app: &AppHandle) {
     HEARTBEAT_STOP.store(true, Ordering::Relaxed);
     let _ = fs_write_text(app, &runtime_shutdown_ok_rel(), "ok", false);
-    let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
 }
 
 // ==============================
@@ -322,7 +322,7 @@ pub fn mark_clean_shutdown_now(app: &AppHandle) {
 
 /// Generic error record (also writes a crash file if enabled).
 #[tauri::command]
-pub fn bd_logs_record_error(
+pub fn dtr_logs_record_error(
     app: AppHandle,
     payload: ErrorPayload,
     env: String,            // Option A: required String
@@ -351,27 +351,27 @@ pub fn bd_logs_record_error(
 
 /// Shortcut for JS errors.
 #[tauri::command]
-pub fn bd_logs_record_js_error(
+pub fn dtr_logs_record_js_error(
     app: AppHandle,
     payload: ErrorPayload,
     app_version: String,
 ) -> Result<(), String> {
-    bd_logs_record_error(app, payload, "js".to_string(), app_version)
+    dtr_logs_record_error(app, payload, "js".to_string(), app_version)
 }
 
 /// Shortcut for native errors.
 #[tauri::command]
-pub fn bd_logs_record_native_error(
+pub fn dtr_logs_record_native_error(
     app: AppHandle,
     payload: ErrorPayload,
     app_version: String,
 ) -> Result<(), String> {
-    bd_logs_record_error(app, payload, "native".to_string(), app_version)
+    dtr_logs_record_error(app, payload, "native".to_string(), app_version)
 }
 
 /// Append one analytics record (if analytics are enabled).
 #[tauri::command]
-pub fn bd_logs_new_record(
+pub fn dtr_logs_new_record(
     app: AppHandle,
     record_type: String,
     payload: AnalyticsRecord,
@@ -395,9 +395,9 @@ pub fn bd_logs_new_record(
     append_jsonl(&app, &log_rel, &entry)
 }
 
-/// Export diagnostics subdirs as a zip file at `target_zip_path`.
+/// Export diagnostics sudtrirs as a zip file at `target_zip_path`.
 #[tauri::command]
-pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
+pub fn dtr_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
     let base = diagnostics_root(&app);
     let file = std::fs::File::create(&target_zip_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipWriter::new(file);
@@ -419,7 +419,7 @@ pub fn bd_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(),
                     .to_string_lossy()
                     .to_string();
 
-                // read via bdfs (scope _diagnostics)
+                // read via dtrfs (scope _diagnostics)
                 let bytes = fs_read_bytes(&app, &rel)?;
                 zip.start_file(rel, options).map_err(|e| e.to_string())?;
                 zip.write_all(&bytes).map_err(|e| e.to_string())?;
@@ -473,7 +473,7 @@ fn purge_older_than(app: &AppHandle, base: &Path, dir_rel: &str, max_age_days: u
                         .ok()
                         .map(|p| p.to_string_lossy().to_string());
                     if let Some(rel) = rel {
-                        let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), rel, false);
+                        let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), rel, false);
                     }
                 }
             }
@@ -493,7 +493,7 @@ fn run_retention(app: &AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_logs_run_retention(app: AppHandle) -> Result<(), String> {
+pub fn dtr_logs_run_retention(app: AppHandle) -> Result<(), String> {
     run_retention(&app)
 }
 
@@ -502,7 +502,7 @@ pub fn bd_logs_run_retention(app: AppHandle) -> Result<(), String> {
 // ==============================
 
 #[tauri::command]
-pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
+pub fn dtr_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile>, String> {
     // area: "logs" | "crashes" | "runtime"
     let base = diagnostics_root(&app);
 
@@ -543,7 +543,7 @@ pub fn bd_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFile
 }
 
 #[tauri::command]
-pub fn bd_logs_read_file(
+pub fn dtr_logs_read_file(
     app: AppHandle,
     rel_path: String,
     // max_bytes: Option<u64>,
@@ -562,7 +562,7 @@ pub fn bd_logs_read_file(
 // ==============================
 
 #[tauri::command]
-pub fn bd_logs_get_privacy(app: AppHandle) -> Result<PrivacySettings, String> {
+pub fn dtr_logs_get_privacy(app: AppHandle) -> Result<PrivacySettings, String> {
     Ok(read_privacy(&app))
 }
 
@@ -577,7 +577,7 @@ pub struct PrivacyPatch {
 }
 
 #[tauri::command]
-pub fn bd_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<PrivacySettings, String> {
+pub fn dtr_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<PrivacySettings, String> {
     let mut s = read_privacy(&app);
     if let Some(v) = patch.analytics_enabled { s.analytics_enabled = v; }
     if let Some(v) = patch.crash_reports_enabled { s.crash_reports_enabled = v; }
@@ -594,13 +594,13 @@ pub fn bd_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<Privac
 
 #[cfg(debug_assertions)]
 #[tauri::command]
-pub fn bd_logs_test_record_n(app: AppHandle, n: u32) -> Result<(), String> {
+pub fn dtr_logs_test_record_n(app: AppHandle, n: u32) -> Result<(), String> {
     for i in 0..n {
         let rec = AnalyticsRecord {
             name: "test_event".into(),
             props: serde_json::json!({ "i": i, "blob": "x".repeat((i % 5 + 1) as usize * 2000) }),
         };
-        bd_logs_new_record(
+        dtr_logs_new_record(
             app.clone(),
             "test".into(),
             rec,
@@ -613,13 +613,13 @@ pub fn bd_logs_test_record_n(app: AppHandle, n: u32) -> Result<(), String> {
 
 #[cfg(debug_assertions)]
 #[tauri::command]
-pub fn bd_logs_test_panic() {
+pub fn dtr_logs_test_panic() {
     panic!("Intentional panic for testing crash pipeline");
 }
 
 #[cfg(debug_assertions)]
 #[tauri::command]
-pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), String> {
+pub fn dtr_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), String> {
     // Sposta TUTTI i file nella relativa area in _trash (logs|crashes|runtime)
     let base = diagnostics_root(&app);
 
@@ -640,7 +640,7 @@ pub fn bd_logs_test_force_retention(app: AppHandle, area: String) -> Result<(), 
                     .unwrap()
                     .to_string_lossy()
                     .to_string();
-                let _ = bdfs::bd_fs_diagnostics_rm(app.clone(), rel, false);
+                let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), rel, false);
             }
         }
     }

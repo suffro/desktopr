@@ -1,5 +1,5 @@
 export * from "./core/_main";
-export * from "./bubbledesk/_main";
+export * from "./desktopr/_main";
 export * from "./modules/rs/files/_main";
 export * from "./modules/rs/events/_main";
 export * from "./modules/rs/fs/_main";

@@ -5,7 +5,7 @@ set -euo pipefail
 APP_URL="http://blank.html"
 APP_VERSION="0.2.1"
 CARGO_PACKAGE_VERSION="0.2.1"
-CARGO_PACKAGE_NAME="bubbledesk-wrapper"
+CARGO_PACKAGE_NAME="desktopr-wrapper"
 
 sed -e "s|%%APP_URL%%|${APP_URL}|g" \
     -e "s|%%ASSETS_CDN_URL%%|${APP_URL}|g" \

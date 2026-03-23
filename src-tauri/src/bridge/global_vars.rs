@@ -96,7 +96,7 @@ impl EnvState {
 // ------- Commands -------
 
 #[tauri::command]
-pub fn bd_global_vars_get(
+pub fn dtr_global_vars_get(
     key: String,
     state: State<'_, EnvState>,
 ) -> Result<Option<String>, String> {
@@ -106,7 +106,7 @@ pub fn bd_global_vars_get(
 }
 
 #[tauri::command]
-pub fn bd_global_vars_set(
+pub fn dtr_global_vars_set(
     key: String,
     value: String,
     state: State<'_, EnvState>,
@@ -118,7 +118,7 @@ pub fn bd_global_vars_set(
 }
 
 #[tauri::command]
-pub fn bd_global_vars_remove(
+pub fn dtr_global_vars_remove(
     key: String,
     state: State<'_, EnvState>,
 ) -> Result<bool, String> {
@@ -128,7 +128,7 @@ pub fn bd_global_vars_remove(
 }
 
 #[tauri::command]
-pub fn bd_global_vars_list(
+pub fn dtr_global_vars_list(
     state: State<'_, EnvState>,
 ) -> Result<HashMap<String, String>, String> {
     state.with(|store| {

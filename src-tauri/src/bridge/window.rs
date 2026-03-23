@@ -36,7 +36,7 @@ pub struct WindowInfo {
 }
 
 #[tauri::command]
-pub fn bd_win_minimize(app: AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_win_minimize(app: AppHandle, label: String) -> Result<(), String> {
   if let Some(window) = app.get_webview_window(&label) {
     window.minimize().map_err(|e| e.to_string())
   } else {
@@ -45,7 +45,7 @@ pub fn bd_win_minimize(app: AppHandle, label: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_win_maximize(app: AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_win_maximize(app: AppHandle, label: String) -> Result<(), String> {
   if let Some(window) = app.get_webview_window(&label) {
     if window.is_maximized().unwrap_or(false) {
       window.unmaximize().map_err(|e| e.to_string())
@@ -58,7 +58,7 @@ pub fn bd_win_maximize(app: AppHandle, label: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn bd_win_fullscreen(app: AppHandle, label: String, enable: bool) -> Result<(), String> {
+pub fn dtr_win_fullscreen(app: AppHandle, label: String, enable: bool) -> Result<(), String> {
   if let Some(window) = app.get_webview_window(&label) {
     window.set_fullscreen(enable).map_err(|e| e.to_string())
   } else {
@@ -67,7 +67,7 @@ pub fn bd_win_fullscreen(app: AppHandle, label: String, enable: bool) -> Result<
 }
 
 #[tauri::command]
-pub async fn bd_win_open(
+pub async fn dtr_win_open(
   app: AppHandle,
   label: String,
   fullscreen: bool,
@@ -101,13 +101,13 @@ pub async fn bd_win_open(
 }
 
 #[tauri::command]
-pub fn bd_win_close(app: AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_win_close(app: AppHandle, label: String) -> Result<(), String> {
   if let Some(w) = app.get_webview_window(&label) { w.close().map_err(|e| e.to_string())?; }
   Ok(())
 }
 
 #[tauri::command]
-pub fn bd_open_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_open_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
   if let Some(win) = app.get_webview_window(&label) {
     win.open_devtools();
   }
@@ -115,7 +115,7 @@ pub fn bd_open_devtools(app: tauri::AppHandle, label: String) -> Result<(), Stri
 }
 
 #[tauri::command]
-pub fn bd_close_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_close_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
   if let Some(win) = app.get_webview_window(&label) {
     win.close_devtools();
   }
@@ -123,19 +123,19 @@ pub fn bd_close_devtools(app: tauri::AppHandle, label: String) -> Result<(), Str
 }
 
 #[tauri::command]
-pub fn bd_toggle_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
+pub fn dtr_toggle_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
   if let Some(win) = app.get_webview_window(&label) {
     if win.is_devtools_open() {
-      bd_close_devtools(app, label);
+      dtr_close_devtools(app, label);
     } else {
-      bd_open_devtools(app, label);
+      dtr_open_devtools(app, label);
     }
   }
   Ok(())
 }
 
 #[tauri::command]
-pub fn bd_win_get_info(window: WebviewWindow, label: Option<String>) -> Result<WindowInfo, String> {
+pub fn dtr_win_get_info(window: WebviewWindow, label: Option<String>) -> Result<WindowInfo, String> {
   let app = window.app_handle();
 
   // Decide which window to inspect:

@@ -17,7 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.waitTauri = exports.tauriReadyCheck = void 0;
 exports.isTauri = isTauri;
 __exportStar(require("./core/_helpers"), exports);
-__exportStar(require("./bubbledesk/_helpers"), exports);
+__exportStar(require("./desktopr/_helpers"), exports);
 __exportStar(require("./modules/rs/files/_helpers"), exports);
 __exportStar(require("./modules/rs/events/_helpers"), exports);
 __exportStar(require("./modules/rs/fs/_helpers"), exports);
@@ -36,7 +36,7 @@ __exportStar(require("./modules/rs/worker/_helpers"), exports);
 __exportStar(require("./modules/rs/contextMenu/_helpers"), exports);
 __exportStar(require("./modules/rs/companion/_helpers"), exports);
 const suffro_lib_1 = require("suffro-lib");
-const tauriReadyCheck = () => (typeof window !== "undefined" && (window.__TAURI__) && (window.Bubbledesk));
+const tauriReadyCheck = () => (typeof window !== "undefined" && (window.__TAURI__) && (window.Desktopr));
 exports.tauriReadyCheck = tauriReadyCheck;
 const waitTauri = async () => {
     const interval = 500;
@@ -50,7 +50,7 @@ exports.waitTauri = waitTauri;
 /**
  * Detects if running inside a native Tauri WebView.
  * - Fast path: checks global objects (__TAURI__ / __TAURI_INTERNALS__)
- * - Fallback: tries invoking a Tauri command (bd_app_info)
+ * - Fallback: tries invoking a Tauri command (dtr_app_info)
  */
 async function isTauri() {
     // --- Fast sync path ---
@@ -62,7 +62,7 @@ async function isTauri() {
     // --- Safe async fallback ---
     try {
         const { invoke } = await import("@tauri-apps/api/core");
-        await invoke("bd_app_info");
+        await invoke("dtr_app_info");
         return true;
     }
     catch {

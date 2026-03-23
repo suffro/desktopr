@@ -1,9 +1,9 @@
-import type { BubbledeskAPI, NotificationsInterface } from "../../../_types";
+import type { DesktoprAPI, NotificationsInterface } from "../../../_types";
 
-export function buildNotifications(core: { invoke: BubbledeskAPI["invoke"] }): NotificationsInterface {
+export function buildNotifications(core: { invoke: DesktoprAPI["invoke"] }): NotificationsInterface {
   return {
-    state: (): Promise<string> => core.invoke("bd_notification_state"),
-    request: (): Promise<string> => core.invoke("bd_request_permission"),
-    show: (title: string, body: string): Promise<void> => core.invoke("bd_notify", { title, body }),
+    state: (): Promise<string> => core.invoke("dtr_notification_state"),
+    request: (): Promise<string> => core.invoke("dtr_request_permission"),
+    show: (title: string, body: string): Promise<void> => core.invoke("dtr_notify", { title, body }),
   };
 }

@@ -1,13 +1,13 @@
-import { BubbledeskAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../_types";
 import { listenForEvent } from "../../../_helpers";
 import type { DragDropPayload, EventsInterface } from "../../../_types";
 
-export function buildEvents(core: { invoke: BubbledeskAPI["invoke"] }): EventsInterface {
+export function buildEvents(core: { invoke: DesktoprAPI["invoke"] }): EventsInterface {
   return {
-    emit: (event: string, payload?: unknown) => core.invoke("bd_event_emit_to_current_window", { event, payload }),
-    emitToAll: (event: string, payload?: unknown) => core.invoke("bd_event_emit", { event, payload }),
+    emit: (event: string, payload?: unknown) => core.invoke("dtr_event_emit_to_current_window", { event, payload }),
+    emitToAll: (event: string, payload?: unknown) => core.invoke("dtr_event_emit", { event, payload }),
     emitTo: (windowLabel: string, event: string, payload?: unknown) =>
-      core.invoke("bd_event_emit_to", { windowLabel, event, payload }),
+      core.invoke("dtr_event_emit_to", { windowLabel, event, payload }),
 
     on: async (event: string, handler: (payload: any) => void) => listenForEvent(event, handler),
 

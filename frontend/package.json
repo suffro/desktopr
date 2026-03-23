@@ -28,7 +28,7 @@
 	"dependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@tailwindcss/vite": "^4.1.17",
-		"bubbledesk": "^0.4.2",
+		"desktopr": "^0.4.2",
 		"suffro-lib": "git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main",
 		"tailwindcss": "^4.1.17"
 	}

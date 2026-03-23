@@ -52,9 +52,9 @@ fn apply_menu_config(app: &AppHandle<Wry>, cfg: MenuConfig) -> tauri::Result<()>
 
   #[cfg(target_os = "macos")]
   if let Some(sec) = cfg.macos_root.as_ref() {
-    index_section_items(&mut index_map, "Bubbledesk", &sec.items, None, None);
+    index_section_items(&mut index_map, "Desktopr", &sec.items, None, None);
     collect_check_items(&mut check_map, &sec.items);
-    subs.push(build_submenu_from_section_handle(app, "Bubbledesk", sec)?);
+    subs.push(build_submenu_from_section_handle(app, "Desktopr", sec)?);
   }
 
   if let Some(sec) = cfg.file.as_ref() {
@@ -148,8 +148,8 @@ fn apply_menu_config_to_window(
   #[cfg(target_os = "macos")]
   {
     eprintln!(
-      "[Bubbledesk][menu] Window-specific native menu is not supported on macOS; \
-bd_init_menu_for_window_from_json is a no-op on this platform."
+      "[Desktopr][menu] Window-specific native menu is not supported on macOS; \
+dtr_init_menu_for_window_from_json is a no-op on this platform."
     );
     return Ok(());
   }
@@ -175,7 +175,7 @@ bd_init_menu_for_window_from_json is a no-op on this platform."
 
     #[cfg(target_os = "macos")]
     if let Some(sec) = cfg.macos_root.as_ref() {
-      subs.push(build_submenu_from_section_handle(app, "Bubbledesk", sec)?);
+      subs.push(build_submenu_from_section_handle(app, "Desktopr", sec)?);
     }
 
     if let Some(sec) = cfg.file.as_ref() {
@@ -249,18 +249,18 @@ fn init_menu_for_window_from_json_internal(
 }
 
 #[tauri::command]
-pub fn bd_init_menu_from_file(app: AppHandle<Wry>, path: String) -> Result<(), String> {
+pub fn dtr_init_menu_from_file(app: AppHandle<Wry>, path: String) -> Result<(), String> {
   let path_ref = Path::new(&path);
   init_menu_from_file_internal(&app, path_ref).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_init_menu_from_json(app: AppHandle<Wry>, cfg_json: serde_json::Value) -> Result<(), String> {
+pub fn dtr_init_menu_from_json(app: AppHandle<Wry>, cfg_json: serde_json::Value) -> Result<(), String> {
   init_menu_from_json_internal(&app, &cfg_json).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_init_menu_for_window_from_json(
+pub fn dtr_init_menu_for_window_from_json(
   app: AppHandle<Wry>,
   window_label: String,
   cfg_json: serde_json::Value,
@@ -711,11 +711,11 @@ pub fn set_checked(app: &AppHandle<Wry>, id: &str, checked: bool) -> tauri::Resu
 }
 
 #[tauri::command]
-pub fn bd_menu_set_enabled(app: AppHandle<Wry>, id: String, enabled: bool) -> Result<(), String> {
+pub fn dtr_menu_set_enabled(app: AppHandle<Wry>, id: String, enabled: bool) -> Result<(), String> {
   set_enabled(&app, &id, enabled).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn bd_menu_set_checked(app: AppHandle<Wry>, id: String, checked: bool) -> Result<(), String> {
+pub fn dtr_menu_set_checked(app: AppHandle<Wry>, id: String, checked: bool) -> Result<(), String> {
   set_checked(&app, &id, checked).map_err(|e| e.to_string())
 }

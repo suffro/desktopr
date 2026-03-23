@@ -1,4 +1,4 @@
-import { AppInfo, BdPlatform } from "../_types";
+import { AppInfo, DtrPlatform } from "../_types";
 import { isWindowAvailable, validate } from "suffro-lib/utils";
 
 export const normalizeString = (
@@ -19,9 +19,9 @@ export const normalizeString = (
   return normalized;
 };
 
-export const platformSpecifcFilter = async (platforms: BdPlatform[]): Promise<void> => {
+export const platformSpecifcFilter = async (platforms: DtrPlatform[]): Promise<void> => {
   const appInfo: AppInfo = await window.Desktopr?.app.info() as AppInfo;
   if(!appInfo) throw "Failed to check platform";
-  const plat = appInfo.os as BdPlatform;
+  const plat = appInfo.os as DtrPlatform;
   if(!(platforms.includes(plat))) throw `[unsupported platform] this method is not supported on ${plat}`;
 }

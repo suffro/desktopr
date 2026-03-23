@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { COMPANION_URL_GLOBAL_VAR_KEY } from "$lib";
-	import { Bubbledesk } from "bubbledesk";
+	import { Desktopr } from "desktopr";
 	import { logger, validate } from "suffro-lib";
 	import { onMount } from "svelte";
 
@@ -30,7 +30,7 @@
             const _url = fullUrl.trim();
             const validUrl = validate.url(_url);
             if(!validUrl) return alert("Invalid URL");
-            await Bubbledesk.globalVariables.set(COMPANION_URL_GLOBAL_VAR_KEY,_url);
+            await Desktopr.globalVariables.set(COMPANION_URL_GLOBAL_VAR_KEY,_url);
             location.href = _url;
         } catch (error) {
             logger.error(error);
@@ -40,14 +40,14 @@
         }
     }
 
-    const openBdApp = () => {
-        Bubbledesk.tauri.shell.open("https://dashboard.bubbledesk.app");
+    const openDtrApp = () => {
+        Desktopr.tauri.shell.open("https://dashboard.desktopr.app");
     }
 
     onMount(async ()=>{
         loading=true; 
         try {
-            const savedUrl = await Bubbledesk.globalVariables.get(COMPANION_URL_GLOBAL_VAR_KEY);
+            const savedUrl = await Desktopr.globalVariables.get(COMPANION_URL_GLOBAL_VAR_KEY);
             if(validate.url(savedUrl)) url=savedUrl;
         } catch (error) {
             logger.error(error);
@@ -62,15 +62,15 @@
 >
     <div class="flex items-center justify-start">
 	<span class="relative mr-4 inline-flex h-[30px] w-[30px] items-center justify-center">
-		<img src="/icons/bd-icon.png" />
+		<img src="/icons/dtr-icon.png" />
 	</span>
 	<span class="flex flex-col items-start justify-center space-y-0 gap-0 -mb-1">
-		<span class="text-xs text-amber-500 w-full -mb-0.5 font-light text-left">Bubbledesk</span>
+		<span class="text-xs text-amber-500 w-full -mb-0.5 font-light text-left">Desktopr</span>
 		<span class="-mt-0.5">Companion</span>
 	</span>
     </div>
     <div>
-            <button onclick={openBdApp} class="px-4 py-2 text-xs bg-neutral-800 hover:cursor-pointer hover:bg-amber-500 hover:text-neutral-800 text-neutral-400 font-medium rounded-md">
+            <button onclick={openDtrApp} class="px-4 py-2 text-xs bg-neutral-800 hover:cursor-pointer hover:bg-amber-500 hover:text-neutral-800 text-neutral-400 font-medium rounded-md">
                 Bubledesk App
             </button>
         </div>
@@ -105,5 +105,5 @@
 <footer
 	class="h-14 border-t border-neutral-800 flex items-center justify-center text-xs text-neutral-400"
 >
-	© {year} Bubbledesk
+	© {year} Desktopr
 </footer>
