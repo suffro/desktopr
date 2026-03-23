@@ -1,47 +1,47 @@
-// src-ts/sdk/bubbledesk.ts
-import type { BubbledeskAPI } from "../_types";
+// src-ts/sdk/desktopr.ts
+import type { DesktoprAPI } from "../_types";
 
 // Internal helper: get a safe window reference
 function getWindow(): Window {
   if (typeof window === "undefined") {
     // Avoid using the bridge in SSR or in non-browser environments
-    throw new Error("[Bubbledesk] window is not defined. Are you running in SSR?");
+    throw new Error("[Desktopr] window is not defined. Are you running in SSR?");
   }
   return window;
 }
 
 // Internal helper: access the real global bridge
-function getGlobalBridge(): BubbledeskAPI | undefined {
+function getGlobalBridge(): DesktoprAPI | undefined {
   const w = getWindow() as any;
-  const bridge = w.Bubbledesk;
+  const bridge = w.Desktopr;
 
   if (!bridge) {
-    // Bubbledesk bridge is not yet injected by the wrapper
+    // Desktopr bridge is not yet injected by the wrapper
     console.error(
-      "[Bubbledesk] window.Bubbledesk is not available. Is the desktop wrapper loaded?"
+      "[Desktopr] window.Desktopr is not available. Is the desktop wrapper loaded?"
     );
     return;
   }
 
-  return bridge as BubbledeskAPI;
+  return bridge as DesktoprAPI;
 }
 
-// Public helper to check if the native Bubbledesk bridge is available.
+// Public helper to check if the native Desktopr bridge is available.
 // This must never throw, even in SSR or when running outside the wrapper.
-export function isBubbledeskAvailable(): boolean {
+export function isDesktoprAvailable(): boolean {
   if (typeof window === "undefined") {
     // In SSR or non-browser environments the bridge is not available.
     return false;
   }
 
   const w = window as any;
-  return !!w.Bubbledesk;
+  return !!w.Desktopr;
 }
 
 // Public SDK object.
-// At runtime, this is just a Proxy that forwards everything to window.Bubbledesk,
-// but from the developer point of view it is strongly typed as BubbledeskAPI.
-export const Bubbledesk: BubbledeskAPI = new Proxy({} as BubbledeskAPI, {
+// At runtime, this is just a Proxy that forwards everything to window.Desktopr,
+// but from the developer point of view it is strongly typed as DesktoprAPI.
+export const Desktopr: DesktoprAPI = new Proxy({} as DesktoprAPI, {
   get(_target, prop, _receiver) {
     const bridge = getGlobalBridge() ?? undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
