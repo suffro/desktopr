@@ -1,5 +1,6 @@
 import { DesktoprAPI, MenuConfig } from "../../../_types";
-import { cryptoTools, validate } from "suffro-lib/utils";
+import { validate } from "suffro-lib/utils";
+import { cryptoTools } from "suffro-lib/crypto";
 
 
 function isMacOS(): boolean {

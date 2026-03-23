@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { COMPANION_URL_GLOBAL_VAR_KEY } from "$lib";
 	import { Desktopr } from "desktopr";
-	import { logger, validate } from "suffro-lib";
+	import { logger, validate } from "suffro-lib/utils";
 	import { onMount } from "svelte";
 
 	const year = new Date().getFullYear();

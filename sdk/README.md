@@ -1,6 +1,7 @@
 # Desktopr
+[Desktopr official website ↗](https://desktopr.app)
 
-**desktopr** is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
+This is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
 It allows any web application to access native desktop features exposed by the Desktopr wrapper, using a clean, typed, importable API.
 
 If the app is running in a normal browser environment, the SDK provides a safe detection method `isDesktoprAvailable()` so you can fallback.
@@ -67,3 +68,6 @@ if (!isDesktoprAvailable()) return;
 await Desktopr.window.new(...);
 ```
 
+---
+
+[Desktopr official website ↗](https://desktopr.app)

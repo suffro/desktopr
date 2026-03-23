@@ -11,14 +11,11 @@ import type { DiagnosticsInterface } from "../modules/rs/diagnostics/_types";
 import type { BadgeInterface } from "../modules/rs/badge/_types";
 import type { WorkerInterface } from "../modules/rs/worker/_types";
 import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
-// import type { CompanionInterface } from "../modules/rs/companion/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
 import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";
 import { WindowTauri } from "../core/_types";
-
 export type DtrPlatform = "macos" | "linux" | "windows";
-
 /**
  * Desktopr API exposed in the webview.
  *
@@ -31,36 +28,34 @@ export type DtrPlatform = "macos" | "linux" | "windows";
  * - All other modules are cross-platform.
  */
 export type DesktoprAPI = {
-  readonly isAvailable: boolean;
-  readonly version: string;
-  readonly ready: Promise<true>;
-  invoke<T = unknown>(
-    cmd: string,
-    payload?: Record<string, unknown>
-  ): Promise<T>;
-  isDesktop: boolean;
-  notifications: NotificationsInterface;
-  clipboard: ClipboardInterface;
-  files: FilesInterface;
-  app: AppInterface;
-  window: WindowInterface;
-  events: EventsInterface;
-  globalShortcut: ShortcutsInterface;
-  fs: FsInterface;
-  menu: MenuInterface;
-  diagnostics: DiagnosticsInterface;
-  network: NetworkInterface;
-  autostart: AutostartInterface;
-  badge?: BadgeInterface;
-  worker: WorkerInterface;
-  tauri?: WindowTauri;
-  // companion: CompanionInterface;
-  globalVariables: GlobalVariablesInterface;
-  contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
-  openBrowser: (url: string) => Promise<void>;
+    readonly isAvailable: boolean;
+    readonly version: string;
+    readonly ready: Promise<true>;
+    invoke<T = unknown>(cmd: string, payload?: Record<string, unknown>): Promise<T>;
+    isDesktop: boolean;
+    notifications: NotificationsInterface;
+    clipboard: ClipboardInterface;
+    files: FilesInterface;
+    app: AppInterface;
+    window: WindowInterface;
+    events: EventsInterface;
+    globalShortcut: ShortcutsInterface;
+    fs: FsInterface;
+    menu: MenuInterface;
+    diagnostics: DiagnosticsInterface;
+    network: NetworkInterface;
+    autostart: AutostartInterface;
+    badge?: BadgeInterface;
+    worker: WorkerInterface;
+    tauri?: WindowTauri;
+    globalVariables: GlobalVariablesInterface;
+    contextMenu: ContextMenuInterface & {
+        listening?: boolean;
+        listener?: EventListenerOrEventListenerObject;
+    };
+    openBrowser: (url: string) => Promise<void>;
 };
-
 export interface DesktoprInstanceInterface {
-  ready: () => boolean;
-  get: () => DesktoprAPI;
+    ready: () => boolean;
+    get: () => DesktoprAPI;
 }

@@ -1,0 +1,18 @@
+{
+  "name": "desktopr",
+  "version": "1.0.0",
+  "description": "Official JS/TS SDK for the Desktopr native bridge",
+  "main": "dist-sdk/sdk/index.js",
+  "types": "dist-sdk/sdk/index.d.ts",
+  "module": "dist-sdk/sdk/index.js",
+  "sideEffects": false,
+  "files": [
+    "dist-sdk/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist-sdk && tsc -p ../tsconfig.sdk.json",
+    "pub": "npm publish --access public",
+    "prepublishOnly": "npm run build"
+  }
+}
