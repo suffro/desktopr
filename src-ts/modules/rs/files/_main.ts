@@ -1,6 +1,6 @@
 import { BubbledeskAPI, FilesInterface, OpenResultWithBytes } from "../../../_types";
 import { OpenResult } from "../../../_types";
-import { U64 } from "suffro-lib";
+import { U64 } from "suffro-lib/utils";
 
 export function buildFiles(core: { invoke: BubbledeskAPI["invoke"] }): FilesInterface {
   return {

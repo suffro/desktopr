@@ -1,7 +1,7 @@
 // src-ts/_dev_diagnostics.ts
 import { BubbledeskAPI } from "../../../_types";
 import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
-import { Num } from "suffro-lib";
+import { Num } from "suffro-lib/utils";
 
 export const diagnosticsSettings = async (core: { invoke: BubbledeskAPI["invoke"] }, settings?: PrivacySettings)=> {
   if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");

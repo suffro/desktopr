@@ -1,5 +1,5 @@
 import { AppInfo, AppInterface, BubbledeskAPI } from "../../../_types";
-import { I32 } from "suffro-lib";
+import { I32 } from "suffro-lib/utils";
 
 export function buildAppInfo(core: { invoke: BubbledeskAPI["invoke"] }): AppInterface {
     return {

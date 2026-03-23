@@ -20,7 +20,7 @@ export const normalizeString = (
 };
 
 export const platformSpecifcFilter = async (platforms: BdPlatform[]): Promise<void> => {
-  const appInfo: AppInfo = await window.Bubbledesk?.app.info() as AppInfo;
+  const appInfo: AppInfo = await window.Desktopr?.app.info() as AppInfo;
   if(!appInfo) throw "Failed to check platform";
   const plat = appInfo.os as BdPlatform;
   if(!(platforms.includes(plat))) throw `[unsupported platform] this method is not supported on ${plat}`;

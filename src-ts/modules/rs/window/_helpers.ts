@@ -1,6 +1,6 @@
 import { COMAPNION_WINDOW_LABEL_PREFIX } from "../../../_constants";
 import { BubbledeskAPI } from "../../../bubbledesk/_types";
-import { wait } from "suffro-lib";
+import { wait } from "suffro-lib/utils";
 
 export const tauriReadyCheck = (): boolean =>
   typeof window !== "undefined" &&

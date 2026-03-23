@@ -1,5 +1,5 @@
 import { BubbledeskAPI, MenuConfig } from "../../../_types";
-import { cryptoTools, validate } from "suffro-lib";
+import { cryptoTools, validate } from "suffro-lib/utils";
 
 
 function isMacOS(): boolean {

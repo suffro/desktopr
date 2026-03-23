@@ -1,4 +1,4 @@
-import { U64, U8 } from "suffro-lib";
+import { U64, U8 } from "suffro-lib/utils";
 
 
 export type SandboxCaps = {

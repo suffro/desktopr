@@ -1,5 +1,5 @@
 import { SandboxCallInput } from "@types";
-import { validate } from "suffro-lib";
+import { validate } from "suffro-lib/utils";
 
 export const normalizeModuleName = (name: string): string => {
     const sanitizeWasmExtensions: string = name.replaceAll(".wasm","");

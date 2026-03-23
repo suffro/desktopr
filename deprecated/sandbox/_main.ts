@@ -1,5 +1,5 @@
 import { AppInterface, BubbledeskAPI } from "@types";
-import { U64, U8 } from "suffro-lib";
+import { U64, U8 } from "suffro-lib/utils";
 import { SandboxCallInput, SandboxInterface } from "./_types";
 import { normalizeModuleInput, normalizeModuleName } from "@helpers";
 

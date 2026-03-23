@@ -1,4 +1,4 @@
-import { U64, U8 } from "suffro-lib";
+import { U64, U8 } from "suffro-lib/utils";
 export interface WorkerInterface {
     call: (method: string, payload: WorkerCallPayload, timeoutMs?: U64) => Promise<string>;
     status: () => Promise<boolean>;

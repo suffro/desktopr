@@ -1,6 +1,6 @@
 import { normalizeString } from "../../../_helpers";
 import { CmListenerCallback, CmListenerCallbackPlayload, CmNode, CmType } from "../../../_types";
-import { validate } from "suffro-lib";
+import { validate } from "suffro-lib/utils";
 
 // Keep CM_TYPES as a readonly tuple and assert it matches CmType[]
 export const CM_TYPES = [

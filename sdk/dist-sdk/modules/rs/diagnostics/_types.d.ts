@@ -1,4 +1,4 @@
-import { U32 } from "suffro-lib";
+import { U32 } from "suffro-lib/utils";
 export interface DiagnosticsInterface {
     settings: {
         set: (settings?: PrivacySettings) => Promise<unknown>;

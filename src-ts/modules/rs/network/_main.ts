@@ -1,5 +1,5 @@
 import type { BubbledeskAPI, } from "../../../_types";
-import { U64 } from "suffro-lib";
+import { U64 } from "suffro-lib/utils";
 import { NetworkInterface } from "./_types";
 
 export function buildNetwork(core: { invoke: BubbledeskAPI["invoke"] }): NetworkInterface {
