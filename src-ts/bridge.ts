@@ -18,11 +18,13 @@ import {
     buildContextMenu,
     // buildCompanion,
     buildGlobVar,
+    dtrReadyEventListener,
 } from "./_main";
 import { APP_VERSION } from "./_constants";
 import { windowTauriProxy, isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
 import { buildWorker } from "modules/rs/worker/_main";
 import { getCacheOnlyWindowContext } from "_companion_context";
+import { wait } from "suffro-lib/utils";
 
 (() => {
   if (!isTauri() || (window as any).Desktopr) return;
@@ -53,6 +55,7 @@ import { getCacheOnlyWindowContext } from "_companion_context";
     worker:           buildWorker(core),
     contextMenu:      buildContextMenu(core),
     tauri:            windowTauriProxy as WindowTauri,
+    onReady:          dtrReadyEventListener,
     // companion:        buildCompanion(core),
     globalVariables:  buildGlobVar(core),
     openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell.open(url)

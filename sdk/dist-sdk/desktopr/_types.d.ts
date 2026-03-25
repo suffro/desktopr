@@ -48,6 +48,7 @@ export type DesktoprAPI = {
     badge?: BadgeInterface;
     worker: WorkerInterface;
     tauri?: WindowTauri;
+    onReady: (callback: Function) => void;
     globalVariables: GlobalVariablesInterface;
     contextMenu: ContextMenuInterface & {
         listening?: boolean;

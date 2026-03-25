@@ -36,4 +36,4 @@ export const dtrInitiators = async () => {
     }
 }
 
-export const dtrReadyEventListener = (callback: Function) => window.addEventListener(READY_EVENT_NAME, () => callback);
+export const dtrReadyEventListener = (callback: Function) => window.addEventListener(READY_EVENT_NAME, () => callback());
