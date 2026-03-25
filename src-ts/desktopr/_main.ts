@@ -1,4 +1,5 @@
 // import { listenForEvent } from "../_helpers";
+import { READY_EVENT_NAME } from "@constants";
 import { DesktoprAPI, DesktoprInstanceInterface } from "../_types";
 
 export const DesktoprInstance: DesktoprInstanceInterface = {
@@ -26,7 +27,13 @@ export const dtrInitiators = async () => {
         });
 
         console.log("## READY ##");
+
+        const eventReady = new CustomEvent(READY_EVENT_NAME);
+
+        window?.dispatchEvent(eventReady);
     } catch (error) {
         console.error(error);
     }
 }
+
+export const dtrReadyEventListener = (callback: Function) => window.addEventListener(READY_EVENT_NAME, () => callback);

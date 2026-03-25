@@ -25,3 +25,5 @@ export const platformSpecifcFilter = async (platforms: DtrPlatform[]): Promise<v
   const plat = appInfo.os as DtrPlatform;
   if(!(platforms.includes(plat))) throw `[unsupported platform] this method is not supported on ${plat}`;
 }
+
+
