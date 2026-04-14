@@ -1,4 +1,5 @@
-import { COMAPNION_WINDOW_LABEL_PREFIX } from "../../../_constants";
+import { Desktopr } from "../../../sdk";
+import { COMAPNION_WINDOW_LABEL_PREFIX, WINDOWS_LABELS_TRACKER_VARIABLE_NAME } from "../../../_constants";
 import { DesktoprAPI } from "../../../desktopr/_types";
 import { wait } from "suffro-lib/utils";
 
@@ -24,21 +25,49 @@ export const newWindow = async (
     url?: string;
   }
 ) => {
-  if (
-    options?.label &&
-    options.label.trim().toLowerCase().startsWith((COMAPNION_WINDOW_LABEL_PREFIX).trim().toLowerCase())
-  )
-    throw new Error(
-      `[Reserved window label] ${COMAPNION_WINDOW_LABEL_PREFIX}* is an app reserved label`
-    );
-
+  if (options?.label){
+    if(options.label.trim().toLowerCase().startsWith((COMAPNION_WINDOW_LABEL_PREFIX).trim().toLowerCase())) throw new Error(`[Reserved window label] '${COMAPNION_WINDOW_LABEL_PREFIX}' is an app reserved label`);
+    
+    if(options.label.trim().toLowerCase().startsWith("main")) throw new Error(`[Reserved window label] 'main' is an app reserved label`);
+  }
   const randomWindowLabel: string = `w_${Math.random()
     .toString(36)
     .substring(2, 2 + 8)}`;
 
+  const labelToSet = (options?.label) ?? randomWindowLabel;
+
+  try {
+    const usedLabelsJSON = await Desktopr.globalVariables.get(WINDOWS_LABELS_TRACKER_VARIABLE_NAME);
+    let usedLabelsObj = await JSON.parse(usedLabelsJSON);
+    usedLabelsObj[labelToSet] = true;
+    const updatedUsedLabelsJSON = JSON.stringify(usedLabelsObj);
+    await Desktopr.globalVariables.set(WINDOWS_LABELS_TRACKER_VARIABLE_NAME, updatedUsedLabelsJSON);
+  } catch (error) {
+    console.warn("Could not update used windows labels tracker");
+  }
+
   core.invoke("dtr_win_open", {
-    label: options?.label ?? randomWindowLabel,
-    fullscreen: options?.fullscreen || false,
-    url: options?.url ?? "",
+    label: labelToSet,
+    fullscreen: (options?.fullscreen) || false,
+    url: (options?.url) ?? "",
   });
+};
+
+
+export const closeWindow = async (
+  core: { invoke: DesktoprAPI["invoke"] },
+  label: string
+) => {
+
+  try {
+    const usedLabelsJSON = await Desktopr.globalVariables.get(WINDOWS_LABELS_TRACKER_VARIABLE_NAME);
+    let usedLabelsObj = await JSON.parse(usedLabelsJSON);
+    if(label) delete usedLabelsObj[label];
+    const updatedUsedLabelsJSON = JSON.stringify(usedLabelsObj);
+    await Desktopr.globalVariables.set(WINDOWS_LABELS_TRACKER_VARIABLE_NAME, updatedUsedLabelsJSON);
+  } catch (error) {
+    console.warn("Could not update used windows labels tracker");
+  }
+
+  core.invoke("dtr_win_close", { label });
 };

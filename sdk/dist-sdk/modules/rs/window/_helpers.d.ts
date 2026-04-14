@@ -8,3 +8,6 @@ export declare const newWindow: (core: {
     fullscreen?: boolean;
     url?: string;
 }) => Promise<void>;
+export declare const closeWindow: (core: {
+    invoke: DesktoprAPI["invoke"];
+}, label: string) => Promise<void>;

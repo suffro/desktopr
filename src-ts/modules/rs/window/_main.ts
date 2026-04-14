@@ -1,5 +1,6 @@
 import { launchCompanion } from "../companion/_helpers";
 import type { DesktoprAPI, NewWindowOptions, WindowInfo, WindowInterface } from "../../../_types";
+import { closeWindow, newWindow } from "./_helpers";
 
 export function buildWindow(core: { invoke: DesktoprAPI["invoke"] }): WindowInterface {
   const randomWindowLabel: string = `w_${Math.random().toString(36).substring(2, 2 + 8)}`
@@ -18,13 +19,9 @@ export function buildWindow(core: { invoke: DesktoprAPI["invoke"] }): WindowInte
         url: options?.url,
         openFullscreen: options?.fullscreen
       });
-      else core.invoke("dtr_win_open", {
-        label: ((options?.label)??randomWindowLabel),
-        fullscreen: ((options?.fullscreen) || false),
-        url: ((options?.url) ?? "")
-      });
+      else newWindow(core, options);
     },
-    close: (label: string): Promise<void> => core.invoke("dtr_win_close", { label }),
+    close: (label: string): Promise<void> => closeWindow(core, label),
     getInfo: (label?: string): Promise<WindowInfo> => core.invoke("dtr_win_get_info", { label }),
     state: {}
   };

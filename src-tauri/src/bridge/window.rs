@@ -79,11 +79,10 @@ pub async fn dtr_win_open(
   let s = url.to_string();
 
   let mut conf = app.config().app.windows.iter().find(|c| c.label == "main").unwrap().clone();
-  // This should be a unique label for all windows. For example, we can use a random suffix:
+  // This should be a unique label for all windows.
   let mut buf = [0u8; 1];
   assert_eq!(getrandom::fill(&mut buf), Ok(()));
-  let suffix = buf[0];
-  conf.label = format!("{}-{}", label, suffix);
+  conf.label = label;
   conf.visible = true;
   conf.fullscreen = fullscreen;
   if !s.is_empty(){

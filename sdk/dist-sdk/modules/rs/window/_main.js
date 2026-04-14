@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildWindow = buildWindow;
 const _helpers_1 = require("../companion/_helpers");
+const _helpers_2 = require("./_helpers");
 function buildWindow(core) {
     const randomWindowLabel = `w_${Math.random().toString(36).substring(2, 2 + 8)}`;
     return {
@@ -21,13 +22,9 @@ function buildWindow(core) {
                     openFullscreen: options?.fullscreen
                 });
             else
-                core.invoke("dtr_win_open", {
-                    label: ((options?.label) ?? randomWindowLabel),
-                    fullscreen: ((options?.fullscreen) || false),
-                    url: ((options?.url) ?? "")
-                });
+                (0, _helpers_2.newWindow)(core, options);
         },
-        close: (label) => core.invoke("dtr_win_close", { label }),
+        close: (label) => (0, _helpers_2.closeWindow)(core, label),
         getInfo: (label) => core.invoke("dtr_win_get_info", { label }),
         state: {}
     };
