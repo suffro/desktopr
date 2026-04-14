@@ -46,17 +46,20 @@ const newWindow = async (core, options) => {
 };
 exports.newWindow = newWindow;
 const closeWindow = async (core, label) => {
+    const trimmedLabel = (label?.trim()) ?? "";
+    const _label = trimmedLabel ?? "main";
     try {
-        const usedLabelsJSON = await sdk_1.Desktopr.globalVariables.get(_constants_1.WINDOWS_LABELS_TRACKER_VARIABLE_NAME);
-        let usedLabelsObj = await JSON.parse(usedLabelsJSON);
-        if (label)
-            delete usedLabelsObj[label];
-        const updatedUsedLabelsJSON = JSON.stringify(usedLabelsObj);
-        await sdk_1.Desktopr.globalVariables.set(_constants_1.WINDOWS_LABELS_TRACKER_VARIABLE_NAME, updatedUsedLabelsJSON);
+        if (trimmedLabel) {
+            const usedLabelsJSON = await sdk_1.Desktopr.globalVariables.get(_constants_1.WINDOWS_LABELS_TRACKER_VARIABLE_NAME);
+            let usedLabelsObj = await JSON.parse(usedLabelsJSON);
+            delete usedLabelsObj[trimmedLabel];
+            const updatedUsedLabelsJSON = JSON.stringify(usedLabelsObj);
+            await sdk_1.Desktopr.globalVariables.set(_constants_1.WINDOWS_LABELS_TRACKER_VARIABLE_NAME, updatedUsedLabelsJSON);
+        }
     }
     catch (error) {
         console.warn("Could not update used windows labels tracker");
     }
-    core.invoke("dtr_win_close", { label });
+    core.invoke("dtr_win_close", { _label });
 };
 exports.closeWindow = closeWindow;
