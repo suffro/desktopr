@@ -74,5 +74,5 @@ export const closeWindow = async (
     console.warn("Could not update used windows labels tracker");
   }
 
-  core.invoke("dtr_win_close", { _label });
+  core.invoke("dtr_win_close", { label: _label });
 };

@@ -10,3 +10,5 @@ export const COMAPNION_WINDOW_LABEL_PREFIX: string = CONSTANTS.companionWindowLa
 export const READY_EVENT_NAME: string = "dtrReady";
 
 export const WINDOWS_LABELS_TRACKER_VARIABLE_NAME: string = "open-windows-labels-tracker-rpkw6kjzxn8bfhj5u74q";
+
+export const BROWSER_STORAGE_NAMESPACE: string = "dtr_xam8wknpz1vf";
