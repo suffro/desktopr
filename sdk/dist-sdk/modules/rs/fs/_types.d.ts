@@ -36,6 +36,24 @@ export type FsScopeMethods = {
     path: () => Promise<string>;
     base: string;
 };
+export interface FsTrashMethods {
+    clear: () => Promise<void>;
+    recover: () => Promise<void>;
+    listContent: (rel?: string | undefined) => Promise<FsEntry[]>;
+    stat: (rel?: string) => Promise<FsEntry>;
+    exists: (rel?: string) => Promise<boolean>;
+    readText: (rel: string) => Promise<string>;
+    readBytes: (rel: string) => Promise<string>;
+}
+export interface FsDiagnosticMethods {
+    clear: () => Promise<void>;
+    remove: (rel: string, recursive?: boolean | undefined) => Promise<void>;
+    listContent: (rel?: string | undefined) => Promise<FsEntry[]>;
+    stat: (rel?: string) => Promise<FsEntry>;
+    exists: (rel?: string) => Promise<boolean>;
+    readText: (rel: string) => Promise<string>;
+    readBytes: (rel: string) => Promise<string>;
+}
 export interface FsInterface {
     cache: FsScopeMethods;
     data: FsScopeMethods;
@@ -44,22 +62,6 @@ export interface FsInterface {
         cache: string;
         data: string;
     };
-    trash: {
-        clear: () => Promise<void>;
-        recover: () => Promise<void>;
-        listContent: (rel?: string) => Promise<FsEntry[]>;
-        stat: (rel?: string) => Promise<FsEntry>;
-        exists: (rel?: string) => Promise<boolean>;
-        readText: (rel: string) => Promise<string>;
-        readBytes: (rel: string) => Promise<string>;
-    };
-    diagnostics: {
-        clear: () => Promise<void>;
-        remove: (rel: string, recursive?: boolean) => Promise<void>;
-        listContent: (rel?: string) => Promise<FsEntry[]>;
-        stat: (rel?: string) => Promise<FsEntry>;
-        exists: (rel?: string) => Promise<boolean>;
-        readText: (rel: string) => Promise<string>;
-        readBytes: (rel: string) => Promise<string>;
-    };
+    trash: FsTrashMethods;
+    diagnostics: FsDiagnosticMethods;
 }
