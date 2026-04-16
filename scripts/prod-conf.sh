@@ -24,6 +24,9 @@ fi
 : "${MAIN_WINDOW_RESIZABLE:=true}"
 : "${MAIN_WINDOW_OPEN_FULLSCREEN:=false}"
 
+APP_URL_ORIGIN="$(printf '%s' "$APP_URL" | sed -E 's#^(https?://[^/]+).*$#\1#')"
+REMOTE_URL_PATTERN="${APP_URL_ORIGIN}/*"
+
 # -----------------------------
 # Always use PROD templates
 # -----------------------------
@@ -35,10 +38,10 @@ TAURI_TEMPLATE="conf-templates/tauri.conf.template.prod.json"
 # -----------------------------
 echo "1. Generating files from templates"
 # remote.json (capabilities)
-sed -e "s|%%APP_URL%%|${APP_URL}|g" \
-    -e "s|%%ASSETS_CDN_URL%%|${APP_URL}|g" \
+sed -e "s|%%APP_URL%%|${REMOTE_URL_PATTERN}|g" \
+    -e "s|%%ASSETS_CDN_URL%%|${APP_URL_ORIGIN}|g" \
   conf-templates/remote.template.json > src-tauri/capabilities/remote.json
-echo "  remote.json             -> patched [${APP_URL}]"
+echo "  remote.json             -> patched [${REMOTE_URL_PATTERN}]"
 
 # Cargo.toml
 sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
@@ -47,7 +50,7 @@ sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
 echo "  Cargo.toml              -> patched [${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}]"
 
 # bridge.constants.json
-sed -e "s|%%APP_URL%%|${APP_URL}|g" \
+sed -e "s|%%APP_URL%%|${APP_URL_ORIGIN}|g" \
     -e "s|%%APP_VERSION%%|${APP_VERSION}|g" \
   conf-templates/bridge.constants.template.json > src-ts/bridge.constants.json
 echo "  bridge.constants.json   -> patched"
@@ -109,9 +112,9 @@ jq \
   )
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
-# CSP allowlist for APP_URL
-echo "5. Patching CSP allowlist for APP_URL"
-jq --arg url "$APP_URL" '
+# CSP allowlist for APP_URL_ORIGIN
+echo "5. Patching CSP allowlist for APP_URL_ORIGIN"
+jq --arg url "$APP_URL_ORIGIN" '
   .app.security.csp = ("default-src '\''self'\'' " + $url + "; script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; img-src * data: blob:; connect-src *; media-src *;")
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
