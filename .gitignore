@@ -2,7 +2,6 @@
 
 src-tauri/target/
 src-tauri/gen/
-src-tauri/Cargo.lock
 src-tauri/tsc/*
 !src-tauri/tsc/.gitkeep
 
