@@ -11,6 +11,7 @@ src-tauri/Cargo.lock
 **/_companion_context.js
 **/bridge.js
 
+
 # Logs
 logs
 *.log
