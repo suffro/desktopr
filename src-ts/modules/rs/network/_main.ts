@@ -1,5 +1,5 @@
 import type { DesktoprAPI, } from "../../../_types";
-import { U64 } from "suffro-lib/utils";
+import { U64 } from "../../../utils";
 import { NetworkInterface } from "./_types";
 
 export function buildNetwork(core: { invoke: DesktoprAPI["invoke"] }): NetworkInterface {

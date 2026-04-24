@@ -1,6 +1,6 @@
 import { DesktoprAPI, FilesInterface, OpenResultWithBytes } from "../../../_types";
 import { OpenResult } from "../../../_types";
-import { U64 } from "suffro-lib/utils";
+import { U64 } from "../../../utils";
 
 export function buildFiles(core: { invoke: DesktoprAPI["invoke"] }): FilesInterface {
   return {

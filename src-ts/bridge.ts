@@ -24,7 +24,7 @@ import { APP_VERSION } from "./_constants";
 import { windowTauriProxy, isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
 import { buildWorker } from "modules/rs/worker/_main";
 import { getCacheOnlyWindowContext } from "_companion_context";
-import { wait } from "suffro-lib/utils";
+import { wait } from "./utils";
 
 (() => {
   if (!isTauri() || (window as any).Desktopr) return;

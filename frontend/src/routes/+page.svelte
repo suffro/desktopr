@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { COMPANION_URL_GLOBAL_VAR_KEY } from "$lib";
 	import { Desktopr } from "desktopr";
-	import { logger, validate } from "suffro-lib/utils";
+	import { validate } from "./_typesValidation";
 	import { onMount } from "svelte";
 
 	const year = new Date().getFullYear();
@@ -33,7 +33,7 @@
             await Desktopr.globalVariables.set(COMPANION_URL_GLOBAL_VAR_KEY,_url);
             location.href = _url;
         } catch (error) {
-            logger.error(error);
+            console.log(error);
             alert("Something went wrong");
         } finally {
             loading=false;
@@ -50,7 +50,7 @@
             const savedUrl = await Desktopr.globalVariables.get(COMPANION_URL_GLOBAL_VAR_KEY);
             if(validate.url(savedUrl)) url=savedUrl;
         } catch (error) {
-            logger.error(error);
+            console.log(error);
         } finally {
             loading=false;
         }

@@ -1,5 +1,5 @@
 import { DesktoprAPI } from "../../../_types";
-import { U64, U8 } from "suffro-lib/utils";
+import { U64, U8 } from "../../../utils";
 import { WorkerCallPayload, WorkerInterface } from "./_types";
 import { normalizeModuleName } from "../../../_helpers";
 

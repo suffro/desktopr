@@ -1,5 +1,5 @@
 import { AppInfo, AppInterface, DesktoprAPI } from "../../../_types";
-import { I32 } from "suffro-lib/utils";
+import { I32 } from "../../../utils";
 
 export function buildAppInfo(core: { invoke: DesktoprAPI["invoke"] }): AppInterface {
     return {

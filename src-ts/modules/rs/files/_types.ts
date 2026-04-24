@@ -1,4 +1,4 @@
-import { U64, U8 } from "suffro-lib/utils";
+import { U64, U8 } from "../../../utils";
 
 export type FileWithBytes = {
   path: string,

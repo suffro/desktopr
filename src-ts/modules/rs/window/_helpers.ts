@@ -1,7 +1,7 @@
 import { Desktopr } from "../../../sdk";
 import { COMAPNION_WINDOW_LABEL_PREFIX, WINDOWS_LABELS_TRACKER_VARIABLE_NAME } from "../../../_constants";
 import { DesktoprAPI } from "../../../desktopr/_types";
-import { wait } from "suffro-lib/utils";
+import { wait } from "../../../utils";
 
 export const tauriReadyCheck = (): boolean =>
   typeof window !== "undefined" &&

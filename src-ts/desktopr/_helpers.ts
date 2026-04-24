@@ -1,5 +1,5 @@
 import { AppInfo, DtrPlatform } from "../_types";
-import { isWindowAvailable, validate } from "suffro-lib/utils";
+import { isWindowAvailable, validate } from "../utils";
 
 export const normalizeString = (
   str: string,

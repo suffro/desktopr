@@ -1,6 +1,6 @@
 import { platformSpecifcFilter } from "../../../_helpers";
 import { AppInfo, BadgeInterface, DesktoprAPI } from "../../../_types";
-import { U32 } from "suffro-lib/utils";
+import { U32 } from "../../../utils";
 
 export function buildBadge(core: { invoke: DesktoprAPI["invoke"] }): BadgeInterface {
     return {

@@ -1,7 +1,7 @@
 // src-ts/_dev_diagnostics.ts
 import { DesktoprAPI } from "../../../_types";
 import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
-import { Num } from "suffro-lib/utils";
+import { Num } from "../../../utils";
 
 export const diagnosticsSettings = async (core: { invoke: DesktoprAPI["invoke"] }, settings?: PrivacySettings)=> {
   if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");

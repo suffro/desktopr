@@ -26,14 +26,12 @@
     "dev:log": "npm run dev:log --prefix src-tauri/",
     "sdk:build": "npm run build --prefix sdk/",
     "sdk:publish": "npm run pub --prefix sdk/",
-    "cargo:update": "npm run cargo:update --prefix src-tauri/",
-    "i:suffro-lib": "npm install git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main --force"
+    "cargo:update": "npm run cargo:update --prefix src-tauri/"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
     "@wasmer/wasi": "^1.2.2",
     "buffer": "^6.0.3",
-    "suffro-lib": "git+https://Suffro:REDACTED-REVOKED-TOKEN@github.com/Suffro/suffro-lib.git#main",
     "typescript": "^5.9.2"
   }
 }

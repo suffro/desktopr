@@ -1,4 +1,4 @@
-import { U32, U64 } from "suffro-lib/utils";
+import { U32, U64 } from "../../../utils";
 
 export interface DiagnosticsInterface {
   settings: {

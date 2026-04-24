@@ -1,5 +1,5 @@
 import { DtrPlatform } from "../../../_types";
-import { I32 } from "suffro-lib/utils";
+import { I32 } from "../../../utils";
 
 /**
  * Information about a window managed by Desktopr.

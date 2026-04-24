@@ -1,4 +1,4 @@
-import { U64 } from "suffro-lib/utils";
+import { U64 } from "../../../utils";
 
 export interface NetworkInterface {
     status: () => Promise<void>;

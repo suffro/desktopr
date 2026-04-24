@@ -20,7 +20,7 @@ export * from "./modules/rs/companion/_helpers";
 export * from "./modules/rs/globalVariables/_helpers";
 
 
-import { wait } from "suffro-lib/utils";
+import { wait } from "./utils";
 
 export const tauriReadyCheck = (): boolean => (typeof window !== "undefined" && ((window as any).__TAURI__) && ((window as any).Desktopr));
 
