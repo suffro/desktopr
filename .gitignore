@@ -5,6 +5,12 @@ src-tauri/tsc/
 src-tauri/gen/
 src-tauri/Cargo.lock
 
+**/_helpers.js
+**/_main.js
+**/_types.js
+**/_companion_context.js
+**/bridge.js
+
 # Logs
 logs
 *.log
