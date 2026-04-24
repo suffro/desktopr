@@ -21,13 +21,15 @@ import {
     dtrReadyEventListener,
 } from "./_main";
 import { APP_VERSION } from "./_constants";
-import { windowTauriProxy, isTauri, tauriReadyCheck, waitTauri } from "./_helpers";
-import { buildWorker } from "modules/rs/worker/_main";
-import { getCacheOnlyWindowContext } from "_companion_context";
-import { wait } from "./utils";
+import { windowTauriProxy, tauriReadyCheck, waitTauri } from "./_helpers";
+import { buildWorker } from "./modules/rs/worker/_main";
+import { getCacheOnlyWindowContext } from "./_companion_context";
 
 (() => {
-  if (!isTauri() || (window as any).Desktopr) return;
+  if (typeof window === "undefined") return;
+  if ((window as any).Desktopr) return;
+
+  console.log("[Desktopr bridge] init script evaluated");
 
   const core = buildCore();
 
@@ -35,10 +37,10 @@ import { wait } from "./utils";
     get isAvailable() { return true; },
     version: APP_VERSION,
     get ready() {
-      return core.ready; 
+      return core.ready;
     },
     invoke: core.invoke,
-    isDesktop:        isTauri(),
+    isDesktop: true,
     notifications:    buildNotifications(core),
     clipboard:        buildClipboard(core),
     files:            buildFiles(core),
@@ -58,19 +60,27 @@ import { wait } from "./utils";
     onReady:          dtrReadyEventListener,
     // companion:        buildCompanion(core),
     globalVariables:  buildGlobVar(core),
-    openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell.open(url)
+    openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell?.open(url)
   };
 
   Object.defineProperty(window, "Desktopr", {
-    value: api, enumerable: false, configurable: false, writable: false,
+    value: api,
+    enumerable: false,
+    configurable: false,
+    writable: false,
   });
 
+  console.log("[Desktopr bridge] window.Desktopr assigned", (window as any).Desktopr);
+
   getCacheOnlyWindowContext();
-
 })();
-
 
 (async () => {
   await waitTauri();
-  if(tauriReadyCheck()) dtrInitiators();
+
+  if (tauriReadyCheck()) {
+    dtrInitiators();
+  } else {
+    console.error("[Desktopr bridge] Tauri did not become ready in time");
+  }
 })();

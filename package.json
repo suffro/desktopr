@@ -2,6 +2,7 @@
   "name": "tauri-skeleton",
   "version": "0.1.0",
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "esbuild": "^0.20.2"
   },
   "scripts": {
@@ -11,6 +12,7 @@
     "localdevconf": "bash scripts/local-dev-conf.sh",
     "prodconf": "bash scripts/prod-conf.sh",
     "ts:compile": "npm run ts:compile --prefix src-tauri/",
+    "ts:compile:bridge": "npx tsc -p tsconfig.json",
     "build:worker": "npm run build:worker --prefix src-tauri/",
     "clean": "npm run clean --prefix src-tauri/",
     "clean:deep": "npm run clean:deep --prefix src-tauri/",
@@ -31,6 +33,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
     "@wasmer/wasi": "^1.2.2",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "buffer": "^6.0.3",
     "typescript": "^5.9.2"
   }
