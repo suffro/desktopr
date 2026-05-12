@@ -5,6 +5,8 @@
   "permissions": [
     "core:default",
 
+    "desktopr-bridge",
+    
     "notification:default",
     "notification:allow-permission-state",
     "notification:allow-request-permission",
