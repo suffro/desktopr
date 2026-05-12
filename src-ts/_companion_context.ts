@@ -31,15 +31,22 @@ export async function getCacheOnlyWindowContext(): Promise<void> {
   if (initialized) return;
   initialized = true;
 
-  if (typeof window === 'undefined' || !window?.Desktopr) {
-    console.error("Error executing setupCompanionContext():\nwindow.Desktopr undefined or not yet initialized.")
+  if (typeof window === "undefined" || !window?.Desktopr) {
+    console.error("Error executing setupCompanionContext():\nwindow.Desktopr undefined or not yet initialized.");
     return;
   }
+
+  try {
     const windowInfo: WindowInfo = await window.Desktopr.window.getInfo();
     const compState = parseCompanionWindowLabel(windowInfo.label);
 
-    if(window?.Desktopr?.window?.state) window.Desktopr.window.state = compState;
-    // if(window?.Desktopr?.companion?.state) window.Desktopr.companion.state = compState;
+    state = compState;
+
+    window.Desktopr.window.state = compState;
+    // if (window?.Desktopr?.companion?.state) window.Desktopr.companion.state = compState;
+  } catch (error) {
+    console.warn("[Desktopr bridge] Failed to initialize cache-only window context:", error);
+  }
 }
 
 // Simple getters
