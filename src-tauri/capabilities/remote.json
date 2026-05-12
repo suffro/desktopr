@@ -1,12 +1,13 @@
 {
   "identifier": "remote",
   "windows": ["*"],
+  "webviews": ["*"],
   "remote": { "urls": ["http://blank.html/*"], "ipc": true },
   "permissions": [
     "core:default",
-
-    "desktopr-bridge",
     
+    "desktopr-bridge",
+
     "notification:default",
     "notification:allow-permission-state",
     "notification:allow-request-permission",

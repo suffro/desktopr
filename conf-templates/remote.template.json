@@ -2,10 +2,10 @@
   "identifier": "remote",
   "windows": ["*"],
   "webviews": ["*"],
-  "remote": { "urls": ["%%APP_URL%%"], "ipc": true },
+  "remote": { "urls": [] },
   "permissions": [
     "core:default",
-    
+
     "desktopr-bridge",
 
     "notification:default",
