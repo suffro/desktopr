@@ -20,6 +20,7 @@
     "clean:deep": "npm run ts:clean && npm run clean:deep --prefix src-tauri/",
     "build": "npm install && npm run build --prefix src-tauri/",
     "build:dev": "npm install && npm run build:dev --prefix src-tauri/",
+    "build:dev:clean": "npm install && npm run build:dev:clean --prefix src-tauri/",
     "build:local": "npm install && npm run build:local --prefix src-tauri/",
     "dev:keepsandbox": "npm run dev:keepsandbox --prefix src-tauri/",
     "dev": "npm run dev --prefix src-tauri/",

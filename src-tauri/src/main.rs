@@ -229,6 +229,8 @@ fn main() {
       dtr_context_menu_popup,
       // companion
       dtr_launch_companion,
+      // plugins
+      dtr_plugin_status, dtr_plugin_paths, dtr_plugin_storage_clear, dtr_plugin_call, dtr_plugin_clear_all_jobs,
       // web_worker
       dtr_worker_call, dtr_worker_delivery, dtr_worker_ready, dtr_worker_add_module, dtr_worker_pick_and_add_module, dtr_worker_remove_module,
       dtr_worker_paths, dtr_worker_clear_all, dtr_worker_list_modules, dtr_worker_status, dtr_worker_restart,

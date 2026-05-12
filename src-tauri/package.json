@@ -21,6 +21,7 @@
         "dev:local": "npm run ts:compile && npm run localdevconf && npm run build:worker && cargo tauri dev",
         "dev:clean": "npm run clean && npm run dev",
         "cargo:update": "cargo update",
-        "build:clean": "npm run clean && npm run build"
+        "build:clean": "npm run clean && npm run build",
+        "build:dev:clean": "npm run clean && npm run build:dev"
     }
 }

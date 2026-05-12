@@ -22,8 +22,8 @@ import {
 } from "./_main";
 import { APP_VERSION } from "./_constants";
 import { windowTauriProxy, tauriReadyCheck, waitTauri } from "./_helpers";
-import { buildWorker } from "./modules/rs/worker/_main";
 import { getCacheOnlyWindowContext } from "./_companion_context";
+import { buildPlugins } from "./modules/rs/plugins/_main";
 
 (() => {
   if (typeof window === "undefined") return;
@@ -54,7 +54,7 @@ import { getCacheOnlyWindowContext } from "./_companion_context";
     network:          buildNetwork(core),
     autostart:        buildAutostart(core),
     badge:            buildBadge(core),
-    worker:           buildWorker(core),
+    plugins:          buildPlugins(core),
     contextMenu:      buildContextMenu(core),
     tauri:            windowTauriProxy as WindowTauri,
     onReady:          dtrReadyEventListener,

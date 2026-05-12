@@ -17,6 +17,7 @@ pub mod web_worker;
 pub mod context_menu;
 pub mod companion;
 pub mod global_vars;
+pub mod plugins;
 
 pub use notifications::*;
 pub use clipboard::*;
@@ -36,3 +37,4 @@ pub use web_worker::*;
 pub use context_menu::*;
 pub use companion::*;
 pub use global_vars::*;
+pub use plugins::*;

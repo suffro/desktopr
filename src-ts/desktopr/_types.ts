@@ -16,6 +16,7 @@ import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
 import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";
 import { WindowTauri } from "../core/_types";
+import { PluginsInterface } from "../modules/rs/plugins/_types";
 
 export type DtrPlatform = "macos" | "linux" | "windows";
 
@@ -52,13 +53,14 @@ export type DesktoprAPI = {
   network: NetworkInterface;
   autostart: AutostartInterface;
   badge?: BadgeInterface;
-  worker: WorkerInterface;
+  plugins: PluginsInterface;
   tauri?: WindowTauri;
   onReady: (callback: Function) => void;
-  // companion: CompanionInterface;
   globalVariables: GlobalVariablesInterface;
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
   openBrowser: (url: string) => Promise<void>;
+  // companion: CompanionInterface; DEPRECATED
+  // worker: WorkerInterface; DEPRECATED
 };
 
 export interface DesktoprInstanceInterface {
