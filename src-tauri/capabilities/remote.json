@@ -2,7 +2,7 @@
   "identifier": "remote",
   "windows": ["*"],
   "webviews": ["*"],
-  "remote": { "urls": ["http://blank.html/*"], "ipc": true },
+  "remote": { "urls": ["http://blank.html/*"] },
   "permissions": [
     "core:default",
     
