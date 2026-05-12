@@ -6,7 +6,8 @@
     "urls": [
     "http://*",
     "https://*"
-    ]
+    ],
+    "ipc": true
   },
   "permissions": [
     "core:default",
