@@ -3,7 +3,10 @@
   "windows": ["*"],
   "webviews": ["*"],
   "remote": {
-    "urls": ["*"]
+    "urls": [
+    "http://*",
+    "https://*"
+    ]
   },
   "permissions": [
     "core:default",
