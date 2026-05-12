@@ -1,7 +1,10 @@
 {
   "identifier": "remote",
   "windows": ["*"],
-  "remote": { "urls": ["%%APP_URL%%"], "ipc": true },
+  "webviews": ["*"],
+  "remote": {
+    "urls": ["*"]
+  },
   "permissions": [
     "core:default",
 
