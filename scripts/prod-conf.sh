@@ -25,6 +25,7 @@ fi
 : "${MAIN_WINDOW_URL:=$APP_URL}"
 : "${MAIN_WINDOW_RESIZABLE:=true}"
 : "${MAIN_WINDOW_OPEN_FULLSCREEN:=false}"
+: "${COMPANION_MODE:=false}"
 
 # -----------------------------
 # Resolve APP_URL origin and remote URL patterns
@@ -48,6 +49,10 @@ echo "Resolved APP_URL_ORIGIN=$APP_URL_ORIGIN"
 echo "Resolved APP_URL_SCHEME=$APP_URL_SCHEME"
 echo "Resolved APP_URL_HOST_WITH_PORT=$APP_URL_HOST_WITH_PORT"
 
+if [ "$COMPANION_MODE" = "true" ]; then
+  echo "COMPANION_MODE=true (this build accepts IPC from any https origin)"
+fi
+
 # -----------------------------
 # Always use PROD templates
 # -----------------------------
@@ -63,18 +68,31 @@ echo "1. Generating files from templates"
 # remote.json capabilities
 cp conf-templates/remote.template.json src-tauri/capabilities/remote.json
 
-jq \
-  --arg scheme "$APP_URL_SCHEME" \
-  --arg host "$APP_URL_HOST_WITH_PORT" \
-  --arg wildcardHost "$APP_URL_WILDCARD_HOST" \
-  '
-  .remote = (.remote // {}) |
-  .remote.urls = [
-    ($scheme + "://" + $host + "/*"),
-    ($scheme + "://" + $wildcardHost + "/*")
-  ] |
-  .remote.ipc = true
+if [ "$COMPANION_MODE" = "true" ]; then
+  jq '
+    .remote = (.remote // {}) |
+    .remote.urls = [
+      "https://*/*",
+      "https://*.*/*",
+      "http://localhost/*",
+      "http://localhost:*/*",
+      "http://127.0.0.1/*",
+      "http://127.0.0.1:*/*"
+    ]
   ' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp && mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
+else
+  jq \
+    --arg scheme "$APP_URL_SCHEME" \
+    --arg host "$APP_URL_HOST_WITH_PORT" \
+    --arg wildcardHost "$APP_URL_WILDCARD_HOST" \
+    '
+    .remote = (.remote // {}) |
+    .remote.urls = [
+      ($scheme + "://" + $host + "/*"),
+      ($scheme + "://" + $wildcardHost + "/*")
+    ]
+    ' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp && mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
+fi
 
 echo "  remote.json             -> patched"
 echo "  remote.urls:"
@@ -166,19 +184,32 @@ jq \
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # CSP allowlist
-echo "5. Patching CSP allowlist for APP_URL_ORIGIN"
-jq --arg url "$APP_URL_ORIGIN" '
-  .app = (.app // {}) |
-  .app.security = (.app.security // {}) |
-  .app.security.csp = (
-    "default-src '\''self'\'' " + $url + "; " +
-    "script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; " +
-    "style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; " +
-    "img-src * data: blob:; " +
-    "connect-src *; " +
-    "media-src *;"
-  )
-' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+echo "5. Patching CSP allowlist"
+if [ "$COMPANION_MODE" = "true" ]; then
+  jq '
+    .app = (.app // {}) |
+    .app.security = (.app.security // {}) |
+    .app.security.csp = (
+      "default-src * data: blob: '\''unsafe-inline'\'' '\''unsafe-eval'\''; " +
+      "img-src * data: blob:; " +
+      "connect-src * ipc: http://ipc.localhost; " +
+      "media-src *;"
+    )
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+else
+  jq --arg url "$APP_URL_ORIGIN" '
+    .app = (.app // {}) |
+    .app.security = (.app.security // {}) |
+    .app.security.csp = (
+      "default-src '\''self'\'' " + $url + "; " +
+      "script-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; " +
+      "style-src '\''self'\'' " + $url + " '\''unsafe-inline'\''; " +
+      "img-src * data: blob:; " +
+      "connect-src *; " +
+      "media-src *;"
+    )
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+fi
 
 # Ensure remote capability is enabled
 echo "5.1. Ensuring remote capability is enabled"

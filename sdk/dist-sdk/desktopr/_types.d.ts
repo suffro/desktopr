@@ -9,12 +9,12 @@ import type { FsInterface } from "../modules/rs/fs/_types";
 import type { MenuInterface } from "../modules/rs/menu/_types";
 import type { DiagnosticsInterface } from "../modules/rs/diagnostics/_types";
 import type { BadgeInterface } from "../modules/rs/badge/_types";
-import type { WorkerInterface } from "../modules/rs/worker/_types";
 import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
 import type { NetworkInterface } from "../modules/rs/network/_types";
 import type { GlobalVariablesInterface } from "../modules/rs/globalVariables/_types";
 import { WindowTauri } from "../core/_types";
+import { PluginsInterface } from "../modules/rs/plugins/_types";
 export type DtrPlatform = "macos" | "linux" | "windows";
 /**
  * Desktopr API exposed in the webview.
@@ -46,7 +46,7 @@ export type DesktoprAPI = {
     network: NetworkInterface;
     autostart: AutostartInterface;
     badge?: BadgeInterface;
-    worker: WorkerInterface;
+    plugins: PluginsInterface;
     tauri?: WindowTauri;
     onReady: (callback: Function) => void;
     globalVariables: GlobalVariablesInterface;

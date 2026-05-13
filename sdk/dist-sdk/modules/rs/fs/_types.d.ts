@@ -8,7 +8,7 @@ export type FsPaths = {
     cache: string;
     data: string;
 };
-export type FsScopeMethods = {
+export type FsCoreMethods = {
     listContent: (rel: string) => Promise<FsEntry[]>;
     newDirectory: (rel: string) => Promise<void>;
     remove: (rel: string, recursive?: boolean) => Promise<void>;
@@ -32,9 +32,14 @@ export type FsScopeMethods = {
         createDirs?: boolean;
         overwrite?: boolean;
     }) => Promise<void>;
+};
+export type FsScopeMethods = FsCoreMethods & {
     clear: () => Promise<void>;
     path: () => Promise<string>;
     base: string;
+};
+export type FsPluginMethods = FsCoreMethods & {
+    clearStorage: () => Promise<void>;
 };
 export interface FsTrashMethods {
     clear: () => Promise<void>;
@@ -57,6 +62,7 @@ export interface FsDiagnosticMethods {
 export interface FsInterface {
     cache: FsScopeMethods;
     data: FsScopeMethods;
+    pluginFs: (plugin: string) => FsPluginMethods;
     paths: () => Promise<FsPaths>;
     base: {
         cache: string;

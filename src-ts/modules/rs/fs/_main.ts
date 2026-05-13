@@ -1,4 +1,4 @@
-import { normalizeModuleName } from "@helpers";
+import { normalizeModuleName } from "../../../_helpers";
 import { CompanionState } from "../../../_companion_context";
 import { DesktoprAPI } from "../../../_types";
 import type {
