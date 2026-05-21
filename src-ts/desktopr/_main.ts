@@ -1,5 +1,5 @@
 // import { listenForEvent } from "../_helpers";
-import { READY_EVENT_NAME } from "@constants";
+import { READY_EVENT_NAME } from "../_constants";
 import { DesktoprAPI, DesktoprInstanceInterface } from "../_types";
 import { Desktopr } from "../sdk";
 

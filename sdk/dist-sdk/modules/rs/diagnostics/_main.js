@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildDiagnostics = buildDiagnostics;
 const _helpers_1 = require("./_helpers");
-const _constants_1 = require("../../../_constants");
 function buildDiagnostics(core) {
     return {
         settings: {
@@ -15,13 +14,13 @@ function buildDiagnostics(core) {
             recordType,
             payload,
             env,
-            appVersion: _constants_1.APP_VERSION,
+            get appVersion() { return window.__DESKTOPR_APP_VERSION__; },
         }),
         newError: {
-            js: (payload) => core.invoke("dtr_logs_record_js_error", { payload, appVersion: _constants_1.APP_VERSION }),
-            native: (payload) => core.invoke("dtr_logs_record_native_error", { payload, appVersion: _constants_1.APP_VERSION }),
+            js: (payload) => core.invoke("dtr_logs_record_js_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; } }),
+            native: (payload) => core.invoke("dtr_logs_record_native_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; } }),
             // Rust richiede 'env' obbligatorio: di default "generic" se non passato
-            generic: (payload, env = "generic") => core.invoke("dtr_logs_record_error", { payload, appVersion: _constants_1.APP_VERSION, env }),
+            generic: (payload, env = "generic") => core.invoke("dtr_logs_record_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; }, env }),
         },
         readRecordsFile: (relPath, maxBytes) => core.invoke("dtr_logs_read_file", { relPath, maxBytes }),
         // qui avevi chiamato dtr_logs_read_file: correggo su dtr_logs_list_files
