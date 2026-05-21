@@ -219,9 +219,9 @@ fn main() {
       dtr_win_fullscreen,
       dtr_win_open,
       dtr_win_close,
-      dtr_toggle_devtools,
-      dtr_open_devtools,
-      dtr_close_devtools,
+      // dtr_toggle_devtools,
+      // dtr_open_devtools,
+      // dtr_close_devtools,
       dtr_win_get_info,
 
       // events

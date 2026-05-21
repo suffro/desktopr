@@ -31,6 +31,7 @@
         "label": "main",
         "title": "Desktopr Dev",
         "visible": false,
+        "devtools": false,
         "width": 1200,
         "height": 800,
         "backgroundColor": "#171717",

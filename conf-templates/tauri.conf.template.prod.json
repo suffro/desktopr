@@ -12,6 +12,7 @@
       {
         "label": "main",
         "title": "%%MAIN_WINDOW_TITLE%%",
+        "devtools": false,
         "width": "%%MAIN_WINDOW_WIDTH%%",
         "height": "%%MAIN_WINDOW_HEIGHT%%",
         "backgroundColor": "%%MAIN_WINDOW_BG_COLOR%%",

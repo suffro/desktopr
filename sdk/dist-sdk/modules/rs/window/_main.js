@@ -6,11 +6,6 @@ const _helpers_2 = require("./_helpers");
 function buildWindow(core) {
     const randomWindowLabel = `w_${Math.random().toString(36).substring(2, 2 + 8)}`;
     return {
-        devTools: {
-            toggle: (label) => core.invoke("dtr_toggle_devtools", { label: label ?? "main" }),
-            open: (label) => core.invoke("dtr_open_devtools", { label: label ?? "main" }),
-            close: (label) => core.invoke("dtr_close_devtools", { label: label ?? "main" }),
-        },
         minimize: (label) => core.invoke("dtr_win_minimize", { label: label ?? "main" }),
         maximizeToggle: (label) => core.invoke("dtr_win_maximize", { label: label ?? "main" }),
         fullscreen: (enable, label) => core.invoke("dtr_win_fullscreen", { enable, label: label ?? "main" }),

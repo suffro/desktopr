@@ -32,7 +32,8 @@
       {
         "label": "main",
         "title": "Desktopr Companion",
-        "visible": false,
+        "devtools": false,
+        "visible": true,
         "width": 1200,
         "height": 800,
         "backgroundColor": "#171717",

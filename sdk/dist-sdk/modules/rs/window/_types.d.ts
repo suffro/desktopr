@@ -1,11 +1,6 @@
 import { CompanionState } from "../../../_companion_context";
 export type _WindowTypesPlaceholder = unknown;
 export interface WindowInterface {
-    devTools: {
-        toggle: (label?: string) => Promise<void>;
-        open: (label?: string) => Promise<void>;
-        close: (label?: string) => Promise<void>;
-    };
     new: (options?: NewWindowOptions) => Promise<void>;
     close: (label: string) => Promise<void>;
     minimize: () => Promise<void>;
