@@ -15,16 +15,7 @@ export const DesktoprInstance: DesktoprInstanceInterface = {
 
 export const dtrInitiators = async () => {
     try {
-        if(!DesktoprInstance.ready()) throw("'window.Desktopr' not found");
-
-        const Desktopr = DesktoprInstance.get()!; 
-        
-        Desktopr.events.onMenuEvent((id: string) => {
-            if (id === "view.devtools") {
-                console.log("DevTools toggled");
-                Desktopr.window.devTools.toggle("main");
-            }
-        });
+        if(!DesktoprInstance.ready()) throw("Desktopr instance not found");
 
         console.log("## READY ##");
 
