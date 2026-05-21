@@ -1,33 +1,34 @@
-import { U32 } from "../../../utils";
+import { U32, U64 } from "../../../utils";
 export interface DiagnosticsInterface {
     settings: {
-        set: (settings?: PrivacySettings) => Promise<unknown>;
-        get: () => Promise<unknown>;
+        set: (settings?: PrivacySettings) => Promise<PrivacySettingsCamelCase>;
+        get: () => Promise<PrivacySettingsCamelCase>;
     };
-    newRecord: (recordType: string, payload: AnalyticsPayload, env: "js" | "native" | string) => Promise<unknown>;
+    newRecord: (recordType: string, payload: AnalyticsPayload, env: "js" | "native" | string, appVersion?: string) => Promise<void>;
     newError: {
-        js: (payload: ErrorPayload) => Promise<unknown>;
-        native: (payload: ErrorPayload) => Promise<unknown>;
-        generic: (payload: ErrorPayload, env?: string) => Promise<unknown>;
+        js: (payload: ErrorPayload, appVersion?: string) => Promise<void>;
+        native: (payload: ErrorPayload, appVersion?: string) => Promise<void>;
+        generic: (payload: ErrorPayload, env?: string, appVersion?: string) => Promise<void>;
     };
-    readRecordsFile: (relPath: string, maxBytes?: number) => Promise<Uint8Array<ArrayBufferLike>>;
-    listRecordsFiles: (area: "logs" | "crashes") => Promise<unknown>;
-    runRetention: () => Promise<unknown>;
-    export: (targetZipPath: string) => Promise<unknown>;
+    readRecordsFile: (relPath: string) => Promise<string>;
+    listRecordsFiles: (area: DiagnosticsArea) => Promise<ListedFile[]>;
+    runRetention: () => Promise<void>;
+    export: (targetZipPath: string) => Promise<void>;
     test: DiagnosticsTestFunctions;
 }
+export type DiagnosticsArea = "logs" | "crashes" | "runtime";
 export type DiagnosticsTestFunctions = {
     testGenerateRecords: (n?: number) => Promise<void>;
     testThrowJsError: () => Promise<never>;
     testPanicRust: () => Promise<void>;
     testExportZip: (path: string) => Promise<void>;
-    testForceRetention: (area: "logs" | "analytics" | "crashes") => Promise<void>;
+    testForceRetention: (area: DiagnosticsArea) => Promise<void>;
 };
 export type ErrorPayload = {
     message: string;
     filename?: string;
-    lineno?: number;
-    colno?: number;
+    lineno?: U32;
+    colno?: U32;
     stack?: string;
 };
 export type AnalyticsPayload = {
@@ -35,9 +36,9 @@ export type AnalyticsPayload = {
     props?: Record<string, unknown>;
 };
 export type ListedFile = {
-    relPath: string;
-    bytes: number;
-    modified_ms: number;
+    rel_path: string;
+    bytes: U64;
+    modified_ms: U64;
 };
 export type RecordPayload = ErrorPayload | AnalyticsPayload;
 export type PrivacySettings = {
@@ -46,4 +47,11 @@ export type PrivacySettings = {
     retentionDaysAnalytics?: U32;
     retentionDaysLogs?: U32;
     retentionDaysCrashes?: U32;
+};
+export type PrivacySettingsCamelCase = {
+    analytics_enabled?: boolean;
+    crash_reports_enabled?: boolean;
+    retention_days_analytics?: U32;
+    retention_days_logs?: U32;
+    retention_days_crashes?: U32;
 };

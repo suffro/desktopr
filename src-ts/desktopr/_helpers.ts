@@ -6,7 +6,7 @@ export const normalizeString = (
   options: { toLowerCase: boolean; spacesFiller: string } = {
     toLowerCase: true,
     spacesFiller: "",
-  }
+  },
 ): string => {
   if (!validate.nonEmptyString(str)) return "";
   let normalized = "";
@@ -19,11 +19,24 @@ export const normalizeString = (
   return normalized;
 };
 
-export const platformSpecifcFilter = async (platforms: DtrPlatform[]): Promise<void> => {
-  const appInfo: AppInfo = await window.Desktopr?.app.info() as AppInfo;
-  if(!appInfo) throw "Failed to check platform";
+export const platformSpecifcFilter = async (
+  platforms: DtrPlatform[],
+): Promise<void> => {
+  const appInfo: AppInfo = (await window.Desktopr?.app.info()) as AppInfo;
+  if (!appInfo) throw "Failed to check platform";
   const plat = appInfo.os as DtrPlatform;
-  if(!(platforms.includes(plat))) throw `[unsupported platform] this method is not supported on ${plat}`;
-}
+  if (!platforms.includes(plat))
+    throw `[unsupported platform] this method is not supported on ${plat}`;
+};
 
+export const getAppVersion = async (): Promise<string> => {
+  const desktopr = window?.Desktopr;
 
+  if (!desktopr) throw "[getAppVersion] Desktopr is not available";
+
+  const appInfo = await desktopr.app.info();
+
+  const version = appInfo.version;
+
+  return version ?? "";
+};

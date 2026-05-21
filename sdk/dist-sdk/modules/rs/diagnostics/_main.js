@@ -10,19 +10,31 @@ function buildDiagnostics(core) {
             get: () => core.invoke("dtr_logs_get_privacy", {}),
         },
         // SOLO analytics (Rust vuole AnalyticsRecord), usa key record_type
-        newRecord: (recordType, payload, env) => core.invoke("dtr_logs_new_record", {
-            recordType,
-            payload,
-            env,
-            get appVersion() { return window.__DESKTOPR_APP_VERSION__; },
-        }),
-        newError: {
-            js: (payload) => core.invoke("dtr_logs_record_js_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; } }),
-            native: (payload) => core.invoke("dtr_logs_record_native_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; } }),
-            // Rust richiede 'env' obbligatorio: di default "generic" se non passato
-            generic: (payload, env = "generic") => core.invoke("dtr_logs_record_error", { payload, get appVersion() { return window.__DESKTOPR_APP_VERSION__; }, env }),
+        newRecord: async (recordType, payload, env, appVersion) => {
+            const v = await (0, _helpers_1.deriveAppVersion)(appVersion);
+            return await core.invoke("dtr_logs_new_record", {
+                recordType,
+                payload,
+                env,
+                appVersion: v
+            });
         },
-        readRecordsFile: (relPath, maxBytes) => core.invoke("dtr_logs_read_file", { relPath, maxBytes }),
+        newError: {
+            js: async (payload, appVersion) => {
+                const v = await (0, _helpers_1.deriveAppVersion)(appVersion);
+                return await core.invoke("dtr_logs_record_js_error", { payload, appVersion: v });
+            },
+            native: async (payload, appVersion) => {
+                const v = await (0, _helpers_1.deriveAppVersion)(appVersion);
+                return await core.invoke("dtr_logs_record_native_error", { payload, appVersion: v });
+            },
+            // Rust richiede 'env' obbligatorio: di default "generic" se non passato
+            generic: async (payload, env = "generic", appVersion) => {
+                const v = await (0, _helpers_1.deriveAppVersion)(appVersion);
+                return await core.invoke("dtr_logs_record_error", { payload, env, appVersion: v });
+            },
+        },
+        readRecordsFile: (relPath) => core.invoke("dtr_logs_read_file", { relPath }),
         // qui avevi chiamato dtr_logs_read_file: correggo su dtr_logs_list_files
         listRecordsFiles: (area) => core.invoke("dtr_logs_list_files", { area }),
         runRetention: () => core.invoke("dtr_logs_run_retention", {}),

@@ -31,6 +31,7 @@
     "dev:log": "npm run dev:log --prefix src-tauri/",
     "sdk:build": "npm run build --prefix sdk/",
     "sdk:publish": "npm run pub --prefix sdk/",
+    "sdk:updateDesktopr": "npm run updateDesktopr --prefix sdk/",
     "cargo:update": "npm run cargo:update --prefix src-tauri/"
   },
   "dependencies": {

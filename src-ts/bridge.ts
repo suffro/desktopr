@@ -35,7 +35,6 @@ import { buildPlugins } from "./modules/rs/plugins/_main";
 
   const api: DesktoprAPI = {
     get isAvailable() { return true; },
-    get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ },
     apiVersion: API_VERSION,
     get ready() {
       return core.ready;

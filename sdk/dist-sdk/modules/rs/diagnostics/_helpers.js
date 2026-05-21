@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.diagnosticsSettings = void 0;
+exports.deriveAppVersion = exports.diagnosticsSettings = void 0;
 exports.buildDiagnosticsTestFunctions = buildDiagnosticsTestFunctions;
 const utils_1 = require("../../../utils");
+const _helpers_1 = require("../../../_helpers");
 const diagnosticsSettings = async (core, settings) => {
     if (settings?.retentionDaysAnalytics && !utils_1.Num.isU32(settings.retentionDaysAnalytics))
         throw ("[retentionDaysAnalytics] the value must be a U32 integer number");
@@ -21,6 +22,13 @@ const diagnosticsSettings = async (core, settings) => {
     });
 };
 exports.diagnosticsSettings = diagnosticsSettings;
+const deriveAppVersion = async (v) => {
+    if (v)
+        return v;
+    const version = await (0, _helpers_1.getAppVersion)();
+    return version;
+};
+exports.deriveAppVersion = deriveAppVersion;
 // ==============================
 // Test functions
 // ==============================

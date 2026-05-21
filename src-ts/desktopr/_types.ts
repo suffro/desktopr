@@ -34,7 +34,6 @@ export type DtrPlatform = "macos" | "linux" | "windows";
 export type DesktoprAPI = {
   readonly isAvailable: boolean;
   readonly apiVersion: string;
-  readonly appVersion: string;
   readonly ready: Promise<true>;
   invoke<T = unknown>(
     cmd: string,

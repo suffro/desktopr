@@ -18,13 +18,6 @@ export const dtrInitiators = async () => {
     try {
         if(!DesktoprInstance.ready()) throw("Desktopr instance not found");
 
-        try {
-            const appInfo = await window.Desktopr?.app.info();
-            if(appInfo?.version) window.__DESKTOPR_APP_VERSION__ = appInfo.version;
-        } catch (error) {
-            console.error(error);
-        }
-
         console.log("## READY ##");
 
         const eventReady = new CustomEvent(READY_EVENT_NAME);

@@ -1,9 +1,10 @@
 // src-ts/_dev_diagnostics.ts
 import { DesktoprAPI } from "../../../_types";
-import { DiagnosticsTestFunctions, PrivacySettings } from "./_types";
+import { DiagnosticsArea, DiagnosticsTestFunctions, PrivacySettings, PrivacySettingsCamelCase } from "./_types";
 import { Num } from "../../../utils";
+import { getAppVersion } from "../../../_helpers";
 
-export const diagnosticsSettings = async (core: { invoke: DesktoprAPI["invoke"] }, settings?: PrivacySettings)=> {
+export const diagnosticsSettings = async (core: { invoke: DesktoprAPI["invoke"] }, settings?: PrivacySettings): Promise<PrivacySettingsCamelCase> => {
   if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");
   if(settings?.retentionDaysLogs && !Num.isU32(settings.retentionDaysLogs)) throw("[retentionDaysLogs] the value must be a U32 integer number");
   if(settings?.retentionDaysCrashes && !Num.isU32(settings.retentionDaysCrashes)) throw("[retentionDaysCrashes] the value must be a U32 integer number");
@@ -17,6 +18,14 @@ export const diagnosticsSettings = async (core: { invoke: DesktoprAPI["invoke"] 
       retention_days_crashes: settings?.retentionDaysCrashes,
     }
   });
+}
+
+export const deriveAppVersion = async (v?: string): Promise<string> => {
+  if(v) return v;
+
+  const version = await getAppVersion();
+
+  return version;
 }
 
 // ==============================
@@ -38,7 +47,7 @@ export function buildDiagnosticsTestFunctions(core: { invoke: DesktoprAPI["invok
     testExportZip: (path: string) =>
       core.invoke<void>("dtr_logs_export_zip", { target_zip_path: path }),
 
-    testForceRetention: (area: "logs" | "analytics" | "crashes") =>
+    testForceRetention: (area: DiagnosticsArea) =>
       core.invoke<void>("dtr_logs_test_force_retention", { area }),
   };
 }
