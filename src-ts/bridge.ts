@@ -56,10 +56,9 @@ import { buildPlugins } from "./modules/rs/plugins/_main";
     badge:            buildBadge(core),
     plugins:          buildPlugins(core),
     contextMenu:      buildContextMenu(core),
+    globalVariables:  buildGlobVar(core),
     tauri:            windowTauriProxy as WindowTauri,
     onReady:          dtrReadyEventListener,
-    // companion:        buildCompanion(core),
-    globalVariables:  buildGlobVar(core),
     openBrowser: (url: string): Promise<void> => window.__TAURI__?.shell?.open(url)
   };
 

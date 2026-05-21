@@ -106,34 +106,6 @@ pub fn dtr_win_close(app: AppHandle, label: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn dtr_open_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
-  if let Some(win) = app.get_webview_window(&label) {
-    win.open_devtools();
-  }
-  Ok(())
-}
-
-#[tauri::command]
-pub fn dtr_close_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
-  if let Some(win) = app.get_webview_window(&label) {
-    win.close_devtools();
-  }
-  Ok(())
-}
-
-#[tauri::command]
-pub fn dtr_toggle_devtools(app: tauri::AppHandle, label: String) -> Result<(), String> {
-  if let Some(win) = app.get_webview_window(&label) {
-    if win.is_devtools_open() {
-      dtr_close_devtools(app, label);
-    } else {
-      dtr_open_devtools(app, label);
-    }
-  }
-  Ok(())
-}
-
-#[tauri::command]
 pub fn dtr_win_get_info(window: WebviewWindow, label: Option<String>) -> Result<WindowInfo, String> {
   let app = window.app_handle();
 

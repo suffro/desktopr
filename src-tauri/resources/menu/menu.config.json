@@ -15,15 +15,6 @@
         "enabled": true,
         "interaction": "click",
         "accelerator": "CmdOrCtrl+R"
-      },
-      {
-        "type": "custom",
-        "id": "view.devtools",
-        "label": "Toggle DevTools",
-        "enabled": true,
-        "interaction": "check",
-        "checked": false,
-        "accelerator": "CmdOrCtrl+Alt+I"
       }]
   },
   "macosRoot": {
