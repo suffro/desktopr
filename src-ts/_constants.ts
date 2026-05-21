@@ -1,9 +1,10 @@
 
 
 import CONSTANTS from "./bridge.constants.json";
+import SDK_PACKAGE_JSON from "../sdk/package.json";
 
 export const APP_URL: string = CONSTANTS.appUrl!;
-export const APP_VERSION: string = CONSTANTS.appVersion!;
+export const API_VERSION: string = SDK_PACKAGE_JSON.version!;
 
 export const COMAPNION_WINDOW_LABEL_PREFIX: string = CONSTANTS.companionWindowLabelPrefix;
 

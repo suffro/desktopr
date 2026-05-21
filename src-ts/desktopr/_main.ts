@@ -1,6 +1,7 @@
 // import { listenForEvent } from "../_helpers";
 import { READY_EVENT_NAME } from "@constants";
 import { DesktoprAPI, DesktoprInstanceInterface } from "../_types";
+import { Desktopr } from "../sdk";
 
 export const DesktoprInstance: DesktoprInstanceInterface = {
     ready: (): boolean => {
@@ -16,6 +17,13 @@ export const DesktoprInstance: DesktoprInstanceInterface = {
 export const dtrInitiators = async () => {
     try {
         if(!DesktoprInstance.ready()) throw("Desktopr instance not found");
+
+        try {
+            const appInfo = await window.Desktopr?.app.info();
+            if(appInfo?.version) window.__DESKTOPR_APP_VERSION__ = appInfo.version;
+        } catch (error) {
+            console.error(error);
+        }
 
         console.log("## READY ##");
 

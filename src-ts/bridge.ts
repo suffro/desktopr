@@ -20,7 +20,7 @@ import {
     buildGlobVar,
     dtrReadyEventListener,
 } from "./_main";
-import { APP_VERSION } from "./_constants";
+import { API_VERSION } from "./_constants";
 import { windowTauriProxy, tauriReadyCheck, waitTauri } from "./_helpers";
 import { getCacheOnlyWindowContext } from "./_companion_context";
 import { buildPlugins } from "./modules/rs/plugins/_main";
@@ -35,7 +35,8 @@ import { buildPlugins } from "./modules/rs/plugins/_main";
 
   const api: DesktoprAPI = {
     get isAvailable() { return true; },
-    version: APP_VERSION,
+    get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ },
+    apiVersion: API_VERSION,
     get ready() {
       return core.ready;
     },

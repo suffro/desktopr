@@ -1,7 +1,7 @@
+import { DesktoprInstance } from "../../../_main";
 import { DesktoprAPI } from "../../../_types";
 import { buildDiagnosticsTestFunctions, diagnosticsSettings } from "./_helpers";
 import { AnalyticsPayload, DiagnosticsInterface, ErrorPayload, PrivacySettings } from "./_types";
-import { APP_VERSION } from "../../../_constants";
 
 export function buildDiagnostics(core: { invoke: DesktoprAPI["invoke"] }): DiagnosticsInterface {
   return {
@@ -21,19 +21,19 @@ export function buildDiagnostics(core: { invoke: DesktoprAPI["invoke"] }): Diagn
         recordType,
         payload,
         env,
-        appVersion: APP_VERSION,
+        get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ },
       }),
 
     newError: {
       js: (payload: ErrorPayload) =>
-        core.invoke("dtr_logs_record_js_error", { payload, appVersion: APP_VERSION }),
+        core.invoke("dtr_logs_record_js_error", { payload, get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ } }),
 
       native: (payload: ErrorPayload) =>
-        core.invoke("dtr_logs_record_native_error", { payload, appVersion: APP_VERSION }),
+        core.invoke("dtr_logs_record_native_error", { payload, get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ } }),
 
       // Rust richiede 'env' obbligatorio: di default "generic" se non passato
       generic: (payload: ErrorPayload, env = "generic") =>
-        core.invoke("dtr_logs_record_error", { payload, appVersion: APP_VERSION, env }),
+        core.invoke("dtr_logs_record_error", { payload, get appVersion() { return (window as any).__DESKTOPR_APP_VERSION__ }, env }),
     },
 
     readRecordsFile: (relPath: string, maxBytes?: number) =>
