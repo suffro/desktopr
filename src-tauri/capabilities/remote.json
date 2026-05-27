@@ -2,7 +2,7 @@
   "identifier": "remote",
   "windows": ["*"],
   "webviews": ["*"],
-  "remote": { "urls": ["https://companion.desktopr.app"] },
+  "remote": { "urls": [] },
   "permissions": [
     "core:default",
 
