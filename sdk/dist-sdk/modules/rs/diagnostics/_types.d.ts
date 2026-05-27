@@ -13,7 +13,7 @@ export interface DiagnosticsInterface {
     readRecordsFile: (relPath: string) => Promise<string>;
     listRecordsFiles: (area: DiagnosticsArea) => Promise<ListedFile[]>;
     runRetention: () => Promise<void>;
-    export: (targetZipPath: string) => Promise<void>;
+    export: () => Promise<string>;
     test: DiagnosticsTestFunctions;
 }
 export type DiagnosticsArea = "logs" | "crashes" | "runtime";
@@ -21,7 +21,7 @@ export type DiagnosticsTestFunctions = {
     testGenerateRecords: (n?: number) => Promise<void>;
     testThrowJsError: () => Promise<never>;
     testPanicRust: () => Promise<void>;
-    testExportZip: (path: string) => Promise<void>;
+    testExportZip: () => Promise<string>;
     testForceRetention: (area: DiagnosticsArea) => Promise<void>;
 };
 export type ErrorPayload = {

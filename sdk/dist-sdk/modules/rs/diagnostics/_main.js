@@ -38,7 +38,7 @@ function buildDiagnostics(core) {
         // qui avevi chiamato dtr_logs_read_file: correggo su dtr_logs_list_files
         listRecordsFiles: (area) => core.invoke("dtr_logs_list_files", { area }),
         runRetention: () => core.invoke("dtr_logs_run_retention", {}),
-        export: (targetZipPath) => core.invoke("dtr_logs_export_zip", { targetZipPath }),
+        export: () => core.invoke("dtr_logs_export_zip", {}),
         test: (0, _helpers_1.buildDiagnosticsTestFunctions)(core),
     };
 }

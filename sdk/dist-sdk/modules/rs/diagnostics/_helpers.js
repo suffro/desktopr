@@ -40,7 +40,7 @@ function buildDiagnosticsTestFunctions(core) {
             throw new Error("DEV: test JS error");
         },
         testPanicRust: () => core.invoke("dtr_logs_test_panic", {}),
-        testExportZip: (path) => core.invoke("dtr_logs_export_zip", { target_zip_path: path }),
+        testExportZip: () => core.invoke("dtr_logs_export_zip", {}),
         testForceRetention: (area) => core.invoke("dtr_logs_test_force_retention", { area }),
     };
 }
