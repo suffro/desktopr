@@ -1,4 +1,4 @@
-import type { DesktoprAPI, } from "../../../_types";
+import type { DesktoprAPI, } from "../../../types";
 import { U64 } from "../../../utils";
 import { NetworkInterface } from "./_types";
 

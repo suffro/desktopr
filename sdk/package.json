@@ -1,6 +1,6 @@
 {
   "name": "desktopr",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Official JS/TS SDK for the Desktopr native bridge",
   "main": "dist-sdk/sdk/index.js",
   "types": "dist-sdk/sdk/index.d.ts",
@@ -13,7 +13,7 @@
   "scripts": {
     "syncVersion": "bash ../scripts/sync-api-version.sh",
     "build": "rm -rf dist-sdk && npm run syncVersion && tsc -p ../tsconfig.sdk.json",
-    "pub": "npm publish --access public",
+    "pub": "npm run build && npm publish --access public",
     "prepublishOnly": "npm run build"
   }
 }

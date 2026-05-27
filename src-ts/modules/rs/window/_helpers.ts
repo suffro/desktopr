@@ -1,5 +1,5 @@
 import { Desktopr } from "../../../sdk";
-import { COMAPNION_WINDOW_LABEL_PREFIX, WINDOWS_LABELS_TRACKER_VARIABLE_NAME } from "../../../_constants";
+import { COMAPNION_WINDOW_LABEL_PREFIX, WINDOWS_LABELS_TRACKER_VARIABLE_NAME } from "../../../constants";
 import { DesktoprAPI } from "../../../desktopr/_types";
 import { wait } from "../../../utils";
 

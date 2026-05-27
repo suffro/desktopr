@@ -1,4 +1,4 @@
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { PluginsInterface } from "./_types";
 export declare function buildPlugins(core: {
     invoke: DesktoprAPI["invoke"];

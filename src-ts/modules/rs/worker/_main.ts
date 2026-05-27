@@ -1,7 +1,7 @@
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { U64, U8 } from "../../../utils";
 import { WorkerCallPayload, WorkerInterface } from "./_types";
-import { normalizeModuleName } from "../../../_helpers";
+import { normalizeModuleName } from "../../../helpers";
 
 export function buildWorker(core: { invoke: DesktoprAPI["invoke"] }) {
     return {

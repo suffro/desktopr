@@ -1,4 +1,4 @@
-import { DesktoprAPI, MenuConfig } from "../../../_types";
+import { DesktoprAPI, MenuConfig } from "../../../types";
 import { validate } from "../../../utils";
 import { cryptoTools } from "../../../utils";
 

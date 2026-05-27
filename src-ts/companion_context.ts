@@ -1,7 +1,7 @@
 // Comments are in English
 
-import { COMAPNION_WINDOW_LABEL_PREFIX } from "./_constants";
-import { WindowInfo } from "./_types";
+import { COMAPNION_WINDOW_LABEL_PREFIX } from "./constants";
+import { WindowInfo } from "./types";
 
 export type CompanionState = {
   isCacheOnly?: boolean;

@@ -1,6 +1,6 @@
-import { DesktoprAPI } from "../../../_types";
-import { listenForEvent } from "../../../_helpers";
-import type { DragDropPayload, EventsInterface } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
+import { listenForEvent } from "../../../helpers";
+import type { DragDropPayload, EventsInterface } from "../../../types";
 
 export function buildEvents(core: { invoke: DesktoprAPI["invoke"] }): EventsInterface {
   return {

@@ -1,6 +1,6 @@
 // import { listenForEvent } from "../_helpers";
-import { READY_EVENT_NAME } from "../_constants";
-import { DesktoprAPI, DesktoprInstanceInterface } from "../_types";
+import { READY_EVENT_NAME } from "../constants";
+import { DesktoprAPI, DesktoprInstanceInterface } from "../types";
 import { Desktopr } from "../sdk";
 
 export const DesktoprInstance: DesktoprInstanceInterface = {

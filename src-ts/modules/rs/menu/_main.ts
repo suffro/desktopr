@@ -1,5 +1,5 @@
-import { initMenuConfig } from "../../../_helpers";
-import type { DesktoprAPI, MenuConfig, MenuInterface, } from "../../../_types";
+import { initMenuConfig } from "../../../helpers";
+import type { DesktoprAPI, MenuConfig, MenuInterface, } from "../../../types";
 
 export function buildMenu(core: { invoke: DesktoprAPI["invoke"] }): MenuInterface {
   return {

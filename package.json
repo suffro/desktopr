@@ -2,7 +2,7 @@
   "name": "tauri-skeleton",
   "version": "0.1.0",
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.1",
     "esbuild": "^0.20.2"
   },
   "scripts": {
@@ -10,7 +10,7 @@
     "dev:frontend": "npm run dev --prefix frontend/",
     "devconf": "bash scripts/dev-conf.sh",
     "localdevconf": "bash scripts/local-dev-conf.sh",
-    "prodconf": "bash scripts/prod-conf.sh",     
+    "prodconf": "bash scripts/prod-conf.sh",
     "ts:clean": "find . -type f -name \"_companion_context.js\" -delete && find . -type f -name \"bridge.js\" -delete && find . -type f -name \"_constants.js\" -delete && find . -type f -name \"_helpers.js\" -delete && find . -type f -name \"_types.js\" -delete && find . -type f -name \"_main.js\" -delete && npm run clean:ts --prefix src-tauri/",
     "ts:compile": "npx tsc -p tsconfig.json && npm run ts:compile --prefix src-tauri/",
     "ts:compile:src-ts": "npx tsc -p tsconfig.json",
@@ -31,7 +31,7 @@
     "dev:log": "npm run dev:log --prefix src-tauri/",
     "sdk:build": "npm run build --prefix sdk/",
     "sdk:publish": "npm run pub --prefix sdk/",
-    "sdk:updateDesktopr": "npm run updateDesktopr --prefix sdk/",
+    "sdk:syncVersion": "npm run syncVersion --prefix sdk/",
     "cargo:update": "npm run cargo:update --prefix src-tauri/"
   },
   "dependencies": {

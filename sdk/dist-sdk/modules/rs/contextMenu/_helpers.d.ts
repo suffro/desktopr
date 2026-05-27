@@ -1,4 +1,4 @@
-import { CmListenerCallback, CmNode, CmType } from "../../../_types";
+import { CmListenerCallback, CmNode, CmType } from "../../../types";
 export declare const CM_TYPES: string[];
 export declare function isCmType(value: unknown): value is CmType;
 /**

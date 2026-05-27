@@ -5,12 +5,12 @@ exports.getCacheOnlyWindowContext = getCacheOnlyWindowContext;
 exports.isCacheOnlyWindow = isCacheOnlyWindow;
 exports.getCacheOnlyWindowLabel = getCacheOnlyWindowLabel;
 exports.getCacheOnlySessionId = getCacheOnlySessionId;
-const _constants_1 = require("./_constants");
+const constants_1 = require("./constants");
 let state = {
     isCacheOnly: false,
 };
 function parseCompanionWindowLabel(label) {
-    const prefix = _constants_1.COMAPNION_WINDOW_LABEL_PREFIX.trim();
+    const prefix = constants_1.COMAPNION_WINDOW_LABEL_PREFIX.trim();
     if (!label.startsWith(prefix)) {
         return { isCacheOnly: false };
     }

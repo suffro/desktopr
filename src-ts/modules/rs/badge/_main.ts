@@ -1,5 +1,5 @@
-import { platformSpecifcFilter } from "../../../_helpers";
-import { AppInfo, BadgeInterface, DesktoprAPI } from "../../../_types";
+import { platformSpecifcFilter } from "../../../helpers";
+import { AppInfo, BadgeInterface, DesktoprAPI } from "../../../types";
 import { U32 } from "../../../utils";
 
 export function buildBadge(core: { invoke: DesktoprAPI["invoke"] }): BadgeInterface {

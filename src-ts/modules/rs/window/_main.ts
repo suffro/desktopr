@@ -1,5 +1,5 @@
 import { launchCompanion } from "../companion/_helpers";
-import type { DesktoprAPI, NewWindowOptions, WindowInfo, WindowInterface } from "../../../_types";
+import type { DesktoprAPI, NewWindowOptions, WindowInfo, WindowInterface } from "../../../types";
 import { closeWindow, newWindow } from "./_helpers";
 
 export function buildWindow(core: { invoke: DesktoprAPI["invoke"] }): WindowInterface {

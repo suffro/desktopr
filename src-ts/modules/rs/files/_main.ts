@@ -1,5 +1,5 @@
-import { DesktoprAPI, FilesInterface, OpenResultWithBytes } from "../../../_types";
-import { OpenResult } from "../../../_types";
+import { DesktoprAPI, FilesInterface, OpenResultWithBytes } from "../../../types";
+import { OpenResult } from "../../../types";
 import { U64 } from "../../../utils";
 
 export function buildFiles(core: { invoke: DesktoprAPI["invoke"] }): FilesInterface {

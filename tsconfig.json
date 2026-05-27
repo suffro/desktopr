@@ -9,13 +9,7 @@
       "declaration": false,
       "sourceMap": false,
       "rootDir": "src-ts",
-      "types": ["node"],
-      "paths": {
-        "@types": ["./src-ts/_types.ts"],
-        "@helpers": ["./src-ts/_helpers.ts"],
-        "@main": ["./src-ts/_main.ts"],
-        "@constants": ["./src-ts/_constants.ts"],
-      },
+      "types": ["node"]
     },
 	"include": ["src-ts"],
 	"exclude": ["node_modules", "src-tauri/tsc", "**/*.test.ts"]

@@ -1,4 +1,4 @@
-import { DesktoprAPI, CompanionConfig } from "../../../_types";
+import { DesktoprAPI, CompanionConfig } from "../../../types";
 /**
  * Validate whether a string is:
  * - a valid absolute URL (http/https)

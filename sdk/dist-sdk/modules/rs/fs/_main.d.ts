@@ -1,5 +1,5 @@
-import { DesktoprAPI } from "../../../_types";
-import type { FsInterface } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
+import type { FsInterface } from "../../../types";
 export declare function buildFs(core: {
     invoke: DesktoprAPI["invoke"];
 }): FsInterface;

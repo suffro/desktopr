@@ -1,4 +1,4 @@
-import { AppInfo, AppInterface, DesktoprAPI } from "../../../_types";
+import { AppInfo, AppInterface, DesktoprAPI } from "../../../types";
 import { I32 } from "../../../utils";
 
 export function buildAppInfo(core: { invoke: DesktoprAPI["invoke"] }): AppInterface {

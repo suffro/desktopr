@@ -1,3 +1,3 @@
-import type { DesktoprAPI } from "../_types";
+import type { DesktoprAPI } from "../types";
 export declare function isDesktoprAvailable(): boolean;
 export declare const Desktopr: DesktoprAPI;

@@ -1,5 +1,5 @@
-import { launchCompanion } from "../../../_helpers";
-import type { DesktoprAPI, CompanionConfig, CompanionInterface } from "../../../_types";
+import { launchCompanion } from "../../../helpers";
+import type { DesktoprAPI, CompanionConfig, CompanionInterface } from "../../../types";
 
 export function buildCompanion(core: { invoke: DesktoprAPI["invoke"] }): CompanionInterface {
   return {

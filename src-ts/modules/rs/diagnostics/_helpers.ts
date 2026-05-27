@@ -1,8 +1,8 @@
 // src-ts/_dev_diagnostics.ts
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { DiagnosticsArea, DiagnosticsTestFunctions, PrivacySettings, PrivacySettingsCamelCase } from "./_types";
 import { Num } from "../../../utils";
-import { getAppVersion } from "../../../_helpers";
+import { getAppVersion } from "../../../helpers";
 
 export const diagnosticsSettings = async (core: { invoke: DesktoprAPI["invoke"] }, settings?: PrivacySettings): Promise<PrivacySettingsCamelCase> => {
   if(settings?.retentionDaysAnalytics && !Num.isU32(settings.retentionDaysAnalytics)) throw("[retentionDaysAnalytics] the value must be a U32 integer number");

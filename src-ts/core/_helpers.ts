@@ -1,4 +1,4 @@
-import { TauriCore, WindowTauri } from "../_types";
+import { TauriCore, WindowTauri } from "../types";
 
 export function extractCore(source: unknown): TauriCore | null {
   if (!source) return null;

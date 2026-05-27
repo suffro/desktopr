@@ -1,6 +1,6 @@
-import { normalizeModuleName } from "../../../_helpers";
-import { CompanionState } from "../../../_companion_context";
-import { DesktoprAPI } from "../../../_types";
+import { normalizeModuleName } from "../../../helpers";
+import { CompanionState } from "../../../companion_context";
+import { DesktoprAPI } from "../../../types";
 import type {
     FsCoreMethods,
   FsEntry,
@@ -8,7 +8,7 @@ import type {
   FsPaths,
   FsPluginMethods,
   FsScopeMethods,
-} from "../../../_types";
+} from "../../../types";
 
 const getWindowLabelIfCompanion = (): string | undefined => {
   const compState: CompanionState = window?.Desktopr?.window

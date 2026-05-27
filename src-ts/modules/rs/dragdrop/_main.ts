@@ -1,7 +1,7 @@
 
 
-import { DragDropPayload } from "../../../_types";
-import { listenForEvent } from "../../../_helpers";
+import { DragDropPayload } from "../../../types";
+import { listenForEvent } from "../../../helpers";
 
 // Puoi esportare qui un builder che semplicemente re-esporta quella logica.
 export function buildDragDrop() {

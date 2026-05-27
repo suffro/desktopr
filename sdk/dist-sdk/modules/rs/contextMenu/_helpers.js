@@ -4,7 +4,7 @@ exports.removeContextMenuListener = exports.initContextMenuListener = exports.CM
 exports.isCmType = isCmType;
 exports.parseCmType = parseCmType;
 exports.normalizeEntries = normalizeEntries;
-const _helpers_1 = require("../../../_helpers");
+const helpers_1 = require("../../../helpers");
 const utils_1 = require("../../../utils");
 // Keep CM_TYPES as a readonly tuple and assert it matches CmType[]
 exports.CM_TYPES = [
@@ -28,7 +28,7 @@ function isCmType(value) {
 function parseCmType(value) {
     if (!utils_1.validate.nonEmptyString(value))
         return null;
-    const normalized = (0, _helpers_1.normalizeString)(value);
+    const normalized = (0, helpers_1.normalizeString)(value);
     return isCmType(normalized) ? normalized : null;
 }
 /**

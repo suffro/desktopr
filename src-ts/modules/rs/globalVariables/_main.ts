@@ -1,4 +1,4 @@
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { GlobalVariablesAllowedTypes, GlobalVariablesInterface } from "./_types";
 
 export function buildGlobVar(core: { invoke: DesktoprAPI["invoke"] }): GlobalVariablesInterface {

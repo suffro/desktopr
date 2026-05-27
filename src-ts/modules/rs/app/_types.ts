@@ -1,4 +1,4 @@
-import { DtrPlatform } from "../../../_types";
+import { DtrPlatform } from "../../../types";
 import { I32 } from "../../../utils";
 
 /**

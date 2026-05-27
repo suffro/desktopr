@@ -1,4 +1,4 @@
-import { CompanionState } from "../../../_companion_context";
+import { CompanionState } from "../../../companion_context";
 
 // reserved for future window-related typed payloads
 export type _WindowTypesPlaceholder = unknown;

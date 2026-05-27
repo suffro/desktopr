@@ -1,5 +1,5 @@
-import { DesktoprAPI } from "../../../_types";
-import type { EventsInterface } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
+import type { EventsInterface } from "../../../types";
 export declare function buildEvents(core: {
     invoke: DesktoprAPI["invoke"];
 }): EventsInterface;

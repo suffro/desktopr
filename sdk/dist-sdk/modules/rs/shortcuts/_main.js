@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildShortcuts = buildShortcuts;
-const _helpers_1 = require("../../../_helpers");
+const helpers_1 = require("../../../helpers");
 function buildShortcuts(core) {
     return {
         register: async (accelerator, cb, options) => {
-            const gs = (0, _helpers_1.tauriGlobalShortcut)();
+            const gs = (0, helpers_1.tauriGlobalShortcut)();
             await gs.register(accelerator, async (e) => {
                 const payload = { accelerator, ...e };
                 if (options?.emitEvent)
@@ -14,17 +14,17 @@ function buildShortcuts(core) {
             });
         },
         unregister: async (accelerator) => {
-            const gs = (0, _helpers_1.tauriGlobalShortcut)();
+            const gs = (0, helpers_1.tauriGlobalShortcut)();
             const reg = await gs.isRegistered(accelerator);
             if (reg)
                 await gs.unregister(accelerator);
         },
         unregisterAll: async () => {
-            const gs = (0, _helpers_1.tauriGlobalShortcut)();
+            const gs = (0, helpers_1.tauriGlobalShortcut)();
             await gs.unregisterAll();
         },
         isRegistered: async (accelerator) => {
-            const gs = (0, _helpers_1.tauriGlobalShortcut)();
+            const gs = (0, helpers_1.tauriGlobalShortcut)();
             return gs.isRegistered(accelerator);
         },
     };

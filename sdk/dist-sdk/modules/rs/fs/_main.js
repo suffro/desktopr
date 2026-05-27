@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildFs = buildFs;
-const _helpers_1 = require("../../../_helpers");
+const helpers_1 = require("../../../helpers");
 const getWindowLabelIfCompanion = () => {
     const compState = window?.Desktopr?.window
         ?.state;
@@ -170,7 +170,7 @@ function scope(core, permanent) {
 }
 function pluginFsScope(core, plugin) {
     const pluginModuleName = ((plugin?.trim()) ?? undefined);
-    const santizedluginModuleName = ((0, _helpers_1.normalizeModuleName)(pluginModuleName)?.trim()) ?? undefined;
+    const santizedluginModuleName = ((0, helpers_1.normalizeModuleName)(pluginModuleName)?.trim()) ?? undefined;
     if (!santizedluginModuleName)
         throw ("Invalid plugin name");
     const coreMethods = scopeCoreMethods(core, true, santizedluginModuleName);

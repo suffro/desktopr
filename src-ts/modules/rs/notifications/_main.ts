@@ -1,4 +1,4 @@
-import type { DesktoprAPI, NotificationsInterface } from "../../../_types";
+import type { DesktoprAPI, NotificationsInterface } from "../../../types";
 
 export function buildNotifications(core: { invoke: DesktoprAPI["invoke"] }): NotificationsInterface {
   return {

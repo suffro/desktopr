@@ -1,4 +1,4 @@
-import type { DesktoprAPI, } from "../../../_types";
+import type { DesktoprAPI, } from "../../../types";
 import { AutostartInterface, AutostartMode } from "./_types";
 
 export function buildAutostart(core: { invoke: DesktoprAPI["invoke"] }): AutostartInterface {

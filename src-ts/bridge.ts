@@ -1,4 +1,4 @@
-import type { DesktoprAPI, WindowTauri } from "./_types";
+import type { DesktoprAPI, WindowTauri } from "./types";
 import {
     buildCore,
     buildFs,
@@ -19,10 +19,10 @@ import {
     // buildCompanion,
     buildGlobVar,
     dtrReadyEventListener,
-} from "./_main";
-import { API_VERSION } from "./_constants";
-import { windowTauriProxy, tauriReadyCheck, waitTauri } from "./_helpers";
-import { getCacheOnlyWindowContext } from "./_companion_context";
+} from "./main";
+import { API_VERSION } from "./constants";
+import { windowTauriProxy, tauriReadyCheck, waitTauri } from "./helpers";
+import { getCacheOnlyWindowContext } from "./companion_context";
 import { buildPlugins } from "./modules/rs/plugins/_main";
 
 (() => {

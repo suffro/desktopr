@@ -1,4 +1,4 @@
-import { AppInfo, DtrPlatform } from "../_types";
+import { AppInfo, DtrPlatform } from "../types";
 import { isWindowAvailable, validate } from "../utils";
 
 export const normalizeString = (

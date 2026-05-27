@@ -1,5 +1,5 @@
-import { tauriGlobalShortcut } from "../../../_helpers";
-import { ShortcutsInterface } from "../../../_types";
+import { tauriGlobalShortcut } from "../../../helpers";
+import { ShortcutsInterface } from "../../../types";
 
 export function buildShortcuts(core: { invoke: <T=unknown>(cmd: string, payload?: any)=>Promise<T> }): ShortcutsInterface {
   return {

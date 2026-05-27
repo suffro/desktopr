@@ -1,5 +1,5 @@
-import { DesktoprInstance } from "../../../_main";
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprInstance } from "../../../main";
+import { DesktoprAPI } from "../../../types";
 import { buildDiagnosticsTestFunctions, deriveAppVersion, diagnosticsSettings } from "./_helpers";
 import { AnalyticsPayload, DiagnosticsArea, DiagnosticsInterface, ErrorPayload, PrivacySettings } from "./_types";
 

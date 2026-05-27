@@ -1,4 +1,4 @@
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { U64, U8 } from "../../../utils";
 import { PluginsInterface, PluginCallPayload, PluginStatusResult, PluginCallResult, PluginAddResult } from "./_types";
 import { normalizeModuleName } from "./_helpers";

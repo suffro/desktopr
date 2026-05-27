@@ -1,5 +1,5 @@
 // src-ts/sdk/desktopr.ts
-import type { DesktoprAPI } from "../_types";
+import type { DesktoprAPI } from "../types";
 
 // Internal helper: get a safe window reference
 function getWindow(): Window {

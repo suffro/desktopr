@@ -1,4 +1,4 @@
-import { DtrPlatform } from "../_types";
+import { DtrPlatform } from "../types";
 export declare const normalizeString: (str: string, options?: {
     toLowerCase: boolean;
     spacesFiller: string;

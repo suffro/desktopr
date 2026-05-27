@@ -1,4 +1,4 @@
-import { CompanionState } from "../../../_companion_context";
+import { CompanionState } from "../../../companion_context";
 export type _WindowTypesPlaceholder = unknown;
 export interface WindowInterface {
     new: (options?: NewWindowOptions) => Promise<void>;

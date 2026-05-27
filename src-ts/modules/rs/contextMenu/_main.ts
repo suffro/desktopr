@@ -1,5 +1,5 @@
-import { initContextMenuListener, normalizeEntries, removeContextMenuListener } from "../../../_helpers";
-import type { DesktoprAPI, CmNode, CmPopupOptions, ContextMenuInterface } from "../../../_types";
+import { initContextMenuListener, normalizeEntries, removeContextMenuListener } from "../../../helpers";
+import type { DesktoprAPI, CmNode, CmPopupOptions, ContextMenuInterface } from "../../../types";
 
 export function buildContextMenu(core: { invoke: DesktoprAPI["invoke"] }): ContextMenuInterface {
   return {

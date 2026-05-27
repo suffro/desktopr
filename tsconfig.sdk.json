@@ -6,14 +6,13 @@
     "moduleResolution": "nodenext",
     "strict": true,
     "skipLibCheck": true,
+    "types": ["node"],
 
     "declaration": true,
     "sourceMap": false,
 
     "outDir": "sdk/dist-sdk",
     "rootDir": "src-ts",
-
-    "baseUrl": "./src-ts",
   },
   "include": [
     "src-ts/sdk/**/*",

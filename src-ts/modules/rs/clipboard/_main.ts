@@ -1,4 +1,4 @@
-import type { DesktoprAPI, ClipboardInterface } from "../../../_types";
+import type { DesktoprAPI, ClipboardInterface } from "../../../types";
 
 export function buildClipboard(core: { invoke: DesktoprAPI["invoke"] }): ClipboardInterface {
   return {

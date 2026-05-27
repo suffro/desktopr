@@ -1,4 +1,4 @@
-import { BadgeInterface, DesktoprAPI } from "../../../_types";
+import { BadgeInterface, DesktoprAPI } from "../../../types";
 export declare function buildBadge(core: {
     invoke: DesktoprAPI["invoke"];
 }): BadgeInterface;

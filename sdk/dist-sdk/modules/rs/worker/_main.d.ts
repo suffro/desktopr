@@ -1,4 +1,4 @@
-import { DesktoprAPI } from "../../../_types";
+import { DesktoprAPI } from "../../../types";
 import { U64, U8 } from "../../../utils";
 import { WorkerCallPayload } from "./_types";
 export declare function buildWorker(core: {
