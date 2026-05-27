@@ -105,14 +105,14 @@ async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<
 }
 
 // --- Optional: simple monitor (interval polling) ---
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex, OnceLock};
 use tokio::task::JoinHandle;
 
 struct MonitorState {
     handle: Option<JoinHandle<()>>,
 }
 
-static mut MONITOR: Option<Arc<Mutex<MonitorState>>> = None;
+static MONITOR: OnceLock<Mutex<MonitorState>> = OnceLock::new();
 
 #[tauri::command]
 pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: Option<Vec<String>>) -> Result<(), String> {
@@ -132,22 +132,18 @@ pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: 
         }
     });
 
-    unsafe {
-        let st = MONITOR.get_or_insert_with(|| Arc::new(Mutex::new(MonitorState { handle: None }))).clone();
-        let mut s = st.lock().unwrap();
-        if let Some(old) = s.handle.take() { old.abort(); }
-        s.handle = Some(handle);
-    }
+    let state = MONITOR.get_or_init(|| Mutex::new(MonitorState { handle: None }));
+    let mut s = state.lock().unwrap();
+    if let Some(old) = s.handle.take() { old.abort(); }
+    s.handle = Some(handle);
     Ok(())
 }
 
 #[tauri::command]
 pub async fn dtr_network_stop_monitor() -> Result<(), String> {
-    unsafe {
-        if let Some(st) = MONITOR.as_ref() {
-            let mut s = st.lock().unwrap();
-            if let Some(h) = s.handle.take() { h.abort(); }
-        }
+    if let Some(state) = MONITOR.get() {
+        let mut s = state.lock().unwrap();
+        if let Some(h) = s.handle.take() { h.abort(); }
     }
     Ok(())
 }

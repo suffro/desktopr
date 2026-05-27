@@ -54,8 +54,8 @@ export function buildDiagnostics(core: { invoke: DesktoprAPI["invoke"] }): Diagn
 
     runRetention: () => core.invoke("dtr_logs_run_retention", {}),
 
-    export: (targetZipPath: string) =>
-      core.invoke("dtr_logs_export_zip", { targetZipPath }),
+    export: () =>
+      core.invoke<string>("dtr_logs_export_zip", {}),
 
     test: buildDiagnosticsTestFunctions(core),
   };

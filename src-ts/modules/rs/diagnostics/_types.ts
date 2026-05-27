@@ -31,7 +31,7 @@ export interface DiagnosticsInterface {
 
   runRetention: () => Promise<void>;
 
-  export: (targetZipPath: string) => Promise<void>;
+  export: () => Promise<string>;
 
   test: DiagnosticsTestFunctions;
 }
@@ -42,7 +42,7 @@ export type DiagnosticsTestFunctions = {
   testGenerateRecords: (n?: number) => Promise<void>;
   testThrowJsError: () => Promise<never>;
   testPanicRust: () => Promise<void>;
-  testExportZip: (path: string) => Promise<void>;
+  testExportZip: () => Promise<string>;
   testForceRetention: (area: DiagnosticsArea) => Promise<void>;
 };
 

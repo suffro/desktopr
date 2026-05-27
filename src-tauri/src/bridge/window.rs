@@ -78,7 +78,10 @@ pub async fn dtr_win_open(
   }
   let s = url.to_string();
 
-  let mut conf = app.config().app.windows.iter().find(|c| c.label == "main").unwrap().clone();
+  let mut conf = app.config().app.windows.iter()
+    .find(|c| c.label == "main")
+    .ok_or_else(|| "main window config not found".to_string())?
+    .clone();
   // This should be a unique label for all windows.
   let mut buf = [0u8; 1];
   assert_eq!(getrandom::fill(&mut buf), Ok(()));
@@ -91,10 +94,10 @@ pub async fn dtr_win_open(
     );
     conf.url = webview_url;
   }
-  let webview_window = tauri::WebviewWindowBuilder::from_config(&app, &conf)
-    .unwrap()
+  let _webview_window = tauri::WebviewWindowBuilder::from_config(&app, &conf)
+    .map_err(|e| format!("Failed to build window config: {e}"))?
     .build()
-    .unwrap();
+    .map_err(|e| format!("Failed to create window: {e}"))?;
 
   Ok(())
 }

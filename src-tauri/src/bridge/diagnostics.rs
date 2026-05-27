@@ -16,6 +16,8 @@ use tauri::{AppHandle, Manager};
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
+use tauri_plugin_dialog::{DialogExt, FilePath};
+
 use crate::bridge::app::{dtr_app_info, AppInfo as AppInfoStruct};
 use crate::bridge::fs as dtrfs;
 
@@ -415,9 +417,32 @@ pub fn dtr_logs_new_record(
     append_jsonl(&app, &log_rel, &entry)
 }
 
-/// Export diagnostics subdirectories as a zip file at `target_zip_path`.
+/// Export diagnostics subdirectories as a zip file.
+/// Opens an OS save dialog so the user explicitly chooses the destination path.
+/// Returns the chosen path, or an empty string if the user cancelled.
 #[tauri::command]
-pub fn dtr_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<(), String> {
+pub async fn dtr_logs_export_zip(app: AppHandle) -> Result<String, String> {
+    let handle = app.clone();
+    let default_name = format!("diagnostics-{}.zip", Utc::now().format("%Y-%m-%d"));
+
+    let chosen = tauri::async_runtime::spawn_blocking(move || {
+        handle
+            .dialog()
+            .file()
+            .set_title("Save Diagnostics")
+            .set_file_name(&default_name)
+            .add_filter("Zip archive", &["zip"])
+            .blocking_save_file()
+    })
+    .await
+    .map_err(|e| format!("Dialog error: {e}"))?;
+
+    let target_zip_path = match chosen {
+        None => return Ok(String::new()),
+        Some(FilePath::Path(p)) => p.to_string_lossy().to_string(),
+        Some(FilePath::Url(u)) => u.to_string(),
+    };
+
     let base = diagnostics_root(&app);
     let file = std::fs::File::create(&target_zip_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipWriter::new(file);
@@ -450,7 +475,7 @@ pub fn dtr_logs_export_zip(app: AppHandle, target_zip_path: String) -> Result<()
     }
 
     zip.finish().map_err(|e| e.to_string())?;
-    Ok(())
+    Ok(target_zip_path)
 }
 
 /// Install a Rust panic hook that writes crash files if crash reports are enabled.

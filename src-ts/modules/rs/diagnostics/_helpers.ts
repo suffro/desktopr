@@ -44,8 +44,8 @@ export function buildDiagnosticsTestFunctions(core: { invoke: DesktoprAPI["invok
 
     testPanicRust: () => core.invoke<void>("dtr_logs_test_panic", {}),
 
-    testExportZip: (path: string) =>
-      core.invoke<void>("dtr_logs_export_zip", { target_zip_path: path }),
+    testExportZip: () =>
+      core.invoke<string>("dtr_logs_export_zip", {}),
 
     testForceRetention: (area: DiagnosticsArea) =>
       core.invoke<void>("dtr_logs_test_force_retention", { area }),

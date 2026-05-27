@@ -315,19 +315,6 @@ fn main() {
       dtr_plugin_remove_module,
       dtr_plugin_list_modules,
 
-      // web_worker deprecated
-      // dtr_worker_call,
-      // dtr_worker_delivery,
-      // dtr_worker_ready,
-      // dtr_worker_add_module,
-      // dtr_worker_pick_and_add_module,
-      // dtr_worker_remove_module,
-      // dtr_worker_paths,
-      // dtr_worker_clear_all,
-      // dtr_worker_list_modules,
-      // dtr_worker_status,
-      // dtr_worker_restart,
-
       // test commands only in dev
       #[cfg(debug_assertions)]
       dtr_logs_test_record_n,

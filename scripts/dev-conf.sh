@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # remote.json -> blank.html
-APP_URL="http://blank.html"
+APP_URL="https://companion.desktopr.app"
 APP_VERSION="0.2.1"
 CARGO_PACKAGE_VERSION="0.2.1"
 CARGO_PACKAGE_NAME="desktopr-wrapper"
