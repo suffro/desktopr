@@ -1,6 +1,6 @@
 {
   "name": "desktopr",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Official JS/TS SDK for the Desktopr native bridge",
   "main": "dist-sdk/sdk/index.js",
   "types": "dist-sdk/sdk/index.d.ts",
