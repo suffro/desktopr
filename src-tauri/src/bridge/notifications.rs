@@ -1,9 +1,9 @@
 use tauri::AppHandle;
 use tauri_plugin_notification::{NotificationExt, PermissionState};
 use serde::Serialize;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicI32, Ordering};
 
-static NOTIF_ID: AtomicU32 = AtomicU32::new(1);
+static NOTIF_ID: AtomicI32 = AtomicI32::new(1);
 
 #[tauri::command]
 pub fn dtr_notification_state(app: AppHandle) -> Result<String, String> {
