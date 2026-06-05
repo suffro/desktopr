@@ -1,6 +1,9 @@
 use tauri::AppHandle;
 use tauri_plugin_notification::{NotificationExt, PermissionState};
 use serde::Serialize;
+use std::sync::atomic::{AtomicU32, Ordering};
+
+static NOTIF_ID: AtomicU32 = AtomicU32::new(1);
 
 #[tauri::command]
 pub fn dtr_notification_state(app: AppHandle) -> Result<String, String> {
@@ -29,6 +32,7 @@ pub fn dtr_notify(app: AppHandle, title: String, body: String) -> Result<NotifyR
     }
   }
 
-  app.notification().builder().title(title).body(body).show().map_err(|e| e.to_string())?;
+  let id = NOTIF_ID.fetch_add(1, Ordering::Relaxed);
+  app.notification().builder().id(id).title(title).body(body).show().map_err(|e| e.to_string())?;
   Ok(NotifyResult { shown: true, state_before: before.to_string(), state_after: after.to_string() })
 }

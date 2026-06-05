@@ -27,7 +27,10 @@
   "bundle": {
     "active": true,
     "targets": ["nsis", "app", "deb", "rpm", "appimage"],
-    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"]
+    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
+    "macOS": {
+      "entitlements": "Entitlements.plist"
+    }
   },
   "plugins": {
     "updater": {

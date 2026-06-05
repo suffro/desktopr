@@ -48,6 +48,9 @@
     ],
     "icon": [
       "icons/icon.png"
-    ]
+    ],
+    "macOS": {
+      "entitlements": "Entitlements.plist"
+    }
   }
 }

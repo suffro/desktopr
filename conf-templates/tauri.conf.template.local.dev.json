@@ -49,6 +49,9 @@
     ],
     "icon": [
       "icons/icon-companion.png"
-    ]
+    ],
+    "macOS": {
+      "entitlements": "Entitlements.plist"
+    }
   }
 }
