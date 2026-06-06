@@ -40,6 +40,7 @@ const OPEN_EXTERNAL_SCRIPT: &str = r#"(function() {
         var a = e.target && e.target.closest && e.target.closest('a[target="_blank"]');
         if (a && a.href && (a.href.startsWith('http://') || a.href.startsWith('https://'))) {
             e.preventDefault();
+            e.stopPropagation();
             try { window.__TAURI_INTERNALS__.invoke('plugin:shell|open', { path: a.href }); } catch(e) {}
         }
     }, true);
