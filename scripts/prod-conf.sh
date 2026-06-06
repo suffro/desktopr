@@ -27,6 +27,17 @@ fi
 : "${MAIN_WINDOW_OPEN_FULLSCREEN:=false}"
 : "${COMPANION_MODE:=false}"
 
+cat > src-tauri/window.env << EOF
+MAIN_WINDOW_URL=${MAIN_WINDOW_URL}
+MAIN_WINDOW_TITLE=${MAIN_WINDOW_TITLE}
+MAIN_WINDOW_WIDTH=${MAIN_WINDOW_WIDTH}
+MAIN_WINDOW_HEIGHT=${MAIN_WINDOW_HEIGHT}
+MAIN_WINDOW_BG_COLOR=${MAIN_WINDOW_BG_COLOR}
+MAIN_WINDOW_RESIZABLE=${MAIN_WINDOW_RESIZABLE}
+MAIN_WINDOW_VISIBLE=false
+MAIN_WINDOW_OPEN_FULLSCREEN=${MAIN_WINDOW_OPEN_FULLSCREEN}
+EOF
+
 # -----------------------------
 # Resolve APP_URL origin and remote URL patterns
 # -----------------------------
@@ -138,50 +149,6 @@ jq \
   --arg ver "$APP_VERSION" \
   '.version = $ver' \
   src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
-
-# Window config
-echo "4. Patching app windows configuration"
-jq \
-  --arg title "$MAIN_WINDOW_TITLE" \
-  --argjson width "$MAIN_WINDOW_WIDTH" \
-  --argjson height "$MAIN_WINDOW_HEIGHT" \
-  --arg bg "$MAIN_WINDOW_BG_COLOR" \
-  --arg url "$MAIN_WINDOW_URL" \
-  --argjson resizable "$( [ "$MAIN_WINDOW_RESIZABLE" = "true" ] && echo true || echo false )" \
-  --argjson fullscreen "$( [ "$MAIN_WINDOW_OPEN_FULLSCREEN" = "true" ] && echo true || echo false )" \
-  '
-  .app = (.app // {}) |
-  .app.windows = (
-    if (.app.windows | type) == "array" and (.app.windows | length) > 0 then
-      (.app.windows | map(
-        if .label == "main" or .label == "main-window" then
-          .title = $title |
-          .width = $width |
-          .height = $height |
-          .resizable = $resizable |
-          .fullscreen = $fullscreen |
-          .backgroundColor = $bg |
-          .url = $url
-        else
-          .
-        end
-      ))
-    else
-      [
-        {
-          "label": "main",
-          "title": $title,
-          "width": $width,
-          "height": $height,
-          "resizable": $resizable,
-          "fullscreen": $fullscreen,
-          "backgroundColor": $bg,
-          "url": $url
-        }
-      ]
-    end
-  )
-  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # CSP allowlist
 echo "5. Patching CSP allowlist"

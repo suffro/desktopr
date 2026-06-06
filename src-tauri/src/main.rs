@@ -5,7 +5,7 @@ mod helpers;
 
 use bridge::*;
 use desktopr::bridge;
-use tauri::{WindowEvent, Emitter, DragDropEvent, Manager};
+use tauri::{WindowEvent, Emitter, DragDropEvent, Manager, WebviewWindowBuilder, WebviewUrl};
 use crate::bridge::dragdrop;
 
 // Global Shortcut plugin
@@ -26,6 +26,24 @@ use tauri_plugin_prevent_default::{
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
+
+const OPEN_EXTERNAL_SCRIPT: &str = r#"(function() {
+    var _nativeOpen = window.open.bind(window);
+    window.open = function(url, target, features) {
+        if (url) {
+            try { window.__TAURI_INTERNALS__.invoke('plugin:shell|open', { path: String(url) }); } catch(e) {}
+            return null;
+        }
+        return _nativeOpen(url, target, features);
+    };
+    document.addEventListener('click', function(e) {
+        var a = e.target && e.target.closest && e.target.closest('a[target="_blank"]');
+        if (a && a.href && (a.href.startsWith('http://') || a.href.startsWith('https://'))) {
+            e.preventDefault();
+            try { window.__TAURI_INTERNALS__.invoke('plugin:shell|open', { path: a.href }); } catch(e) {}
+        }
+    }, true);
+})();"#;
 
 fn main() {
   // let prevent = PD::new()
@@ -67,6 +85,25 @@ fn main() {
 
   // --- 3) Setup: autostart, env state, logs, shortcuts and deeplinks ---
   builder = builder.setup(|app| {
+    // Create main window programmatically to support initialization_script.
+    {
+      let url = if env!("MAIN_WINDOW_URL").is_empty() {
+        WebviewUrl::App("/".into())
+      } else {
+        WebviewUrl::External(env!("MAIN_WINDOW_URL").parse().expect("invalid MAIN_WINDOW_URL"))
+      };
+      WebviewWindowBuilder::new(app, "main", url)
+        .title(env!("MAIN_WINDOW_TITLE"))
+        .visible(env!("MAIN_WINDOW_VISIBLE").parse::<bool>().unwrap_or(false))
+        .inner_size(
+          env!("MAIN_WINDOW_WIDTH").parse::<f64>().unwrap_or(1200.0),
+          env!("MAIN_WINDOW_HEIGHT").parse::<f64>().unwrap_or(800.0),
+        )
+        .resizable(env!("MAIN_WINDOW_RESIZABLE").parse::<bool>().unwrap_or(true))
+        .initialization_script(OPEN_EXTERNAL_SCRIPT)
+        .build()?;
+    }
+
     // Run autostart bootstrap first so this setup owns the timing.
     bridge::autostart::run_from_setup(app)?;
 

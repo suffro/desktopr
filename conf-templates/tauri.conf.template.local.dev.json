@@ -28,19 +28,7 @@
       ],
       "csp": null
     },
-    "windows": [
-      {
-        "label": "main",
-        "title": "Desktopr Companion",
-        "devtools": false,
-        "visible": true,
-        "width": 1200,
-        "height": 800,
-        "backgroundColor": "#171717",
-        "resizable": true,
-        "fullscreen": false
-      }
-    ]
+    "windows": []
   },
   "bundle": {
     "active": true,

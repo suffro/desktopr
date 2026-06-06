@@ -29,6 +29,18 @@ cp conf-templates/tauri.conf.template.dev.json src-tauri/tauri.conf.json
 
 cp conf-templates/menu.config.dev.json src-tauri/resources/menu/menu.config.json
 
+cat > src-tauri/window.env << 'EOF'
+MAIN_WINDOW_URL=https://companion.desktopr.app
+MAIN_WINDOW_TITLE=Desktopr Dev
+MAIN_WINDOW_WIDTH=1200
+MAIN_WINDOW_HEIGHT=800
+MAIN_WINDOW_BG_COLOR=#171717
+MAIN_WINDOW_RESIZABLE=true
+MAIN_WINDOW_VISIBLE=false
+MAIN_WINDOW_OPEN_FULLSCREEN=false
+EOF
+
 echo "Dev remote.json -> ${REMOTE_URL_PATTERN}"
 echo "Dev Cargo.toml package name -> ${CARGO_PACKAGE_NAME}"
 echo "Dev Cargo.toml package version -> ${CARGO_PACKAGE_VERSION}"
+echo "Dev window.env -> written"

@@ -9,7 +9,7 @@ use tauri::{
   Position,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{collections::HashMap, sync::{Arc, Mutex, OnceLock}};
 use tokio::sync::oneshot;
 
 /// ---------- Public schema (passed from JS) ----------
@@ -99,10 +99,8 @@ struct AwaitOnce {
 type AwaitMap = Arc<Mutex<HashMap<u64, AwaitOnce>>>;
 
 fn global_await_map() -> &'static AwaitMap {
-  static mut MAP: Option<AwaitMap> = None;
-  unsafe {
-    MAP.get_or_insert_with(|| Arc::new(Mutex::new(HashMap::new())))
-  }
+  static MAP: OnceLock<AwaitMap> = OnceLock::new();
+  MAP.get_or_init(|| Arc::new(Mutex::new(HashMap::new())))
 }
 
 fn next_ticket() -> u64 {

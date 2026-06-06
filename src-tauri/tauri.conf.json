@@ -26,20 +26,7 @@
       ],
       "csp": null
     },
-    "windows": [
-      {
-        "label": "main",
-        "title": "Desktopr Dev",
-        "visible": false,
-        "devtools": true,
-        "width": 1200,
-        "height": 800,
-        "backgroundColor": "#171717",
-        "resizable": true,
-        "fullscreen": false,
-        "url": "https://companion.desktopr.app"
-      }
-    ]
+    "windows": []
   },
   "bundle": {
     "active": true,
