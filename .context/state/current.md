@@ -2,8 +2,10 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 6 completed: the base runtime now starts from
-bundled local content and has no required Desktopr hosted-service dependency.
+Desktopr OSS migration phase 7 implemented and awaiting its first GitHub run:
+`.github/workflows/build.yml` builds Linux, Windows and macOS from this
+repository, signs optionally from repository secrets and publishes only GitHub
+artifacts or an optional GitHub Release.
 
 ## Recent relevant changes
 
@@ -66,11 +68,29 @@ bundled local content and has no required Desktopr hosted-service dependency.
   package/lockfile version so the standalone production profile passes
   `cargo check --locked`.
 
+- Phases 1-6 were committed and pushed to `main` as `c659dcf`.
+- Added `.github/workflows/build.yml` (`workflow_dispatch` and
+  `workflow_call`) replacing the legacy build/sign/dist workflows without R2,
+  CDN, private wrapper checkout, hosted logging or credential inputs.
+- Signing uses Tauri's native Windows certificate-store and macOS
+  `APPLE_*` mechanisms; unsigned macOS builds are ad-hoc signed. Updater
+  artifacts are built only with both updater inputs and the private key secret.
+- CI keeps the Cargo package name/version from `Cargo.lock` and applies the app
+  version to `tauri.conf.json`; verified that coupling them breaks `--locked`.
+- The production template now also bundles `dmg`.
+- Windows builds can opt into an MSIX package through the `msix_*` inputs; it
+  is signed only when the Windows certificate subject matches the MSIX
+  publisher. The MSIX step itself has not run on Windows yet.
+- Verified: `actionlint` with `shellcheck` passes (and reports injected
+  errors); the macOS job sequence reproduced locally produced an ad-hoc signed
+  DMG with the requested version/identifier. The local run used tauri-cli
+  2.8.4, while CI pins 2.11.1.
+
 ## Next
 
-Stop before phase 7. The next planned step, when explicitly requested, is phase
-7: replace the legacy hosted Actions flow with in-repository build/signing
-workflows and GitHub-hosted artifacts/releases.
+Run `build.yml` on GitHub (unsigned first) to verify the Linux, Windows and
+macOS jobs, then fix any runner-specific issue. After that, phase 8 validates
+the first complete standalone build.
 
 ## Blockers
 
@@ -78,8 +98,10 @@ workflows and GitHub-hosted artifacts/releases.
   manifest/lockfile data. It must be revoked/rotated and scrubbed in that source
   repository and its history before that repository can be shared. The value
   was never printed or copied.
-- Phase 7 still needs to replace the separate Actions workflows, which require
-  a private wrapper token and R2/CDN distribution.
+- The in-repository workflow has not run on GitHub yet. Windows and Linux jobs
+  and real-certificate signing are unverified.
+- Running it on this private repository consumes GitHub Actions minutes
+  (macOS and Windows runners are billed at higher multipliers).
 - The legacy `frontend/` companion UI still links the retired dashboard. It is
   intentionally excluded until the planned companion phase and is not required
   by the standalone runtime.

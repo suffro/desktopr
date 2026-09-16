@@ -65,15 +65,15 @@ records source-repository boundaries; `tauri-skeleton` remains the only target.
 
 ## Next
 
-Phases 4-6 are complete. The next step is phase 7: replace the separate legacy
-Actions with in-repository build/signing workflows that publish only GitHub
-artifacts or optional GitHub Releases.
+Phases 4-6 are complete. Phase 7 replaced the legacy Actions with the
+in-repository `.github/workflows/build.yml`; its first GitHub run is pending.
 
 ## Blockers
 
 - Revoke/rotate and remove the exposed credential from the separate
   `project-globals` repository and its history before sharing that repository.
-- The separate legacy Actions still depend on private wrapper checkout and
-  hosted R2/CDN distribution; phase 7 must not copy those dependencies.
+- The separate legacy Actions repository still contains private wrapper
+  checkout and hosted R2/CDN distribution. None of it was copied; it can be
+  archived once the new workflow is verified.
 - The legacy `frontend/` companion UI still has a retired dashboard link and is
   deferred to the companion phase.

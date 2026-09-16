@@ -32,6 +32,20 @@
 - Enabling updates requires both developer-owned updater inputs plus the Cargo
   `updater` feature. Never restore an implicit or hosted Desktopr updater.
 - Run `syngraphe check` after updating repository context.
+- Lint workflow changes with `actionlint` (with `shellcheck` on `PATH` so
+  embedded scripts are checked).
+
+## CI workflow rules
+
+- Credentials are secrets only, never workflow inputs, and must not be echoed.
+  Signing stays optional: absent secrets produce an unsigned build, partial
+  secret sets fail early.
+- Keep the default token read-only; grant `contents: write` only to the job
+  that creates a GitHub Release.
+- Prefer first-party `actions/*` and pinned tool versions; do not add
+  `curl | bash` installers or uploads to external storage.
+- Keep the Cargo package name/version from `Cargo.lock` in CI; the app version
+  belongs in `tauri.conf.json` so `--locked` stays valid.
 
 ## Important rules
 

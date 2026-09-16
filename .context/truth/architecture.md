@@ -23,6 +23,9 @@ build is established. The repository root is also the npm workspace root.
 - `src-tauri/standalone/`: bundled local fallback UI used when a developer does
   not configure an external application URL.
 - `conf-templates/` and `scripts/`: runtime configuration generation.
+- `.github/workflows/build.yml`: cross-platform build, optional signing,
+  GitHub Actions artifacts and optional GitHub Release. It builds this checkout
+  directly; see `decisions/github-actions-build.md`.
 
 The source repositories have these roles:
 
@@ -32,9 +35,9 @@ The source repositories have these roles:
 - `wasm-module-template`: absorbed into `wasm/module-template/` in phase 5.
 - `wasm-modules`: its useful `math` example was absorbed into
   `wasm/modules/math/` in phase 5.
-- `github-actions`: legacy build/sign/distribution workflows. They are not yet
-  copied because they are coupled to a private wrapper checkout and hosted R2
-  distribution.
+- `github-actions`: legacy build/sign/distribution workflows, replaced in
+  phase 7 by the in-repository `build.yml`. No hosted distribution, private
+  wrapper checkout or logging worker logic was copied.
 
 ## Data flow
 
@@ -58,8 +61,10 @@ directory plus dedicated persistent plugin storage.
 - The updater is excluded from default Cargo features. A developer can opt in
   with the `updater` feature and must supply both their own HTTPS endpoint and
   signing public key.
-- R2 distribution and a private wrapper checkout remain only in the separate
-  legacy Actions repository for phase 7; they are not monorepo dependencies.
+- CI builds use GitHub-hosted runners, first-party `actions/*` actions,
+  crates.io and npm. Build outputs go only to GitHub Actions artifacts and
+  optional GitHub Releases. Signing credentials are the consumer repository's
+  own secrets.
 - The legacy companion frontend still has one retired dashboard link and stays
   isolated until its planned phase.
 - Generic network diagnostics currently use public Cloudflare and Google

@@ -1,0 +1,745 @@
+# Builds Desktopr for Linux, Windows and macOS on GitHub-hosted runners.
+#
+# Outputs are GitHub Actions artifacts and, optionally, a GitHub Release.
+# Nothing is uploaded anywhere else.
+#
+# Signing is optional and driven only by secrets of the repository running (or
+# calling) this workflow. When a platform's secrets are absent its build is
+# unsigned; macOS builds are then ad-hoc signed. Partial secret sets fail early.
+#
+#   Windows:  WINDOWS_CERTIFICATE (base64 .pfx), WINDOWS_CERTIFICATE_PASSWORD
+#   macOS:    APPLE_CERTIFICATE (base64 .p12), APPLE_CERTIFICATE_PASSWORD,
+#             APPLE_SIGNING_IDENTITY
+#   Notarize: APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID
+#   Updater:  TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+#
+# The updater is built only when both update_endpoint and updater_public_key are
+# provided (inputs, or the DESKTOPR_UPDATE_ENDPOINT / TAURI_SIGNING_PUBLIC_KEY
+# repository variables), and then requires TAURI_SIGNING_PRIVATE_KEY.
+#
+# An MSIX package (Microsoft Store / sideloading) is added to the Windows build
+# when msix_identity_name, msix_identity_publisher, msix_publisher_display_name
+# and msix_display_name are all provided. The values come from Partner Center
+# and are not secret. The MSIX is signed only when the Windows certificate
+# subject matches msix_identity_publisher; Store submissions are signed by the
+# Store.
+
+name: build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "Comma-separated platforms: linux, windows, macos"
+        type: string
+        default: "linux,windows,macos"
+      app_name:
+        description: "Product name and main window title"
+        type: string
+        default: "Desktopr"
+      app_identifier:
+        description: "Bundle identifier (reverse domain)"
+        type: string
+        default: "app.desktopr.app"
+      app_version:
+        description: "App version (X.Y.Z). Empty uses the configuration default."
+        type: string
+        default: ""
+      app_url:
+        description: "External web app URL. Empty loads the bundled standalone page."
+        type: string
+        default: ""
+      icon:
+        description: "Repository path of the square source icon (PNG or SVG)"
+        type: string
+        default: "src-tauri/icons/icon.png"
+      deeplink_scheme:
+        description: "Deep link scheme. Empty keeps the configuration default."
+        type: string
+        default: ""
+      update_endpoint:
+        description: "Updater HTTPS endpoint. Empty disables the updater unless the repository variable is set."
+        type: string
+        default: ""
+      updater_public_key:
+        description: "Updater public key. Empty uses the repository variable, if any."
+        type: string
+        default: ""
+      msix_identity_name:
+        description: "MSIX: Package/Identity/Name from Partner Center. Empty skips MSIX."
+        type: string
+        default: ""
+      msix_identity_publisher:
+        description: "MSIX: Package/Identity/Publisher (CN=...)"
+        type: string
+        default: ""
+      msix_publisher_display_name:
+        description: "MSIX: Publisher display name"
+        type: string
+        default: ""
+      msix_display_name:
+        description: "MSIX: Package display name reserved for the listing"
+        type: string
+        default: ""
+      msix_background_color:
+        description: "MSIX: Tile background color"
+        type: string
+        default: "#ffffff"
+      msix_short_name:
+        description: "MSIX: Optional tile short name"
+        type: string
+        default: ""
+      release:
+        description: "Create a GitHub Release from the artifacts"
+        type: boolean
+        default: false
+      release_draft:
+        description: "Create the release as a draft"
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      platforms:
+        type: string
+        default: "linux,windows,macos"
+      app_name:
+        type: string
+        default: "Desktopr"
+      app_identifier:
+        type: string
+        default: "app.desktopr.app"
+      app_version:
+        type: string
+        default: ""
+      app_url:
+        type: string
+        default: ""
+      icon:
+        type: string
+        default: "src-tauri/icons/icon.png"
+      deeplink_scheme:
+        type: string
+        default: ""
+      update_endpoint:
+        type: string
+        default: ""
+      updater_public_key:
+        type: string
+        default: ""
+      msix_identity_name:
+        type: string
+        default: ""
+      msix_identity_publisher:
+        type: string
+        default: ""
+      msix_publisher_display_name:
+        type: string
+        default: ""
+      msix_display_name:
+        type: string
+        default: ""
+      msix_background_color:
+        type: string
+        default: "#ffffff"
+      msix_short_name:
+        type: string
+        default: ""
+      release:
+        type: boolean
+        default: false
+      release_draft:
+        type: boolean
+        default: true
+    secrets:
+      WINDOWS_CERTIFICATE:
+        required: false
+      WINDOWS_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_CERTIFICATE:
+        required: false
+      APPLE_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_SIGNING_IDENTITY:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_PASSWORD:
+        required: false
+      APPLE_TEAM_ID:
+        required: false
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  TAURI_CLI_VERSION: "2.11.1"
+  NODE_VERSION: "22"
+
+jobs:
+  prepare:
+    name: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      updater: ${{ steps.validate.outputs.updater }}
+    steps:
+      - name: Validate inputs
+        id: validate
+        shell: bash
+        env:
+          APP_VERSION: ${{ inputs.app_version }}
+          APP_URL: ${{ inputs.app_url }}
+          UPDATE_ENDPOINT: ${{ inputs.update_endpoint || vars.DESKTOPR_UPDATE_ENDPOINT }}
+          UPDATER_PUBLIC_KEY: ${{ inputs.updater_public_key || vars.TAURI_SIGNING_PUBLIC_KEY }}
+          UPDATER_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          RELEASE: ${{ inputs.release }}
+          MSIX_IDENTITY_NAME: ${{ inputs.msix_identity_name }}
+          MSIX_IDENTITY_PUBLISHER: ${{ inputs.msix_identity_publisher }}
+          MSIX_PUBLISHER_DISPLAY_NAME: ${{ inputs.msix_publisher_display_name }}
+          MSIX_DISPLAY_NAME: ${{ inputs.msix_display_name }}
+          MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color }}
+        run: |
+          set -euo pipefail
+
+          msix_fields=0
+          for v in MSIX_IDENTITY_NAME MSIX_IDENTITY_PUBLISHER MSIX_PUBLISHER_DISPLAY_NAME MSIX_DISPLAY_NAME; do
+            [ -n "${!v}" ] && msix_fields=$((msix_fields + 1))
+          done
+          if [ "$msix_fields" -ne 0 ] && [ "$msix_fields" -ne 4 ]; then
+            echo "::error::MSIX requires msix_identity_name, msix_identity_publisher, msix_publisher_display_name and msix_display_name"
+            exit 1
+          fi
+          if [ "$msix_fields" -eq 4 ]; then
+            if [ -n "$APP_VERSION" ] && ! printf '%s' "$APP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::MSIX requires a numeric X.Y.Z app_version"
+              exit 1
+            fi
+            if ! printf '%s' "$MSIX_IDENTITY_PUBLISHER" | grep -Eq '^CN='; then
+              echo "::error::msix_identity_publisher must be a distinguished name starting with CN="
+              exit 1
+            fi
+            if [ -n "$MSIX_BACKGROUND_COLOR" ] && ! printf '%s' "$MSIX_BACKGROUND_COLOR" | grep -Eq '^(#[0-9A-Fa-f]{6}|transparent)$'; then
+              echo "::error::msix_background_color must be #RRGGBB or transparent"
+              exit 1
+            fi
+          fi
+
+          if [ -n "$APP_VERSION" ] && ! printf '%s' "$APP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$'; then
+            echo "::error::app_version must be X.Y.Z (optionally with a pre-release or build suffix)"
+            exit 1
+          fi
+
+          if [ "$RELEASE" = "true" ] && [ -z "$APP_VERSION" ]; then
+            echo "::error::app_version is required when release is enabled"
+            exit 1
+          fi
+
+          if [ -n "$APP_URL" ] && ! printf '%s' "$APP_URL" | grep -Eq '^https?://[^/]+'; then
+            echo "::error::app_url must be an absolute HTTP(S) URL"
+            exit 1
+          fi
+
+          updater=false
+          if [ -n "$UPDATE_ENDPOINT" ] || [ -n "$UPDATER_PUBLIC_KEY" ]; then
+            if [ -z "$UPDATE_ENDPOINT" ] || [ -z "$UPDATER_PUBLIC_KEY" ]; then
+              echo "::error::The updater requires both update_endpoint and updater_public_key"
+              exit 1
+            fi
+            if [ -z "$UPDATER_PRIVATE_KEY" ]; then
+              echo "::error::The updater requires the TAURI_SIGNING_PRIVATE_KEY secret"
+              exit 1
+            fi
+            updater=true
+          fi
+          echo "updater=$updater" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve platform matrix
+        id: matrix
+        shell: bash
+        env:
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          set -euo pipefail
+
+          include='[]'
+          for platform in $(printf '%s' "$PLATFORMS" | tr ',' ' '); do
+            case "$platform" in
+              linux)   os=ubuntu-22.04 ;;
+              windows) os=windows-latest ;;
+              macos)   os=macos-latest ;;
+              *) echo "::error::Unknown platform: $platform"; exit 1 ;;
+            esac
+            include="$(jq -c --arg p "$platform" --arg os "$os" '. + [{platform: $p, os: $os}] | unique' <<<"$include")"
+          done
+
+          if [ "$(jq length <<<"$include")" -eq 0 ]; then
+            echo "::error::No platform selected"
+            exit 1
+          fi
+
+          echo "matrix=$include" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build (${{ matrix.platform }})
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustc --version
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential file jq libayatana-appindicator3-dev libgtk-3-dev \
+            librsvg2-dev libssl-dev libwebkit2gtk-4.1-dev libxdo-dev pkg-config
+
+      - name: Cache Cargo registry and target
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Cache Tauri CLI
+        id: tauri_cli_cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/cargo-tauri
+            ~/.cargo/bin/cargo-tauri.exe
+          key: ${{ runner.os }}-tauri-cli-${{ env.TAURI_CLI_VERSION }}
+
+      - name: Install Tauri CLI
+        if: steps.tauri_cli_cache.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --version "$TAURI_CLI_VERSION" --locked
+
+      - name: Install npm dependencies
+        run: npm ci --no-audit --fund=false
+
+      - name: Generate icons
+        env:
+          ICON_SOURCE: ${{ inputs.icon }}
+        run: |
+          set -euo pipefail
+          test -s "$ICON_SOURCE" || { echo "::error::Icon not found: $ICON_SOURCE"; exit 1; }
+
+          out="$RUNNER_TEMP/icons"
+          (cd src-tauri && cargo tauri icon "$GITHUB_WORKSPACE/$ICON_SOURCE" --output "$out")
+          for icon in icon.png icon.icns icon.ico; do
+            test -s "$out/$icon" || { echo "::error::Icon generation did not produce $icon"; exit 1; }
+            cp "$out/$icon" "src-tauri/icons/$icon"
+          done
+
+      - name: Configure production build
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          APP_IDENTIFIER: ${{ inputs.app_identifier }}
+          APP_VERSION_INPUT: ${{ inputs.app_version }}
+          APP_URL: ${{ inputs.app_url }}
+          DEEPLINK_SCHEME: ${{ inputs.deeplink_scheme }}
+          UPDATER: ${{ needs.prepare.outputs.updater }}
+          UPDATE_ENDPOINT_INPUT: ${{ inputs.update_endpoint || vars.DESKTOPR_UPDATE_ENDPOINT }}
+          UPDATER_PUBLIC_KEY: ${{ inputs.updater_public_key || vars.TAURI_SIGNING_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+
+          export MAIN_WINDOW_TITLE="$APP_NAME"
+          export APP_IDENTIFIER APP_URL DEEPLINK_SCHEME
+          if [ -n "$APP_VERSION_INPUT" ]; then
+            export APP_VERSION="$APP_VERSION_INPUT"
+          fi
+
+          # The app version lives in tauri.conf.json. The Cargo package keeps the
+          # name/version recorded in Cargo.lock so `--locked` builds stay valid.
+          CARGO_PACKAGE_NAME="$(sed -nE 's/^name = "([^"]+)"$/\1/p' src-tauri/Cargo.toml | head -n 1)"
+          CARGO_PACKAGE_VERSION="$(sed -nE 's/^version = "([^"]+)"$/\1/p' src-tauri/Cargo.toml | head -n 1)"
+          if [ -z "$CARGO_PACKAGE_NAME" ] || [ -z "$CARGO_PACKAGE_VERSION" ]; then
+            echo "::error::Could not read the Cargo package name/version from src-tauri/Cargo.toml"
+            exit 1
+          fi
+          export CARGO_PACKAGE_NAME CARGO_PACKAGE_VERSION
+          echo "CARGO_PACKAGE_NAME=$CARGO_PACKAGE_NAME" >> "$GITHUB_ENV"
+
+          if [ "$UPDATER" = "true" ]; then
+            export UPDATE_ENDPOINT="$UPDATE_ENDPOINT_INPUT"
+            export ED25519_PUBKEY="$UPDATER_PUBLIC_KEY"
+          else
+            export UPDATE_ENDPOINT="" ED25519_PUBKEY=""
+          fi
+
+          bash scripts/prod-conf.sh
+
+          (cd src-tauri && cargo metadata --locked --format-version 1 >/dev/null)
+
+      - name: Compile bridge
+        run: |
+          set -euo pipefail
+          npm run ts:compile:bridge
+          grep -qE 'window\.Desktopr|globalThis\.Desktopr' src-tauri/tsc/bridge.js || {
+            echo "::error::Compiled bridge does not expose Desktopr"
+            exit 1
+          }
+
+      - name: Configure Windows signing
+        id: windows_signing
+        if: runner.os == 'Windows'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $hasCert = -not [string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)
+          $hasPassword = -not [string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE_PASSWORD)
+
+          if (-not $hasCert -and -not $hasPassword) {
+            Write-Host "::notice::Windows signing secrets not set; building unsigned."
+            exit 0
+          }
+          if (-not ($hasCert -and $hasPassword)) {
+            throw "Windows signing requires both WINDOWS_CERTIFICATE and WINDOWS_CERTIFICATE_PASSWORD."
+          }
+
+          $pfxPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+          try {
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+            $password = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          } finally {
+            Remove-Item -Force $pfxPath -ErrorAction SilentlyContinue
+          }
+
+          $configPath = "src-tauri/tauri.conf.json"
+          $config = Get-Content $configPath -Raw | ConvertFrom-Json
+          if ($null -eq $config.bundle.windows) {
+            $config.bundle | Add-Member -NotePropertyName windows -NotePropertyValue ([pscustomobject]@{})
+          }
+          $config.bundle.windows | Add-Member -Force -NotePropertyName certificateThumbprint -NotePropertyValue $cert.Thumbprint
+          $config.bundle.windows | Add-Member -Force -NotePropertyName digestAlgorithm -NotePropertyValue "sha256"
+          $config.bundle.windows | Add-Member -Force -NotePropertyName timestampUrl -NotePropertyValue "http://timestamp.digicert.com"
+          $config | ConvertTo-Json -Depth 32 | Set-Content -Path $configPath -Encoding utf8
+
+          "thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Windows signing enabled for certificate $($cert.Thumbprint)"
+
+      - name: Configure macOS signing
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          count_set() { local n=0; for v in "$@"; do [ -n "${!v:-}" ] && n=$((n + 1)); done; echo "$n"; }
+
+          signing="$(count_set APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY)"
+          notarization="$(count_set APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID)"
+
+          if [ "$signing" -ne 0 ] && [ "$signing" -ne 3 ]; then
+            echo "::error::macOS signing requires APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD and APPLE_SIGNING_IDENTITY"
+            exit 1
+          fi
+          if [ "$notarization" -ne 0 ] && [ "$notarization" -ne 3 ]; then
+            echo "::error::Notarization requires APPLE_ID, APPLE_PASSWORD and APPLE_TEAM_ID"
+            exit 1
+          fi
+          if [ "$notarization" -eq 3 ] && [ "$signing" -eq 0 ]; then
+            echo "::error::Notarization requires the macOS signing secrets"
+            exit 1
+          fi
+
+          if [ "$signing" -eq 0 ]; then
+            echo "::notice::macOS signing secrets not set; building with an ad-hoc signature (not notarized)."
+            jq '.bundle.macOS = ((.bundle.macOS // {}) + {signingIdentity: "-"})' \
+              src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+            mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          elif [ "$notarization" -eq 0 ]; then
+            echo "::warning::macOS build will be signed but not notarized."
+          fi
+
+      - name: Build
+        env:
+          UPDATER: ${{ needs.prepare.outputs.updater }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        working-directory: src-tauri
+        run: |
+          set -euo pipefail
+
+          # Tauri treats a present-but-empty variable as configured; drop unset secrets.
+          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+                   APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID \
+                   TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
+            [ -n "${!v:-}" ] || unset "$v"
+          done
+          if [ "$UPDATER" != "true" ]; then
+            unset TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          fi
+
+          if [ "$UPDATER" = "true" ]; then
+            cargo tauri build --ci --features updater -- --locked
+          else
+            cargo tauri build --ci -- --locked
+          fi
+
+      - name: Build MSIX package
+        if: runner.os == 'Windows' && inputs.msix_identity_name != ''
+        shell: pwsh
+        env:
+          MSIX_IDENTITY_NAME: ${{ inputs.msix_identity_name }}
+          MSIX_IDENTITY_PUBLISHER: ${{ inputs.msix_identity_publisher }}
+          MSIX_PUBLISHER_DISPLAY_NAME: ${{ inputs.msix_publisher_display_name }}
+          MSIX_DISPLAY_NAME: ${{ inputs.msix_display_name }}
+          MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color || '#ffffff' }}
+          MSIX_SHORT_NAME: ${{ inputs.msix_short_name }}
+          SIGNING_THUMBPRINT: ${{ steps.windows_signing.outputs.thumbprint }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.Drawing
+
+          function Get-SdkTool([string]$Name) {
+            $tool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter $Name -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match '\\x64\\' } |
+              Sort-Object FullName -Descending |
+              Select-Object -First 1
+            if ($null -eq $tool) { throw "$Name not found in the Windows SDK" }
+            return $tool.FullName
+          }
+
+          # Draws the icon centered on a transparent canvas, keeping its aspect ratio.
+          function New-Asset([string]$Source, [string]$Destination, [int]$Width, [int]$Height) {
+            $src = [System.Drawing.Image]::FromFile($Source)
+            $bmp = New-Object System.Drawing.Bitmap($Width, $Height)
+            $gfx = [System.Drawing.Graphics]::FromImage($bmp)
+            try {
+              $gfx.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+              $gfx.Clear([System.Drawing.Color]::Transparent)
+              $side = [Math]::Min($Width, $Height)
+              $gfx.DrawImage($src, [int](($Width - $side) / 2), [int](($Height - $side) / 2), $side, $side)
+              $bmp.Save($Destination, [System.Drawing.Imaging.ImageFormat]::Png)
+            } finally {
+              $gfx.Dispose(); $bmp.Dispose(); $src.Dispose()
+            }
+          }
+
+          function Escape-Xml([string]$Value) { [System.Security.SecurityElement]::Escape($Value) }
+
+          $config = Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json
+          if ($config.version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "MSIX requires a numeric X.Y.Z version; got '$($config.version)'"
+          }
+          $version = "$($config.version).0"
+
+          $releaseDir = "src-tauri/target/release"
+          $exeName = "$env:CARGO_PACKAGE_NAME.exe"
+          if (-not (Test-Path (Join-Path $releaseDir $exeName))) { throw "Main executable not found: $exeName" }
+
+          $root = Join-Path $env:RUNNER_TEMP "msix-root"
+          Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$root/app", "$root/Assets" | Out-Null
+
+          Copy-Item (Join-Path $releaseDir $exeName) "$root/app/"
+          Get-ChildItem $releaseDir -File -Filter *.dll | Copy-Item -Destination "$root/app/"
+
+          $icon = Join-Path $env:RUNNER_TEMP "icons/icon.png"
+          New-Asset $icon "$root/Assets/Square44x44Logo.png" 44 44
+          New-Asset $icon "$root/Assets/StoreLogo.png" 50 50
+          New-Asset $icon "$root/Assets/SmallTile.png" 71 71
+          New-Asset $icon "$root/Assets/Square150x150Logo.png" 150 150
+          New-Asset $icon "$root/Assets/Wide310x150Logo.png" 310 150
+          New-Asset $icon "$root/Assets/LargeTile.png" 310 310
+          New-Asset $icon "$root/Assets/SplashScreen.png" 620 300
+
+          $shortName = ""
+          if (-not [string]::IsNullOrWhiteSpace($env:MSIX_SHORT_NAME)) {
+            $shortName = " ShortName=`"$(Escape-Xml $env:MSIX_SHORT_NAME)`""
+          }
+          $displayName = Escape-Xml $env:MSIX_DISPLAY_NAME
+
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <Package
+            xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+            xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+            xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+            xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+            IgnorableNamespaces="uap10 rescap">
+            <Identity Name="$(Escape-Xml $env:MSIX_IDENTITY_NAME)" Publisher="$(Escape-Xml $env:MSIX_IDENTITY_PUBLISHER)" Version="$version" ProcessorArchitecture="x64" />
+            <Properties>
+              <DisplayName>$displayName</DisplayName>
+              <PublisherDisplayName>$(Escape-Xml $env:MSIX_PUBLISHER_DISPLAY_NAME)</PublisherDisplayName>
+              <Logo>Assets\StoreLogo.png</Logo>
+            </Properties>
+            <Resources>
+              <Resource Language="en-us" />
+            </Resources>
+            <Dependencies>
+              <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.19041.0" />
+            </Dependencies>
+            <Capabilities>
+              <rescap:Capability Name="runFullTrust" />
+            </Capabilities>
+            <Applications>
+              <Application Id="App" Executable="app\$exeName" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL">
+                <uap:VisualElements DisplayName="$displayName" Description="$displayName" BackgroundColor="$(Escape-Xml $env:MSIX_BACKGROUND_COLOR)" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
+                  <uap:DefaultTile$shortName Square71x71Logo="Assets\SmallTile.png" Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\LargeTile.png" />
+                  <uap:SplashScreen Image="Assets\SplashScreen.png" />
+                </uap:VisualElements>
+              </Application>
+            </Applications>
+          </Package>
+          "@ | Set-Content -Path "$root/AppxManifest.xml" -Encoding utf8
+
+          $makepri = Get-SdkTool "makepri.exe"
+          $makeappx = Get-SdkTool "makeappx.exe"
+
+          Push-Location $root
+          try {
+            & $makepri createconfig /cf priconfig.xml /dq en-US /o
+            if ($LASTEXITCODE -ne 0) { throw "MakePri createconfig failed ($LASTEXITCODE)" }
+            & $makepri new /pr $root /cf (Join-Path $root "priconfig.xml") /o
+            if ($LASTEXITCODE -ne 0) { throw "MakePri new failed ($LASTEXITCODE)" }
+            Remove-Item priconfig.xml
+          } finally {
+            Pop-Location
+          }
+
+          $outDir = "src-tauri/target/release/bundle/msix"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $safeName = ($config.productName -replace '[^A-Za-z0-9._-]', '_')
+          $msix = Join-Path $outDir "${safeName}_$($config.version)_x64.msix"
+
+          & $makeappx pack /d $root /p $msix /o
+          if ($LASTEXITCODE -ne 0) { throw "MakeAppx pack failed ($LASTEXITCODE)" }
+
+          if ([string]::IsNullOrEmpty($env:SIGNING_THUMBPRINT)) {
+            Write-Host "::notice::MSIX built unsigned. The Microsoft Store signs submitted packages; sideloading requires a signature."
+          } else {
+            $cert = Get-Item "Cert:\CurrentUser\My\$env:SIGNING_THUMBPRINT"
+            if ($cert.Subject -ne $env:MSIX_IDENTITY_PUBLISHER) {
+              Write-Host "::notice::MSIX left unsigned: certificate subject does not match msix_identity_publisher."
+            } else {
+              $signtool = Get-SdkTool "signtool.exe"
+              & $signtool sign /sha1 $env:SIGNING_THUMBPRINT /fd SHA256 /tr "http://timestamp.digicert.com" /td SHA256 $msix
+              if ($LASTEXITCODE -ne 0) { throw "MSIX signing failed ($LASTEXITCODE)" }
+              Write-Host "MSIX signed with certificate $env:SIGNING_THUMBPRINT"
+            }
+          }
+
+          Get-Item $msix | Format-List Name, Length
+
+      - name: Collect artifacts
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+
+          bundle=src-tauri/target/release/bundle
+          out="$RUNNER_TEMP/dist"
+          rm -rf "$out"
+          mkdir -p "$out"
+
+          find "$bundle" -type f \( \
+            -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' \
+            -o -name '*.exe' -o -name '*.msi' -o -name '*.msix' \
+            -o -name '*.dmg' -o -name '*.app.tar.gz' \
+            -o -name '*.sig' \
+          \) -exec cp {} "$out/" \;
+
+          if [ -z "$(ls -A "$out")" ]; then
+            echo "::error::No distributable artifacts found in $bundle"
+            find "$bundle" -maxdepth 2
+            exit 1
+          fi
+
+          (cd "$out" && for f in *; do
+            if command -v sha256sum >/dev/null; then sha256sum "$f"; else shasum -a 256 "$f"; fi
+          done > "SHA256SUMS-$PLATFORM.txt")
+
+          ls -la "$out"
+          echo "DIST_DIR=$out" >> "$GITHUB_ENV"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktopr-${{ matrix.platform }}
+          path: ${{ env.DIST_DIR }}
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: build
+    if: inputs.release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: desktopr-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          APP_NAME: ${{ inputs.app_name }}
+          APP_VERSION: ${{ inputs.app_version }}
+          DRAFT: ${{ inputs.release_draft }}
+          TARGET: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          args=(--title "$APP_NAME v$APP_VERSION" --target "$TARGET" --generate-notes)
+          if [ "$DRAFT" = "true" ]; then
+            args+=(--draft)
+          fi
+
+          gh release create "v$APP_VERSION" "${args[@]}" dist/*
