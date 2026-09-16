@@ -1,0 +1,11 @@
+{
+  "name": "@desktopr/wasm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "build:template": "node build.mjs module-template",
+    "build:math": "node build.mjs modules/math",
+    "check": "cargo check --workspace --locked"
+  }
+}

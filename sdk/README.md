@@ -1,5 +1,4 @@
 # Desktopr
-[Desktopr official website ↗](https://desktopr.app)
 
 This is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
 It allows any web application to access native desktop features exposed by the Desktopr wrapper, using a clean, typed, importable API.
@@ -69,5 +68,3 @@ await Desktopr.window.new(...);
 ```
 
 ---
-
-[Desktopr official website ↗](https://desktopr.app)

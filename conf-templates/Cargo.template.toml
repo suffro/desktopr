@@ -67,7 +67,6 @@ default = [
     "tauri-plugin-notification",
     "tauri-plugin-autostart",
     "tauri-plugin-global-shortcut",
-    "tauri-plugin-updater",
     "tauri-plugin-persisted-scope",
     "tauri-plugin-clipboard-manager",
     "tauri-plugin-dialog",
@@ -75,6 +74,7 @@ default = [
     "tauri-plugin-single-instance",
     "tauri-plugin-prevent-default",
 ]
+updater = ["dep:tauri-plugin-updater"]
 
 [profile.release]
 opt-level = 2

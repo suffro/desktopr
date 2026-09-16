@@ -1,6 +1,6 @@
 fn main() {
     let defaults = [
-        ("MAIN_WINDOW_URL",             "https://companion.desktopr.app"),
+        ("MAIN_WINDOW_URL",             ""),
         ("MAIN_WINDOW_TITLE",           "Desktopr"),
         ("MAIN_WINDOW_WIDTH",           "1200"),
         ("MAIN_WINDOW_HEIGHT",          "800"),

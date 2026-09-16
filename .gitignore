@@ -1,6 +1,8 @@
 
 
 src-tauri/target/
+wasm/target/
+wasm/**/dist/
 src-tauri/gen/
 src-tauri/tsc/*
 !src-tauri/tsc/.gitkeep

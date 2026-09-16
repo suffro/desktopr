@@ -3,7 +3,10 @@
   "identifier": "%%APP_IDENTIFIER%%",
   "version": "%%APP_VERSION%%",
 
-  "build": { "removeUnusedCommands": true },
+  "build": {
+    "frontendDist": ["standalone/index.html"],
+    "removeUnusedCommands": true
+  },
 
   "app": {
     "withGlobalTauri": true,
@@ -20,9 +23,6 @@
     }
   },
   "plugins": {
-    "updater": {
-      "active": false
-    },
     "deep-link": {
       "desktop": {
         "schemes": [

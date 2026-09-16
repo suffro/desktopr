@@ -84,6 +84,13 @@ fn main() {
   // --- 2) Deep Link plugin ---
   builder = builder.plugin(tauri_plugin_deep_link::init());
 
+  // The updater is excluded from default builds. Developers opt in with the
+  // `updater` Cargo feature and provide their own endpoint/public key config.
+  #[cfg(feature = "updater")]
+  {
+    builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+  }
+
   // --- 3) Setup: autostart, env state, logs, shortcuts and deeplinks ---
   builder = builder.setup(|app| {
     // Create main window programmatically to support initialization_script.

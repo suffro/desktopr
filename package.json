@@ -1,12 +1,20 @@
 {
   "name": "tauri-skeleton",
   "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "sdk",
+    "wasm"
+  ],
   "devDependencies": {
     "@types/node": "^25.9.1",
     "esbuild": "^0.20.2"
   },
   "scripts": {
     "build:frontend": "npm ci --prefix frontend/ && npm run build --prefix frontend/",
+    "check:menu-contract": "node scripts/check-menu-contract.mjs",
+    "check:private-deps": "node scripts/check-private-deps.mjs",
+    "check:standalone": "node scripts/check-standalone.mjs",
     "dev:frontend": "npm run dev --prefix frontend/",
     "devconf": "bash scripts/dev-conf.sh",
     "localdevconf": "bash scripts/local-dev-conf.sh",
@@ -31,7 +39,12 @@
     "dev:log": "npm run dev:log --prefix src-tauri/",
     "sdk:build": "npm run build --prefix sdk/",
     "sdk:publish": "npm run pub --prefix sdk/",
-    "sdk:syncVersion": "npm run syncVersion --prefix sdk/",
+    "wasm:check": "npm run check --prefix wasm/",
+    "wasm:build:template": "npm run build:template --prefix wasm/",
+    "wasm:build:math": "npm run build:math --prefix wasm/",
+    "typecheck": "npm run typecheck:runtime && npm run typecheck:sdk",
+    "typecheck:runtime": "tsc --noEmit -p tsconfig.json",
+    "typecheck:sdk": "tsc --noEmit -p tsconfig.sdk.json",
     "cargo:update": "npm run cargo:update --prefix src-tauri/"
   },
   "dependencies": {

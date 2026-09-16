@@ -56,13 +56,13 @@ Capire esattamente cosa dipende da cosa prima di spostare codice.
 
 ## Azioni
 
-- [ ] Analizzare `tauri-skeleton`.
-- [ ] Analizzare `github-actions`.
-- [ ] Analizzare `project-globals`.
-- [ ] Analizzare `wasm-module-template`.
-- [ ] Analizzare `wasm-modules`.
-- [ ] Ignorare `companion` per ora.
-- [ ] Ignorare `docs`.
+- [x] Analizzare `tauri-skeleton`.
+- [x] Analizzare `github-actions`.
+- [x] Analizzare `project-globals`.
+- [x] Analizzare `wasm-module-template`.
+- [x] Analizzare `wasm-modules`.
+- [x] Ignorare `companion` per ora.
+- [x] Ignorare `docs`.
 
 Produrre una mappa di:
 
@@ -99,11 +99,11 @@ Desktopr OSS non deve dipendere da repository o package personali/private.
 
 Per ogni utilizzo:
 
-- [ ] identificare quali funzioni vengono realmente usate;
-- [ ] copiare solo il minimo codice necessario se Desktopr-specific;
-- [ ] sostituire utility generiche con dipendenze pubbliche quando opportuno;
-- [ ] riscrivere localmente utility banali;
-- [ ] rimuovere del tutto ciò che non serve.
+- [x] identificare quali funzioni vengono realmente usate;
+- [x] copiare solo il minimo codice necessario se Desktopr-specific;
+- [x] sostituire utility generiche con dipendenze pubbliche quando opportuno;
+- [x] riscrivere localmente utility banali;
+- [x] rimuovere del tutto ciò che non serve.
 
 ## Regole
 
@@ -211,6 +211,9 @@ Per esempio:
 
 `project-globals` non è più una dipendenza runtime/build di Desktopr.
 
+**Stato:** completata. È stato assorbito soltanto il contratto menu realmente
+usato; tipi SaaS, `suffro-lib` e tipi Tauri obsoleti non sono stati importati.
+
 ---
 
 # Fase 5 — Integrazione WASM
@@ -232,14 +235,18 @@ wasm/
 
 ## Azioni
 
-- [ ] preservare il template per sviluppare moduli;
-- [ ] preservare eventuali moduli/example utili;
-- [ ] verificare compatibilità con il runtime WASM esistente;
-- [ ] rimuovere riferimenti esterni non necessari.
+- [x] preservare il template per sviluppare moduli;
+- [x] preservare eventuali moduli/example utili;
+- [x] verificare compatibilità con il runtime WASM esistente;
+- [x] rimuovere riferimenti esterni non necessari.
 
 ## Criterio di completamento
 
 Un developer può capire e creare un modulo WASM Desktopr usando solo il monorepo.
+
+**Stato:** completata. Template e modulo math sono nel workspace `wasm/`,
+compilano per `wasm32-wasip1` e sono stati eseguiti contro il protocollo del
+runtime esistente. La fase 6 non è stata avviata.
 
 ---
 
@@ -277,6 +284,11 @@ Deve diventare:
 ## Regola fondamentale
 
 Una build Desktopr base deve funzionare **offline rispetto a qualsiasi infrastruttura Desktopr**.
+
+**Stato:** completata. Il profilo base usa contenuto locale incorporato, non
+concede origini remote e non include l'updater. URL applicazione e updater sono
+opt-in e configurati esclusivamente dallo sviluppatore. Actions hosted e
+companion restano nei rispettivi step successivi.
 
 ---
 
@@ -386,8 +398,8 @@ Solo dopo una build standalone funzionante.
 - `.gitignore`;
 - `LICENSE`;
 - `README.md`;
-- `SECURITY.md`;
-- eventualmente `CONTRIBUTING.md`.
+- SECURITY.md;
+- eventualmente CONTRIBUTING.md.
 
 ## Criterio di completamento
 

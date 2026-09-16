@@ -4,19 +4,34 @@ set -euo pipefail
 # -----------------------------
 # Read inputs with safe defaults
 # -----------------------------
-: "${APP_URL:=http://blank.html}"
-: "${APP_VERSION:=0.1.0}"
+: "${APP_URL:=}"
+: "${APP_VERSION:=0.2.1}"
 : "${CARGO_PACKAGE_NAME:=desktopr-wrapper}"
 : "${CARGO_PACKAGE_VERSION:=$APP_VERSION}"
 : "${APP_IDENTIFIER:=app.desktopr.app}"
-: "${UPDATE_ENDPOINT:?Missing UPDATE_ENDPOINT (set by CI)}"
+: "${UPDATE_ENDPOINT:=}"
 : "${TAURI_SIGNING_PUBLIC_KEY:=}"
 
 if [ -z "${ED25519_PUBKEY:-}" ] && [ -n "${TAURI_SIGNING_PUBLIC_KEY:-}" ]; then
   ED25519_PUBKEY="$TAURI_SIGNING_PUBLIC_KEY"
 fi
 
-: "${ED25519_PUBKEY:?Missing ED25519_PUBKEY (CI var/secret)}"
+: "${ED25519_PUBKEY:=}"
+
+if { [ -n "$UPDATE_ENDPOINT" ] && [ -z "$ED25519_PUBKEY" ]; } ||
+   { [ -z "$UPDATE_ENDPOINT" ] && [ -n "$ED25519_PUBKEY" ]; }; then
+  echo "Updater configuration requires both UPDATE_ENDPOINT and ED25519_PUBKEY"
+  exit 1
+fi
+
+UPDATER_ENABLED=false
+if [ -n "$UPDATE_ENDPOINT" ] && [ -n "$ED25519_PUBKEY" ]; then
+  if ! printf '%s' "$UPDATE_ENDPOINT" | grep -Eq '^https://[^/]+(/.*)?$'; then
+    echo "UPDATE_ENDPOINT must be an absolute HTTPS URL"
+    exit 1
+  fi
+  UPDATER_ENABLED=true
+fi
 : "${DEEPLINK_SCHEME:=}"
 : "${MAIN_WINDOW_TITLE:=Desktopr}"
 : "${MAIN_WINDOW_WIDTH:=1200}"
@@ -42,23 +57,29 @@ EOF
 # Resolve APP_URL origin and remote URL patterns
 # -----------------------------
 
-APP_URL_ORIGIN="$(printf '%s' "$APP_URL" | sed -E 's#^(https?://[^/]+).*$#\1#')"
+APP_URL_ORIGIN=""
+APP_URL_SCHEME=""
+APP_URL_HOST_WITH_PORT=""
+APP_URL_WILDCARD_HOST=""
 
-if ! printf '%s' "$APP_URL_ORIGIN" | grep -Eq '^https?://[^/]+$'; then
-  echo "Invalid APP_URL origin resolved from APP_URL: $APP_URL"
-  exit 1
+if [ -n "$APP_URL" ]; then
+  APP_URL_ORIGIN="$(printf '%s' "$APP_URL" | sed -E 's#^(https?://[^/]+).*$#\1#')"
+
+  if ! printf '%s' "$APP_URL_ORIGIN" | grep -Eq '^https?://[^/]+$'; then
+    echo "Invalid APP_URL: expected an absolute HTTP(S) URL"
+    exit 1
+  fi
+
+  APP_URL_SCHEME="$(printf '%s' "$APP_URL_ORIGIN" | sed -E 's#^(https?)://.*$#\1#')"
+  APP_URL_HOST="$(printf '%s' "$APP_URL_ORIGIN" | sed -E 's#^https?://([^/:]+)(:[0-9]+)?$#\1#')"
+  APP_URL_PORT="$(printf '%s' "$APP_URL_ORIGIN" | sed -nE 's#^https?://[^/:]+(:[0-9]+)$#\1#p')"
+  APP_URL_HOST_WITH_PORT="${APP_URL_HOST}${APP_URL_PORT}"
+  APP_URL_WILDCARD_HOST="*.${APP_URL_HOST}${APP_URL_PORT}"
+
+  echo "Resolved external application origin=$APP_URL_ORIGIN"
+else
+  echo "Application source=bundled standalone page"
 fi
-
-APP_URL_SCHEME="$(printf '%s' "$APP_URL_ORIGIN" | sed -E 's#^(https?)://.*$#\1#')"
-APP_URL_HOST="$(printf '%s' "$APP_URL_ORIGIN" | sed -E 's#^https?://([^/:]+)(:[0-9]+)?$#\1#')"
-APP_URL_PORT="$(printf '%s' "$APP_URL_ORIGIN" | sed -nE 's#^https?://[^/:]+(:[0-9]+)$#\1#p')"
-
-APP_URL_HOST_WITH_PORT="${APP_URL_HOST}${APP_URL_PORT}"
-APP_URL_WILDCARD_HOST="*.${APP_URL_HOST}${APP_URL_PORT}"
-
-echo "Resolved APP_URL_ORIGIN=$APP_URL_ORIGIN"
-echo "Resolved APP_URL_SCHEME=$APP_URL_SCHEME"
-echo "Resolved APP_URL_HOST_WITH_PORT=$APP_URL_HOST_WITH_PORT"
 
 if [ "$COMPANION_MODE" = "true" ]; then
   echo "COMPANION_MODE=true (this build accepts IPC from any https origin)"
@@ -91,7 +112,7 @@ if [ "$COMPANION_MODE" = "true" ]; then
       "http://127.0.0.1:*/*"
     ]
   ' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp && mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
-else
+elif [ -n "$APP_URL_ORIGIN" ]; then
   jq \
     --arg scheme "$APP_URL_SCHEME" \
     --arg host "$APP_URL_HOST_WITH_PORT" \
@@ -107,7 +128,7 @@ fi
 
 echo "  remote.json             -> patched"
 echo "  remote.urls:"
-jq '.remote.urls' src-tauri/capabilities/remote.json
+jq '.remote.urls // []' src-tauri/capabilities/remote.json
 
 # Cargo.toml
 sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
@@ -117,9 +138,9 @@ sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \
 echo "  Cargo.toml              -> patched [${CARGO_PACKAGE_NAME} ${CARGO_PACKAGE_VERSION}]"
 
 # bridge.constants.json
-sed -e "s|%%APP_URL%%|${APP_URL_ORIGIN}|g" \
-    -e "s|%%APP_VERSION%%|${APP_VERSION}|g" \
-  conf-templates/bridge.constants.template.json > src-ts/bridge.constants.json
+jq --arg appUrl "$APP_URL_ORIGIN" '
+  .appUrl = $appUrl
+' conf-templates/bridge.constants.template.json > src-ts/bridge.constants.json
 
 echo "  bridge.constants.json   -> patched"
 
@@ -163,7 +184,7 @@ if [ "$COMPANION_MODE" = "true" ]; then
       "media-src *;"
     )
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
-else
+elif [ -n "$APP_URL_ORIGIN" ]; then
   jq --arg url "$APP_URL_ORIGIN" '
     .app = (.app // {}) |
     .app.security = (.app.security // {}) |
@@ -174,6 +195,19 @@ else
       "img-src * data: blob:; " +
       "connect-src *; " +
       "media-src *;"
+    )
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+else
+  jq '
+    .app = (.app // {}) |
+    .app.security = (.app.security // {}) |
+    .app.security.csp = (
+      "default-src '\''self'\''; " +
+      "script-src '\''self'\'' '\''unsafe-inline'\''; " +
+      "style-src '\''self'\'' '\''unsafe-inline'\''; " +
+      "img-src '\''self'\'' data: blob:; " +
+      "connect-src '\''self'\'' ipc: http://ipc.localhost; " +
+      "media-src '\''self'\'' blob:;"
     )
   ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 fi
@@ -189,15 +223,39 @@ jq '
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
 # Updater config
-echo "6. Patching updater settings (Tauri v2 plugin)"
-jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
-  .bundle = (.bundle // {}) |
-  .bundle.createUpdaterArtifacts = true |
-  .plugins = (.plugins // {}) |
-  .plugins.updater = (.plugins.updater // {}) |
-  .plugins.updater.endpoints = [ $endpoint ] |
-  .plugins.updater.pubkey = $pubkey
-' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+if [ "$UPDATER_ENABLED" = "true" ]; then
+  echo "6. Enabling developer-configured updater"
+  jq --arg endpoint "$UPDATE_ENDPOINT" --arg pubkey "$ED25519_PUBKEY" '
+    .bundle = (.bundle // {}) |
+    .bundle.createUpdaterArtifacts = true |
+    .plugins = (.plugins // {}) |
+    .plugins.updater = {
+      "endpoints": [$endpoint],
+      "pubkey": $pubkey
+    }
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+  mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+
+  jq '
+    .permissions = (((.permissions // []) + ["updater:default"]) | unique)
+  ' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp
+  mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
+  echo "  Build with Cargo feature: updater"
+else
+  echo "6. Updater disabled (default)"
+  jq '
+    .bundle = (.bundle // {}) |
+    .bundle.createUpdaterArtifacts = false |
+    .plugins = (.plugins // {}) |
+    del(.plugins.updater)
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+  mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+
+  jq '
+    .permissions = ((.permissions // []) | map(select(. != "updater:default")))
+  ' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp
+  mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
+fi
 
 # Deep link config
 echo "7. Patching deep-link plugin configuration"

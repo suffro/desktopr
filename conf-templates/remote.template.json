@@ -2,7 +2,6 @@
   "identifier": "remote",
   "windows": ["*"],
   "webviews": ["*"],
-  "remote": { "urls": ["%%APP_URL%%"] },
   "permissions": [
     "core:default",
 

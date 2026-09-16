@@ -18,17 +18,17 @@ export declare function validateFile(file: File | Blob | null | undefined, maxSi
 export declare function imageExistsAtURL(url: string, bustCache?: boolean): Promise<boolean>;
 export declare function clearUrl(input: string, domainOnly?: boolean): string | null;
 /**
- * Estrae il sottodominio da un URL o dal dominio corrente (es. builder.bubbledesk.app → "builder").
+ * Estrae il sottodominio da un URL o dal dominio corrente (es. app.example.com → "app").
  *
- * ⚠️ Restituisce `null` se non è presente alcun sottodominio (es. bubbledesk.app o localhost).
+ * ⚠️ Restituisce `null` se non è presente alcun sottodominio (es. example.com o localhost).
  *
  * @param url - (opzionale) Una stringa URL da cui estrarre il sottodominio. Se non fornita, usa `window.location.hostname`.
  * @returns Il sottodominio come stringa, oppure `null` se non rilevabile.
  *
  * @example
- * getSubdomain("https://auth.bubbledesk.app"); // "auth"
- * getSubdomain(); // se eseguito su builder.bubbledesk.app → "builder"
- * getSubdomain("https://bubbledesk.app"); // null
+ * getSubdomain("https://auth.example.com"); // "auth"
+ * getSubdomain(); // se eseguito su app.example.com → "app"
+ * getSubdomain("https://example.com"); // null
  * getSubdomain("http://localhost:5173"); // null
  */
 export declare const getSubdomain: (url?: string) => string | null;
