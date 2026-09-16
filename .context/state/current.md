@@ -92,6 +92,8 @@ artifacts or an optional GitHub Release.
 - A Linux verification run (35139886909) confirmed both fixes but showed the
   cached `src-tauri/target` leaking bundles from the previous run into the
   artifact; bundles are now removed before building and before the cache save.
+  Run 35140696294 (commit `de1b219`) verified it: only the current packages,
+  valid checksums, no annotations, ~5 min with a warm cache.
 - Verified: `actionlint` with `shellcheck` passes (and reports injected
   errors); the macOS job sequence reproduced locally produced an ad-hoc signed
   DMG with the requested version/identifier. The local run used tauri-cli
