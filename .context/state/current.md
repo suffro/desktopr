@@ -2,7 +2,7 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 7 implemented and awaiting its first GitHub run:
+Desktopr OSS migration phase 7 completed for unsigned builds:
 `.github/workflows/build.yml` builds Linux, Windows and macOS from this
 repository, signs optionally from repository secrets and publishes only GitHub
 artifacts or an optional GitHub Release.
@@ -80,7 +80,15 @@ artifacts or an optional GitHub Release.
 - The production template now also bundles `dmg`.
 - Windows builds can opt into an MSIX package through the `msix_*` inputs; it
   is signed only when the Windows certificate subject matches the MSIX
-  publisher. The MSIX step itself has not run on Windows yet.
+  publisher.
+- First GitHub run (35125323826, commit `7563fc9`) succeeded on Linux
+  (~19 min), macOS (~21 min) and Windows (~47 min, including an uncached
+  `cargo install tauri-cli`). Artifacts: AppImage/deb/rpm, NSIS setup and an
+  unsigned MSIX with the expected manifest, and an ad-hoc signed DMG with the
+  requested identifier/version. Package checksums verified.
+- That run exposed a self-referencing `SHA256SUMS` entry (fixed) and a Node 20
+  deprecation warning (artifact actions bumped to `upload-artifact@v7` and
+  `download-artifact@v8`).
 - Verified: `actionlint` with `shellcheck` passes (and reports injected
   errors); the macOS job sequence reproduced locally produced an ad-hoc signed
   DMG with the requested version/identifier. The local run used tauri-cli
@@ -88,9 +96,9 @@ artifacts or an optional GitHub Release.
 
 ## Next
 
-Run `build.yml` on GitHub (unsigned first) to verify the Linux, Windows and
-macOS jobs, then fix any runner-specific issue. After that, phase 8 validates
-the first complete standalone build.
+Phase 8 validates the first complete standalone build. Still unexercised in
+CI: signing with real certificates, notarization, the updater path and the
+`release` job.
 
 ## Blockers
 
@@ -98,8 +106,8 @@ the first complete standalone build.
   manifest/lockfile data. It must be revoked/rotated and scrubbed in that source
   repository and its history before that repository can be shared. The value
   was never printed or copied.
-- The in-repository workflow has not run on GitHub yet. Windows and Linux jobs
-  and real-certificate signing are unverified.
+- Real-certificate signing, notarization, the updater build and the GitHub
+  Release job have not run; they need developer secrets or an explicit release.
 - Running it on this private repository consumes GitHub Actions minutes
   (macOS and Windows runners are billed at higher multipliers).
 - The legacy `frontend/` companion UI still links the retired dashboard. It is

@@ -324,10 +324,10 @@ source
 
 ## Build workflow
 
-- [ ] Linux (implementato, non ancora eseguito su GitHub)
-- [ ] Windows (implementato, non ancora eseguito su GitHub)
-- [ ] macOS (implementato; percorso del job riprodotto in locale, non ancora eseguito su GitHub)
-- [ ] unsigned build funzionante (verificata in locale solo su macOS, ad-hoc);
+- [x] Linux
+- [x] Windows
+- [x] macOS
+- [x] unsigned build funzionante;
 - [x] `workflow_dispatch`;
 - [x] `workflow_call` se pratico.
 
@@ -352,15 +352,16 @@ Nessuna credenziale sensibile come normale workflow input.
 
 Un developer può usare GitHub per buildare Desktopr senza infrastruttura esterna.
 
-**Stato:** implementata, in attesa del primo run su GitHub.
+**Stato:** completata per le build non firmate; la firma con certificati reali e
+la creazione della GitHub Release non sono ancora state eseguite.
 `.github/workflows/build.yml` sostituisce build, sign e dist legacy: build
 matrix Linux/Windows/macOS, firma opzionale nativa Tauri solo da secret del
 repository, MSIX opzionale per Windows, artifact GitHub e GitHub Release
 opzionale. Nessun R2/CDN, wrapper
 privata, logging hosted o credenziale come input. Validato con actionlint e
-shellcheck; il job macOS non firmato è stato riprodotto in locale (DMG ad-hoc).
-Windows, Linux e la firma con certificati reali restano da verificare con un
-run reale. Vedi `decisions/github-actions-build.md`.
+shellcheck. Il run GitHub 35125323826 (commit `7563fc9`) ha prodotto su tutte e
+tre le piattaforme AppImage/deb/rpm, installer NSIS + MSIX e DMG ad-hoc, con
+checksum dei pacchetti verificati. Vedi `decisions/github-actions-build.md`.
 
 ---
 

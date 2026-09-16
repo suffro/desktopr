@@ -696,15 +696,18 @@ jobs:
             exit 1
           fi
 
+          # Written outside $out first so the list does not include itself.
+          sums="$RUNNER_TEMP/SHA256SUMS-$PLATFORM.txt"
           (cd "$out" && for f in *; do
             if command -v sha256sum >/dev/null; then sha256sum "$f"; else shasum -a 256 "$f"; fi
-          done > "SHA256SUMS-$PLATFORM.txt")
+          done > "$sums")
+          mv "$sums" "$out/"
 
           ls -la "$out"
           echo "DIST_DIR=$out" >> "$GITHUB_ENV"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: desktopr-${{ matrix.platform }}
           path: ${{ env.DIST_DIR }}
@@ -720,7 +723,7 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: desktopr-*
           path: dist

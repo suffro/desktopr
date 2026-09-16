@@ -73,7 +73,7 @@ is left unsigned, as Store submissions are signed by the Store.
 
 Workflow syntax and embedded shell scripts are checked with `actionlint` plus
 `shellcheck`; PowerShell steps are parsed with `pwsh`, and the rendered MSIX
-manifest was checked as well-formed XML with escaped values. The macOS job path
-was reproduced locally. Windows and Linux
-paths, and signing with real certificates, are verified only by running the
-workflow on GitHub.
+manifest was checked as well-formed XML with escaped values. The unsigned
+Linux, Windows (including MSIX) and macOS jobs succeeded on GitHub. Signing with
+real certificates, notarization, the updater path and the release job still need
+a run with the corresponding secrets or inputs.
