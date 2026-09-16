@@ -520,6 +520,9 @@ jobs:
             unset TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD
           fi
 
+          # The target cache must not leak bundles from previous runs into the artifacts.
+          rm -rf target/release/bundle
+
           if [ "$UPDATER" = "true" ]; then
             cargo tauri build --ci --features updater -- --locked
           else
@@ -712,6 +715,10 @@ jobs:
           name: desktopr-${{ matrix.platform }}
           path: ${{ env.DIST_DIR }}
           if-no-files-found: error
+
+      - name: Drop bundles from the target cache
+        if: always()
+        run: rm -rf src-tauri/target/release/bundle
 
   release:
     name: release

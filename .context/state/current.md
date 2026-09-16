@@ -89,6 +89,9 @@ artifacts or an optional GitHub Release.
 - That run exposed a self-referencing `SHA256SUMS` entry (fixed) and a Node 20
   deprecation warning (artifact actions bumped to `upload-artifact@v7` and
   `download-artifact@v8`).
+- A Linux verification run (35139886909) confirmed both fixes but showed the
+  cached `src-tauri/target` leaking bundles from the previous run into the
+  artifact; bundles are now removed before building and before the cache save.
 - Verified: `actionlint` with `shellcheck` passes (and reports injected
   errors); the macOS job sequence reproduced locally produced an ad-hoc signed
   DMG with the requested version/identifier. The local run used tauri-cli
