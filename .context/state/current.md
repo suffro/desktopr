@@ -136,6 +136,8 @@ unverified.
   the SDK README), `SECURITY.md` (GitHub private vulnerability reporting and the
   trust model) and `CONTRIBUTING.md`, plus `Apache-2.0` license fields in the npm
   and Cargo manifests.
+- Run 35170008647 (commit `775803a`) verified the cleanup: all three platforms
+  build and pass the launch smoke test, with valid artifacts and checksums.
 - `build.yml` launches the built app on every platform for 15 seconds. Run
   35168452799 (commit `b592858`) passed on Linux, Windows and macOS with MSIX,
   verified checksums and no developer entitlements in the DMG app.
