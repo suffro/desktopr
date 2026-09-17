@@ -479,16 +479,16 @@ Dare una sistematina alla test automation.
 
 ## Rust
 
-- [ ] `cargo fmt --check`
-- [ ] `cargo clippy`
-- [ ] `cargo test`
+- [x] `cargo fmt --check`
+- [x] `cargo clippy` (`-D warnings`, su Linux, Windows e macOS)
+- [x] `cargo test` (inclusi i test del runtime WASM)
 
 ## TypeScript
 
-- [ ] `npm ci`
-- [ ] typecheck
-- [ ] bridge compile
-- [ ] SDK build
+- [x] `npm ci`
+- [x] typecheck
+- [x] bridge compile
+- [x] SDK build
 
 ## Test prioritari
 
@@ -505,9 +505,18 @@ Dare una sistematina alla test automation.
 
 ## Cross-platform
 
-- [ ] Linux smoke build
-- [ ] Windows smoke build
-- [ ] macOS smoke build
+- [x] Linux smoke build
+- [x] Windows smoke build
+- [x] macOS smoke build
+
+**Stato:** completata. `.github/workflows/ci.yml` gira a ogni push su `main` e a ogni pull
+request: controlli del repository, TypeScript, test bridge/SDK e test di generazione della config su
+Linux; rustfmt, clippy e test Rust su tutte e tre le piattaforme; fmt/clippy del workspace WASM.
+Tutti i test prioritari sono coperti (Rust: scope, traversal, storage dei plugin, WASM non valido e
+timeout, isolamento companion; `scripts/test-config-generation.mjs`; `scripts/test-bridge.mjs`), e
+ogni nuovo test è stato visto fallire con la guardia rotta. Emersi e corretti: `isDesktoprAvailable()`
+documentato ma non esportato dall'SDK, e un campo usato solo su macOS che clippy segnalava su
+Linux/Windows. Le smoke build con avvio restano in `build.yml` (on demand, verificate nella fase 10).
 
 ---
 

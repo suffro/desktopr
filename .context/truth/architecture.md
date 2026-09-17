@@ -35,8 +35,14 @@ build is established. The repository root is also the npm workspace root.
 - `.github/workflows/build.yml`: cross-platform build, optional signing,
   GitHub Actions artifacts and optional GitHub Release. It builds this checkout
   directly; see `decisions/github-actions-build.md`.
+- `.github/workflows/ci.yml`: checks and tests on every push to `main` and pull
+  request. Repository checks, TypeScript, bridge/SDK tests
+  (`scripts/test-bridge.mjs`, which loads the bundled bridge in a VM with a
+  fake Tauri global) and configuration generation tests
+  (`scripts/test-config-generation.mjs`) run on Linux; rustfmt, clippy and Rust
+  tests on Linux, Windows and macOS.
 
-The source repositories have these roles:
+The source repositories have these roles (all four are archived on GitHub):
 
 - `project-globals`: phase 4 absorbed only the useful menu contract into
   `src-ts/config/menu.ts`. The old general Tauri types were stale and unused;

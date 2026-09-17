@@ -26,12 +26,18 @@
 
 - Compile the bridge before Rust checks because `src-tauri/src/desktopr.rs`
   embeds `src-tauri/tsc/bridge.js`.
-- Minimum local verification for migration changes:
-  `npm ci`, `npm run check:private-deps`, `npm run typecheck`,
-  `npm run check:menu-contract`, `npm run ts:compile:bridge`, and
-  `cargo check --locked` in `src-tauri/`.
-- For WASM changes also run `npm run wasm:check` and `npm run test:wasm-runtime`,
-  which builds the modules and runs the runtime executor tests against them.
+- `.github/workflows/ci.yml` is the verification gate for pushes to `main` and
+  pull requests. Locally run what applies: `npm ci`, `npm run
+  check:private-deps`, `npm run typecheck`, `npm run check:menu-contract`,
+  `npm run test:bridge`, `npm run test:config`, `npm run lint:rust` and
+  `npm run test:rust` (builds the WASM modules and runs all Rust tests).
+- Rust code must pass `cargo fmt --check` and `cargo clippy --all-targets -D
+  warnings` on Linux, Windows and macOS. Code compiled only on some platforms
+  can look unused elsewhere: use a targeted `cfg_attr(..., allow(...))` instead
+  of renaming parameters. Never rename `#[tauri::command]` parameters to silence
+  lints; they are the IPC argument names.
+- Edit `conf-templates/Cargo.template.toml` together with `src-tauri/Cargo.toml`;
+  `npm run test:config` fails when the generated manifest drifts.
 - When adding or changing a bridge command, update `desktopr-bridge.toml`
   (and `desktopr-bridge-companion` unless the command is companion-denied in
   `scripts/check-bridge-permissions.mjs`), then run `npm run

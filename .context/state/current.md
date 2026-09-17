@@ -2,7 +2,7 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 10 (hardening) completed and verified in CI. The standalone runtime builds and launches on Linux, Windows and
+Desktopr OSS migration phase 11 (tests and CI) completed and verified in CI. The standalone runtime builds and launches on Linux, Windows and
 macOS through `.github/workflows/build.yml`; signing with real certificates is
 still unverified.
 
@@ -171,12 +171,34 @@ still unverified.
   launch smoke tests, MSIX, valid checksums, all five AppImage tools verified
   and no bundler downloads from remote sources.
 
+- The absorbed source repositories `project-globals`, `wasm-module-template`,
+  `wasm-modules` and `github-actions` were archived on GitHub (read-only, not
+  deleted). The `project-globals` credential still needs to be revoked.
+- Phase 11: added `.github/workflows/ci.yml` (push to `main`, pull requests).
+  Applied rustfmt to the runtime crate and made clippy pass with `-D warnings`
+  on Linux, Windows and macOS; the first run caught a macOS-only field that
+  was dead code elsewhere. New npm scripts: `test:bridge`, `test:config`,
+  `test:rust`, `lint:rust`.
+- `scripts/test-config-generation.mjs` runs the prod/dev/local generators in
+  temporary copies (defaults, `APP_URL`, companion mode, updater validation)
+  and fails when the generated `Cargo.toml` drifts from the checked-in one.
+- `scripts/test-bridge.mjs` loads the bundled bridge in a Node VM with a fake
+  Tauri global (frozen `window.Desktopr`, idempotent init, `dtrReady`, IPC
+  argument names, companion prefix shared with Rust) and tests the SDK outside
+  the wrapper. It found that the documented `isDesktoprAvailable()` was not
+  exported; it now is, and missing-bridge access throws a descriptive error.
+- Added Rust tests for scope label validation, plugin storage module names
+  and WASM upload validation. Each new test was observed failing against a
+  broken guard.
+- CI run 35211551764 (commit `cd36dbf`) failed clippy on Linux and Windows
+  (`macos_root` only read on macOS). Run 35212428698 (commit `1a1d20d`) passed
+  all jobs: repository checks and TypeScript, WASM modules, and the runtime on
+  Linux, Windows and macOS.
+
 ## Next
 
-Phase 11 (tests and CI) is next: a regular CI workflow for checks and tests.
-The runtime ACL self-test used in phase 10 was manual (debug build with a test
-page); automating a bridge self-test is a good phase 11 candidate. Known
-remaining items: the companion default URL `/cache-only/blank.html` does not
+Phase 12 (companion) is next, only when requested. The runtime ACL self-test
+from phase 10 is still manual (it needs a real webview). Known remaining items: the companion default URL `/cache-only/blank.html` does not
 exist, and diagnostics reads stay available to companion windows.
 
 ## Blockers
@@ -188,7 +210,9 @@ exist, and diagnostics reads stay available to companion windows.
 - Real-certificate signing, notarization, the updater build and the GitHub
   Release job have not run; they need developer secrets or an explicit release.
   Local test launches of GUI apps require running outside the command sandbox.
-- Running it on this private repository consumes GitHub Actions minutes
+- `ci.yml` runs on every push to `main` and pull request (Markdown and
+  `.context/` changes are skipped), including Windows and macOS runners.
+- Running `build.yml` on this private repository consumes GitHub Actions minutes
   (macOS and Windows runners are billed at higher multipliers).
 - The legacy `frontend/` companion UI still links the retired dashboard. It is
   intentionally excluded until the planned companion phase and is not required
