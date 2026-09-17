@@ -2,10 +2,10 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 7 completed for unsigned builds:
-`.github/workflows/build.yml` builds Linux, Windows and macOS from this
-repository, signs optionally from repository secrets and publishes only GitHub
-artifacts or an optional GitHub Release.
+Desktopr OSS migration phase 8 completed for unsigned builds: the standalone
+runtime builds and launches on Linux, Windows and macOS through
+`.github/workflows/build.yml`, which signs optionally from repository secrets
+and publishes only GitHub artifacts or an optional GitHub Release.
 
 ## Recent relevant changes
 
@@ -99,11 +99,33 @@ artifacts or an optional GitHub Release.
   DMG with the requested version/identifier. The local run used tauri-cli
   2.8.4, while CI pins 2.11.1.
 
+- Phase 8 validation from a clean install passed: `npm ci`, typecheck, bridge,
+  SDK build with no drift, `cargo check --locked` (default and `updater`),
+  repository checks, WASM check/build.
+- The WASM executor was extracted from `AppHandle` and covered by tests:
+  invalid bytes, missing `_start`, timeout interruption, and the real math and
+  template modules (protocol, `/storage` persistence, temporary job files).
+  `npm run test:wasm-runtime` builds the modules and runs them.
+- Found that unsigned/ad-hoc macOS builds were killed at launch because
+  `Entitlements.plist` declared the restricted
+  `com.apple.developer.usernotifications.time-sensitive` entitlement (unused by
+  the code). Removed it; `check:standalone` now rejects `com.apple.developer.*`.
+- Found that Linux startup failed when `update-desktop-database`/`xdg-mime` are
+  missing, because deep link registration errors aborted the setup hook. It now
+  logs a warning and continues.
+- The custom panic hook replaced the default one, so panics were silent unless
+  crash reports were enabled. It now chains to the default hook.
+- `build.yml` launches the built app on every platform for 15 seconds. Run
+  35168452799 (commit `b592858`) passed on Linux, Windows and macOS with MSIX,
+  verified checksums and no developer entitlements in the DMG app.
+
 ## Next
 
-Phase 8 validates the first complete standalone build. Still unexercised in
-CI: signing with real certificates, notarization, the updater path and the
-`release` job.
+Phase 8 is complete except signing with real certificates, which needs
+developer secrets. Phase 9 (OSS cleanup) is next. Candidate hardening notes
+found during phase 8: Linux AppImage bundling downloads an unpinned
+`linuxdeploy-plugin-gtk.sh` at build time (one run failed on a network reset);
+each WASM call keeps a timeout thread sleeping for the full timeout.
 
 ## Blockers
 
@@ -113,6 +135,7 @@ CI: signing with real certificates, notarization, the updater path and the
   was never printed or copied.
 - Real-certificate signing, notarization, the updater build and the GitHub
   Release job have not run; they need developer secrets or an explicit release.
+  Local test launches of GUI apps require running outside the command sandbox.
 - Running it on this private repository consumes GitHub Actions minutes
   (macOS and Windows runners are billed at higher multipliers).
 - The legacy `frontend/` companion UI still links the retired dashboard. It is

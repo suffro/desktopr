@@ -48,6 +48,11 @@ icon without distortion. It is signed with the imported Windows certificate
 only when the certificate subject equals `msix_identity_publisher`; otherwise it
 is left unsigned, as Store submissions are signed by the Store.
 
+After building, each platform launches the app for 15 seconds (the macOS
+`.app` bundle via `open`, the Linux binary under `xvfb-run`, the Windows
+executable) and fails if it exits. A green build alone missed unsigned macOS
+apps being killed at launch because of a restricted entitlement.
+
 ## Rationale
 
 - The legacy flow depended on a private wrapper checkout token, R2/CDN uploads,

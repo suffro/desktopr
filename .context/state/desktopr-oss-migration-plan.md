@@ -373,20 +373,29 @@ Ottenere la prima versione realmente standalone prima di fare refactor estetici.
 
 ## Validare
 
-- [ ] install dipendenze;
-- [ ] TypeScript compile;
-- [ ] Rust compile;
-- [ ] SDK build;
-- [ ] WASM integration;
-- [ ] Linux build;
-- [ ] Windows build;
-- [ ] macOS build;
-- [ ] unsigned build;
-- [ ] signing opzionale.
+- [x] install dipendenze;
+- [x] TypeScript compile;
+- [x] Rust compile;
+- [x] SDK build;
+- [x] WASM integration;
+- [x] Linux build;
+- [x] Windows build;
+- [x] macOS build;
+- [x] unsigned build;
+- [ ] signing opzionale (percorso senza secret verificato; firma con certificati reali non eseguita).
 
 ## Regola
 
 Non iniziare grandi cleanup prima di arrivare qui.
+
+**Stato:** completata tranne la firma con certificati reali. Da install pulita
+passano `npm ci`, typecheck, bridge, SDK (output identico a quello committato),
+`cargo check --locked` con e senza updater, check del repo e WASM. I moduli
+math e template sono eseguiti dall'host reale del runtime con
+`npm run test:wasm-runtime`. Il run GitHub 35168452799 (commit `b592858`) ha
+prodotto e **avviato** l'app su Linux, Windows e macOS. La validazione ha
+trovato e corretto due bug che impedivano l'avvio (entitlement macOS riservata,
+registrazione deep link su Linux) e un panic hook che nascondeva i panic.
 
 ---
 
@@ -407,10 +416,10 @@ Solo dopo una build standalone funzionante.
 ## Aggiungere
 
 - `.gitignore`;
-- `LICENSE`;
+- `LICENSE` (Apache 2.0);
 - `README.md`;
 - SECURITY.md;
-- eventualmente CONTRIBUTING.md.
+- CONTRIBUTING.md.
 
 ## Criterio di completamento
 
@@ -450,6 +459,8 @@ Da fare **dopo la migrazione funzionale**, ma **prima della release stabile**.
 ---
 
 # Fase 11 — Test e CI
+
+Dare una sistematina alla test automation.
 
 ## Rust
 
@@ -511,11 +522,11 @@ apps/companion/
 Deve essere:
 
 - standalone;
-- senza servizio hosted;
+- senza servizio hosted o app firmate;
 - utile come playground/demo reale del runtime;
 - eventualmente usato anche come example/dogfooding.
 
-## Distribuzione
+## Pubblicazione
 
 GitHub Actions deve poter produrre:
 
@@ -525,20 +536,7 @@ GitHub Actions deve poter produrre:
 
 Pubblicabili come:
 
-- GitHub Actions artifacts;
-- eventualmente GitHub Release.
-
-## macOS
-
-Non rendere obbligatorio Apple Developer Program.
-
-Finché non si vuole pagare:
-
-- build macOS unsigned/non-notarized;
-- documentare il warning Gatekeeper;
-- niente dipendenza da firma Apple per mantenere il progetto.
-
-Non introdurre un servizio hosted per risolvere questo problema.
+- GitHub Release.
 
 ---
 
@@ -562,7 +560,7 @@ Preferibile mantenere il nuovo monorepo con history pulita/sanitizzata se la vec
 
 Solo alla fine:
 
-- [ ] rinominare `tauri-skeleton` in `desktopr` o nome definitivo;
+- [ ] rinominare `tauri-skeleton` in `desktopr`;
 - [ ] aggiornare package metadata;
 - [ ] aggiornare badge/link;
 - [ ] collegare le docs separate;

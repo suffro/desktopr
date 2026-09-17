@@ -25,8 +25,11 @@
   `npm ci`, `npm run check:private-deps`, `npm run typecheck`,
   `npm run check:menu-contract`, `npm run ts:compile:bridge`, and
   `cargo check --locked` in `src-tauri/`.
-- For WASM changes also run `npm run wasm:check`, build the affected module, and
-  execute at least one request against the resulting artifact.
+- For WASM changes also run `npm run wasm:check` and `npm run test:wasm-runtime`,
+  which builds the modules and runs the runtime executor tests against them.
+- Never add restricted `com.apple.developer.*` entitlements to
+  `src-tauri/Entitlements.plist`: without a provisioning profile macOS refuses
+  to launch the app. `check:standalone` enforces this.
 - Default configuration must use the bundled standalone page, contain no remote
   origin and exclude updater configuration and permissions.
 - Enabling updates requires both developer-owned updater inputs plus the Cargo
