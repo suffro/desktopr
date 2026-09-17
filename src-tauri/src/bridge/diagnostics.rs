@@ -480,6 +480,9 @@ pub async fn dtr_logs_export_zip(app: AppHandle) -> Result<String, String> {
 
 /// Install a Rust panic hook that writes crash files if crash reports are enabled.
 pub fn install_panic_hook(app: AppHandle, app_version: String) {
+    // Keep the default hook so panics are still printed to stderr.
+    let default_hook = std::panic::take_hook();
+
     std::panic::set_hook(Box::new(move |info| {
         let ts = Utc::now().format("%Y-%m-%dT%H-%M-%SZ").to_string();
         let cause = info.to_string();
@@ -508,6 +511,8 @@ pub fn install_panic_hook(app: AppHandle, app_version: String) {
                 false,
             );
         }
+
+        default_hook(info);
     }));
 }
 
