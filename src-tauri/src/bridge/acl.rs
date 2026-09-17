@@ -43,9 +43,9 @@ fn remote_permissions() -> Result<Vec<String>, String> {
     permissions
         .iter()
         .map(|p| {
-            p.as_str()
-                .map(str::to_string)
-                .ok_or_else(|| "scoped permissions are not supported in runtime capabilities".to_string())
+            p.as_str().map(str::to_string).ok_or_else(|| {
+                "scoped permissions are not supported in runtime capabilities".to_string()
+            })
         })
         .collect()
 }
@@ -54,14 +54,31 @@ fn companion_permissions(permissions: Vec<String>) -> Vec<String> {
     permissions
         .into_iter()
         .filter(|p| p != DEBUG_BRIDGE_PERMISSION)
-        .filter(|p| !COMPANION_DENIED_PERMISSION_PREFIXES.iter().any(|prefix| p.starts_with(prefix)))
-        .map(|p| if p == BRIDGE_PERMISSION { COMPANION_BRIDGE_PERMISSION.to_string() } else { p })
+        .filter(|p| {
+            !COMPANION_DENIED_PERMISSION_PREFIXES
+                .iter()
+                .any(|prefix| p.starts_with(prefix))
+        })
+        .map(|p| {
+            if p == BRIDGE_PERMISSION {
+                COMPANION_BRIDGE_PERMISSION.to_string()
+            } else {
+                p
+            }
+        })
         .collect()
 }
 
-fn add_capability(app: &AppHandle, identifier: &str, label: &str, permissions: Vec<String>) -> Result<(), String> {
+fn add_capability(
+    app: &AppHandle,
+    identifier: &str,
+    label: &str,
+    permissions: Vec<String>,
+) -> Result<(), String> {
     let capability = remote_capability()?;
-    let mut builder = CapabilityBuilder::new(identifier).window(label).webview(label);
+    let mut builder = CapabilityBuilder::new(identifier)
+        .window(label)
+        .webview(label);
 
     if let Some(urls) = capability.pointer("/remote/urls").and_then(Value::as_array) {
         for url in urls.iter().filter_map(Value::as_str) {
@@ -73,7 +90,8 @@ fn add_capability(app: &AppHandle, identifier: &str, label: &str, permissions: V
         builder = builder.permission(permission);
     }
 
-    app.add_capability(builder).map_err(|e| format!("failed to grant capability to '{label}': {e}"))
+    app.add_capability(builder)
+        .map_err(|e| format!("failed to grant capability to '{label}': {e}"))
 }
 
 #[cfg(test)]
@@ -93,7 +111,11 @@ mod tests {
 
         assert_eq!(
             companion_permissions(permissions),
-            vec!["core:default", "desktopr-bridge-companion", "clipboard-manager:allow-read-text"]
+            vec![
+                "core:default",
+                "desktopr-bridge-companion",
+                "clipboard-manager:allow-read-text"
+            ]
         );
     }
 

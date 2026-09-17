@@ -1,12 +1,12 @@
+use crate::bridge::companion::is_companion_label;
+use base64::{engine::general_purpose, Engine as _}; // Cargo.toml: base64 = "0.22"
 use serde::{Deserialize, Serialize};
+use std::io::{Read, Write};
 use std::{
     fs,
     path::{Component, Path, PathBuf},
 };
 use tauri::{AppHandle, Manager, WebviewWindow};
-use std::io::{Read, Write};
-use crate::bridge::companion::is_companion_label;
-use base64::{engine::general_purpose, Engine as _}; // Cargo.toml: base64 = "0.22"
 use walkdir::WalkDir;
 
 #[derive(Serialize, Deserialize)]
@@ -304,7 +304,10 @@ fn diagnostics_dir(app: &AppHandle) -> Result<PathBuf, String> {
 // the window Tauri injects into the command, never from frontend input:
 // companion windows are confined to their own scope and every other window uses
 // the main scope. A `window_label` sent by the frontend must match that scope.
-fn caller_scope(window: &WebviewWindow, requested: Option<String>) -> Result<Option<String>, String> {
+fn caller_scope(
+    window: &WebviewWindow,
+    requested: Option<String>,
+) -> Result<Option<String>, String> {
     scope_for_label(window.label(), requested)
 }
 
@@ -320,7 +323,10 @@ fn scope_for_label(label: &str, requested: Option<String>) -> Result<Option<Stri
 }
 
 // Plugin storage belongs to the main app; companion windows cannot reach it.
-fn caller_plugin_storage(window: &WebviewWindow, module: Option<String>) -> Result<Option<String>, String> {
+fn caller_plugin_storage(
+    window: &WebviewWindow,
+    module: Option<String>,
+) -> Result<Option<String>, String> {
     plugin_storage_for_label(window.label(), module)
 }
 
@@ -348,13 +354,8 @@ pub fn dtr_fs_list_dir(
 ) -> Result<Vec<FsEntry>, String> {
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
-    let dir = resolve_existing_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let dir =
+        resolve_existing_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     let mut out = Vec::new();
 
     for e in fs::read_dir(&dir).map_err(|e| e.to_string())? {
@@ -388,13 +389,7 @@ pub fn dtr_fs_mkdir(
 ) -> Result<(), String> {
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
-    let dir = resolve_any_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let dir = resolve_any_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())
 }
 
@@ -412,13 +407,7 @@ pub fn dtr_fs_rm(
 ) -> Result<(), String> {
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
-    let p = resolve_any_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let p = resolve_any_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
 
     if !p.exists() {
         return Ok(());
@@ -478,13 +467,7 @@ pub fn dtr_fs_stat(
 ) -> Result<FsEntry, String> {
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
-    let p = resolve_existing_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let p = resolve_existing_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     let md = fs::metadata(&p).map_err(|e| e.to_string())?;
     Ok(FsEntry {
         name: p
@@ -512,7 +495,16 @@ pub fn dtr_fs_write_text(
 ) -> Result<(), String> {
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
-    fs_write_text_in_scope(app, rel, permanent, contents, create_dirs, append, window_label, plugin_storage_module)
+    fs_write_text_in_scope(
+        app,
+        rel,
+        permanent,
+        contents,
+        create_dirs,
+        append,
+        window_label,
+        plugin_storage_module,
+    )
 }
 
 // Writes text in an explicit scope; for runtime code that has no calling window.
@@ -529,13 +521,7 @@ pub fn fs_write_text_in_scope(
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
     let permanent = permanent.unwrap_or(false);
-    let path = resolve_any_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let path = resolve_any_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     if create_dirs.unwrap_or(true) {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -555,7 +541,8 @@ pub fn fs_write_text_in_scope(
     }
     .map_err(|e| e.to_string())?;
 
-    file.write_all(contents.as_bytes()).map_err(|e| e.to_string())
+    file.write_all(contents.as_bytes())
+        .map_err(|e| e.to_string())
 }
 
 // ---- READ TEXT ----
@@ -584,13 +571,8 @@ pub fn fs_read_text_in_scope(
     plugin_storage_module: Option<String>,
 ) -> Result<String, String> {
     let permanent = permanent.unwrap_or(false);
-    let path = resolve_existing_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let path =
+        resolve_existing_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     std::fs::read_to_string(path).map_err(|e| e.to_string())
 }
 
@@ -611,13 +593,7 @@ pub fn dtr_fs_write_bytes(
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
-    let path = resolve_any_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let path = resolve_any_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     if create_dirs.unwrap_or(true) {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -644,13 +620,8 @@ pub fn dtr_fs_read_bytes(
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
-    let path = resolve_existing_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let path =
+        resolve_existing_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     let mut f = std::fs::File::open(path).map_err(|e| e.to_string())?;
     let mut buf = Vec::new();
     f.read_to_end(&mut buf).map_err(|e| e.to_string())?;
@@ -672,13 +643,7 @@ pub fn dtr_fs_exists(
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
-    let path = resolve_any_scoped(
-        &app,
-        &rel,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let path = resolve_any_scoped(&app, &rel, permanent, &window_label, &plugin_storage_module)?;
     Ok(path.exists())
 }
 
@@ -700,13 +665,8 @@ pub fn dtr_fs_move(
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
-    let src_path = resolve_existing_scoped(
-        &app,
-        &src,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let src_path =
+        resolve_existing_scoped(&app, &src, permanent, &window_label, &plugin_storage_module)?;
     let mut dest_path = resolve_any_scoped(
         &app,
         &dest,
@@ -766,13 +726,8 @@ pub fn dtr_fs_copy(
     let window_label = caller_scope(&window, window_label)?;
     let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
-    let src_path = resolve_existing_scoped(
-        &app,
-        &src,
-        permanent,
-        &window_label,
-        &plugin_storage_module,
-    )?;
+    let src_path =
+        resolve_existing_scoped(&app, &src, permanent, &window_label, &plugin_storage_module)?;
     let mut dest_path = resolve_any_scoped(
         &app,
         &dest,
@@ -891,7 +846,11 @@ pub fn dtr_fs_data_clear_trash(app: AppHandle, window: WebviewWindow) -> Result<
 }
 
 #[tauri::command]
-pub fn dtr_fs_data_recover_trash(app: AppHandle, window: WebviewWindow, trash_rel_path: String) -> Result<(), String> {
+pub fn dtr_fs_data_recover_trash(
+    app: AppHandle,
+    window: WebviewWindow,
+    trash_rel_path: String,
+) -> Result<(), String> {
     let scope = caller_scope(&window, None)?;
     let data = base_dir_scoped(&app, true, &scope)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
@@ -941,8 +900,8 @@ pub fn dtr_fs_paths(app: AppHandle, window: WebviewWindow) -> Result<FsPaths, St
 }
 
 /* =========================
-   TRASH: helpers and commands
-   ========================= */
+TRASH: helpers and commands
+========================= */
 
 fn unique_with_suffix(dest: PathBuf, suffix: &str) -> PathBuf {
     if !dest.exists() {
@@ -1019,7 +978,11 @@ fn move_rel_in_data_to_trash(
 
 // ---- LIST DIR in _trash ----
 #[tauri::command]
-pub fn dtr_fs_trash_list_dir(app: AppHandle, window: WebviewWindow, rel: String) -> Result<Vec<FsEntry>, String> {
+pub fn dtr_fs_trash_list_dir(
+    app: AppHandle,
+    window: WebviewWindow,
+    rel: String,
+) -> Result<Vec<FsEntry>, String> {
     let scope = caller_scope(&window, None)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let dir = {
@@ -1049,7 +1012,11 @@ pub fn dtr_fs_trash_list_dir(app: AppHandle, window: WebviewWindow, rel: String)
 
 // Stat in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_stat(app: AppHandle, window: WebviewWindow, rel: String) -> Result<FsEntry, String> {
+pub fn dtr_fs_trash_stat(
+    app: AppHandle,
+    window: WebviewWindow,
+    rel: String,
+) -> Result<FsEntry, String> {
     let scope = caller_scope(&window, None)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
@@ -1070,7 +1037,11 @@ pub fn dtr_fs_trash_stat(app: AppHandle, window: WebviewWindow, rel: String) -> 
 
 // Exists in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_exists(app: AppHandle, window: WebviewWindow, rel: String) -> Result<bool, String> {
+pub fn dtr_fs_trash_exists(
+    app: AppHandle,
+    window: WebviewWindow,
+    rel: String,
+) -> Result<bool, String> {
     let scope = caller_scope(&window, None)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
@@ -1079,7 +1050,11 @@ pub fn dtr_fs_trash_exists(app: AppHandle, window: WebviewWindow, rel: String) -
 
 // Read text in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_read_text(app: AppHandle, window: WebviewWindow, rel: String) -> Result<String, String> {
+pub fn dtr_fs_trash_read_text(
+    app: AppHandle,
+    window: WebviewWindow,
+    rel: String,
+) -> Result<String, String> {
     let scope = caller_scope(&window, None)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
@@ -1094,7 +1069,11 @@ pub fn dtr_fs_trash_read_text(app: AppHandle, window: WebviewWindow, rel: String
 
 // Read bytes (base64) in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_read_bytes(app: AppHandle, window: WebviewWindow, rel: String) -> Result<String, String> {
+pub fn dtr_fs_trash_read_bytes(
+    app: AppHandle,
+    window: WebviewWindow,
+    rel: String,
+) -> Result<String, String> {
     let scope = caller_scope(&window, None)?;
     let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
@@ -1111,8 +1090,8 @@ pub fn dtr_fs_trash_read_bytes(app: AppHandle, window: WebviewWindow, rel: Strin
 }
 
 /* =========================
-   DIAGNOSTICS: helpers and commands
-   ========================= */
+DIAGNOSTICS: helpers and commands
+========================= */
 
 // Safe join relative to _diagnostics
 pub fn dtr_fs_safe_join_diagnostics(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
@@ -1213,7 +1192,8 @@ pub fn dtr_fs_diagnostics_write_text(
             .open(&path)
     }
     .map_err(|e| e.to_string())?;
-    file.write_all(contents.as_bytes()).map_err(|e| e.to_string())
+    file.write_all(contents.as_bytes())
+        .map_err(|e| e.to_string())
 }
 
 // --- read text in _diagnostics ---
@@ -1307,14 +1287,20 @@ mod tests {
     #[test]
     fn companion_windows_are_confined_to_their_own_scope() {
         assert_eq!(scope_for_label(COMPANION, None), Ok(Some(COMPANION.into())));
-        assert_eq!(scope_for_label(COMPANION, Some(COMPANION.into())), Ok(Some(COMPANION.into())));
+        assert_eq!(
+            scope_for_label(COMPANION, Some(COMPANION.into())),
+            Ok(Some(COMPANION.into()))
+        );
         assert!(scope_for_label(COMPANION, Some("dtr-cache-only-window-other".into())).is_err());
         assert!(scope_for_label(COMPANION, Some("main".into())).is_err());
     }
 
     #[test]
     fn plugin_storage_is_denied_to_companion_windows() {
-        assert_eq!(plugin_storage_for_label("main", Some("math.wasm".into())), Ok(Some("math.wasm".into())));
+        assert_eq!(
+            plugin_storage_for_label("main", Some("math.wasm".into())),
+            Ok(Some("math.wasm".into()))
+        );
         assert!(plugin_storage_for_label(COMPANION, Some("math.wasm".into())).is_err());
         assert_eq!(plugin_storage_for_label(COMPANION, None), Ok(None));
     }

@@ -59,7 +59,9 @@ fn validate_wasm_name_and_bytes(name: &str, bytes: &[u8]) -> Result<()> {
     validate_module_name(name)?;
 
     if bytes.len() < 4 || bytes[..4] != WASM_MAGIC {
-        return Err(anyhow!("invalid module: missing WASM magic header (\\0asm)"));
+        return Err(anyhow!(
+            "invalid module: missing WASM magic header (\\0asm)"
+        ));
     }
 
     Ok(())
@@ -210,10 +212,13 @@ fn plugin_storage_dir(app: &AppHandle, module: &str) -> Result<PathBuf> {
 }
 
 fn validate_wasm_file(path: &Path) -> Result<()> {
-    let bytes = fs::read(path).with_context(|| format!("cannot read module: {}", path.display()))?;
+    let bytes =
+        fs::read(path).with_context(|| format!("cannot read module: {}", path.display()))?;
 
     if bytes.len() < 4 || bytes[..4] != WASM_MAGIC {
-        return Err(anyhow!("invalid module: missing WASM magic header (\\0asm)"));
+        return Err(anyhow!(
+            "invalid module: missing WASM magic header (\\0asm)"
+        ));
     }
 
     Ok(())
@@ -371,13 +376,11 @@ pub async fn dtr_plugin_pick_and_add_module(
 
     let name = match default_name {
         Some(n) if !n.trim().is_empty() => n,
-        _ => {
-            Path::new(&file.path)
-                .file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .filter(|s| !s.is_empty())
-                .ok_or_else(|| "cannot derive file name".to_string())?
-        }
+        _ => Path::new(&file.path)
+            .file_name()
+            .map(|s| s.to_string_lossy().to_string())
+            .filter(|s| !s.is_empty())
+            .ok_or_else(|| "cannot derive file name".to_string())?,
     };
 
     let base = external_modules_dir(&app).map_err(|e| e.to_string())?;
@@ -431,12 +434,7 @@ pub fn dtr_plugin_list_modules(app: AppHandle) -> Result<Vec<String>, String> {
     for entry in fs::read_dir(dir).map_err(|e| e.to_string())? {
         let e = entry.map_err(|e| e.to_string())?;
 
-        if e.path().is_file()
-            && e.path()
-                .extension()
-                .map(|x| x == "wasm")
-                .unwrap_or(false)
-        {
+        if e.path().is_file() && e.path().extension().map(|x| x == "wasm").unwrap_or(false) {
             out.push(e.file_name().to_string_lossy().to_string());
         }
     }
@@ -563,20 +561,10 @@ fn execute_wasm_module(
 
     // The job sandbox is the plugin working directory.
     // Relative paths are temporary and are cleaned after the run.
-    wasi_builder.preopened_dir(
-        job_dir,
-        ".",
-        DirPerms::all(),
-        FilePerms::all(),
-    )?;
+    wasi_builder.preopened_dir(job_dir, ".", DirPerms::all(), FilePerms::all())?;
 
     // Persistent plugin storage is available explicitly under /storage.
-    wasi_builder.preopened_dir(
-        storage_dir,
-        "/storage",
-        DirPerms::all(),
-        FilePerms::all(),
-    )?;
+    wasi_builder.preopened_dir(storage_dir, "/storage", DirPerms::all(), FilePerms::all())?;
 
     let wasi = wasi_builder.build_p1();
 
@@ -660,9 +648,15 @@ mod tests {
             self.root.join("storage")
         }
 
-        fn run(&self, wasm: &[u8], payload: serde_json::Value, timeout_ms: u64) -> Result<PluginResponse> {
+        fn run(
+            &self,
+            wasm: &[u8],
+            payload: serde_json::Value,
+            timeout_ms: u64,
+        ) -> Result<PluginResponse> {
             let job_dir = self.new_job_dir();
-            let result = execute_wasm_module("test", wasm, payload, timeout_ms, &job_dir, &self.storage());
+            let result =
+                execute_wasm_module("test", wasm, payload, timeout_ms, &job_dir, &self.storage());
             safe_remove_dir_all(&job_dir).unwrap();
             result
         }
@@ -675,7 +669,9 @@ mod tests {
     }
 
     fn artifact(relative: &str) -> Vec<u8> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../wasm").join(relative);
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../wasm")
+            .join(relative);
         fs::read(&path).unwrap_or_else(|e| {
             panic!(
                 "missing WASM artifact {} ({e}); run `npm run test:wasm-runtime` from the repository root",
@@ -694,8 +690,14 @@ mod tests {
     fn rejects_module_without_start() {
         let sandbox = Sandbox::new("no-start");
         let wasm = wat::parse_str(r#"(module (func (export "main")))"#).unwrap();
-        let err = sandbox.run(&wasm, json!({}), 1_000).err().expect("expected an error");
-        assert!(err.to_string().contains("_start"), "unexpected error: {err}");
+        let err = sandbox
+            .run(&wasm, json!({}), 1_000)
+            .err()
+            .expect("expected an error");
+        assert!(
+            err.to_string().contains("_start"),
+            "unexpected error: {err}"
+        );
     }
 
     #[test]
@@ -708,7 +710,10 @@ mod tests {
 
         assert!(!response.ok, "an endless loop must not succeed");
         assert!(response.error.is_some());
-        assert!(started.elapsed() < Duration::from_secs(10), "timeout was not enforced");
+        assert!(
+            started.elapsed() < Duration::from_secs(10),
+            "timeout was not enforced"
+        );
     }
 
     #[test]
@@ -720,7 +725,10 @@ mod tests {
         drop(cancel);
         thread.join().unwrap();
 
-        assert!(started.elapsed() < Duration::from_secs(5), "deadline thread kept sleeping");
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "deadline thread kept sleeping"
+        );
     }
 
     #[test]
@@ -729,11 +737,15 @@ mod tests {
         let sandbox = Sandbox::new("math");
         let wasm = artifact("modules/math/dist/math.wasm");
 
-        let response = sandbox.run(&wasm, json!({ "fn": "add", "args": [3, 5] }), 5_000).unwrap();
+        let response = sandbox
+            .run(&wasm, json!({ "fn": "add", "args": [3, 5] }), 5_000)
+            .unwrap();
         assert!(response.ok, "host error: {:?}", response.error);
         assert_eq!(response.value, Some(json!({ "ok": true, "value": 8.0 })));
 
-        let response = sandbox.run(&wasm, json!({ "fn": "nope", "args": [] }), 5_000).unwrap();
+        let response = sandbox
+            .run(&wasm, json!({ "fn": "nope", "args": [] }), 5_000)
+            .unwrap();
         assert_eq!(
             response.value,
             Some(json!({ "ok": false, "error": "unknown function: nope" }))
@@ -748,23 +760,44 @@ mod tests {
 
         for path in ["/storage/kept.txt", "scratch.txt"] {
             let response = sandbox
-                .run(&wasm, json!({ "fn": "write", "args": { "path": path, "contents": "hello" } }), 5_000)
+                .run(
+                    &wasm,
+                    json!({ "fn": "write", "args": { "path": path, "contents": "hello" } }),
+                    5_000,
+                )
                 .unwrap();
-            assert_eq!(response.value.as_ref().and_then(|v| v.get("ok")), Some(&json!(true)), "{response:?}");
+            assert_eq!(
+                response.value.as_ref().and_then(|v| v.get("ok")),
+                Some(&json!(true)),
+                "{response:?}"
+            );
         }
 
         let kept = sandbox
-            .run(&wasm, json!({ "fn": "read", "args": { "path": "/storage/kept.txt" } }), 5_000)
+            .run(
+                &wasm,
+                json!({ "fn": "read", "args": { "path": "/storage/kept.txt" } }),
+                5_000,
+            )
             .unwrap();
         assert_eq!(
-            kept.value.as_ref().and_then(|v| v.pointer("/value/contents")),
+            kept.value
+                .as_ref()
+                .and_then(|v| v.pointer("/value/contents")),
             Some(&json!("hello")),
             "{kept:?}"
         );
-        assert_eq!(fs::read_to_string(sandbox.storage().join("kept.txt")).unwrap(), "hello");
+        assert_eq!(
+            fs::read_to_string(sandbox.storage().join("kept.txt")).unwrap(),
+            "hello"
+        );
 
         let scratch = sandbox
-            .run(&wasm, json!({ "fn": "read", "args": { "path": "scratch.txt" } }), 5_000)
+            .run(
+                &wasm,
+                json!({ "fn": "read", "args": { "path": "scratch.txt" } }),
+                5_000,
+            )
             .unwrap();
         assert_eq!(
             scratch.value.as_ref().and_then(|v| v.get("ok")),

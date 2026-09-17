@@ -3,8 +3,8 @@ use std::{
     fs,
     io::Write as IoWrite,
     path::{Path, PathBuf},
-    sync::Mutex,
     sync::atomic::{AtomicBool, Ordering},
+    sync::Mutex,
     thread,
     time::Duration,
 };
@@ -30,34 +30,54 @@ use crate::bridge::fs as dtrfs;
 //
 
 #[inline]
-fn rel_base() -> &'static str { "" }
+fn rel_base() -> &'static str {
+    ""
+}
 
 #[inline]
-fn rel_settings_dir() -> String { format!("{}settings", rel_base()) }
+fn rel_settings_dir() -> String {
+    format!("{}settings", rel_base())
+}
 
 #[inline]
-fn rel_privacy_settings() -> String { format!("{}/privacy.json", rel_settings_dir()) }
+fn rel_privacy_settings() -> String {
+    format!("{}/privacy.json", rel_settings_dir())
+}
 
 #[inline]
-fn rel_runtime_dir() -> String { format!("{}runtime", rel_base()) }
+fn rel_runtime_dir() -> String {
+    format!("{}runtime", rel_base())
+}
 
 #[inline]
-fn rel_runtime_heartbeat() -> String { format!("{}/heartbeat.json", rel_runtime_dir()) }
+fn rel_runtime_heartbeat() -> String {
+    format!("{}/heartbeat.json", rel_runtime_dir())
+}
 
 #[inline]
-fn rel_runtime_shutdown_ok() -> String { format!("{}/shutdown.ok", rel_runtime_dir()) }
+fn rel_runtime_shutdown_ok() -> String {
+    format!("{}/shutdown.ok", rel_runtime_dir())
+}
 
 #[inline]
-fn rel_logs_dir() -> String { format!("{}logs", rel_base()) }
+fn rel_logs_dir() -> String {
+    format!("{}logs", rel_base())
+}
 
 #[inline]
 fn rel_monthly_log_file() -> String {
     // e.g., "logs/record-2025-09.jsonl"
-    format!("{}/record-{}.jsonl", rel_logs_dir(), Utc::now().format("%Y-%m"))
+    format!(
+        "{}/record-{}.jsonl",
+        rel_logs_dir(),
+        Utc::now().format("%Y-%m")
+    )
 }
 
 #[inline]
-fn rel_crashes_dir() -> String { format!("{}crashes", rel_base()) }
+fn rel_crashes_dir() -> String {
+    format!("{}crashes", rel_base())
+}
 
 #[inline]
 fn rel_crash_json_file(ts_iso_filename: &str) -> String {
@@ -72,13 +92,19 @@ fn rel_crash_log_file(ts_iso_filename: &str) -> String {
 
 // Backward-compatible helper names.
 #[inline]
-fn runtime_dir_rel() -> String { rel_runtime_dir() }
+fn runtime_dir_rel() -> String {
+    rel_runtime_dir()
+}
 
 #[inline]
-fn runtime_heartbeat_rel() -> String { rel_runtime_heartbeat() }
+fn runtime_heartbeat_rel() -> String {
+    rel_runtime_heartbeat()
+}
 
 #[inline]
-fn runtime_shutdown_ok_rel() -> String { rel_runtime_shutdown_ok() }
+fn runtime_shutdown_ok_rel() -> String {
+    rel_runtime_shutdown_ok()
+}
 
 // ==============================
 // Heartbeat / runtime markers
@@ -222,7 +248,10 @@ fn rotate_with_part_suffix(abs_path: &Path) -> std::io::Result<()> {
     if let Ok(meta) = fs::metadata(abs_path) {
         if meta.len() as usize >= ROTATE_MAX_BYTES {
             let (stem, ext) = if let Some(ext) = abs_path.extension().and_then(|s| s.to_str()) {
-                let stem = abs_path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
+                let stem = abs_path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("file");
                 (stem.to_string(), format!(".{}", ext))
             } else {
                 ("file".to_string(), String::new())
@@ -664,7 +693,10 @@ pub struct PrivacyPatch {
 }
 
 #[tauri::command]
-pub fn dtr_logs_set_privacy(app: AppHandle, patch: PrivacyPatch) -> Result<PrivacySettings, String> {
+pub fn dtr_logs_set_privacy(
+    app: AppHandle,
+    patch: PrivacyPatch,
+) -> Result<PrivacySettings, String> {
     let mut s = read_privacy(&app);
 
     if let Some(v) = patch.analytics_enabled {

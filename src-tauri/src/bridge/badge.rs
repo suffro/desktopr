@@ -21,10 +21,10 @@ pub fn dtr_badge_clear(app: AppHandle) -> Result<(), String> {
 fn set_badge_macos(count: Option<u32>) -> Result<(), String> {
     // Safety: Interacting with Cocoa APIs requires unsafe
     unsafe {
-        use objc::{msg_send, sel, sel_impl};
         use cocoa::appkit::NSApp;
         use cocoa::base::{id, nil};
-        use cocoa::foundation::{NSString, NSAutoreleasePool};
+        use cocoa::foundation::{NSAutoreleasePool, NSString};
+        use objc::{msg_send, sel, sel_impl};
         let _pool = NSAutoreleasePool::new(nil);
 
         let app: id = NSApp();

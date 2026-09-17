@@ -1,8 +1,8 @@
-use tauri::{AppHandle, Manager};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
 use std::sync::atomic::AtomicBool;
+use std::sync::Mutex;
+use tauri::{AppHandle, Manager};
 
 pub struct CloseGuard {
     pub closing: AtomicBool,
@@ -67,11 +67,7 @@ impl CompanionSandboxRegistry {
 // These helpers assume that CompanionSandboxRegistry is managed in Tauri state.
 
 // Register sandbox root for a specific window label.
-pub fn register_companion_sandbox(
-    app: &AppHandle,
-    window_label: impl Into<String>,
-    path: PathBuf,
-) {
+pub fn register_companion_sandbox(app: &AppHandle, window_label: impl Into<String>, path: PathBuf) {
     let registry = app.state::<CompanionSandboxRegistry>();
     registry.insert(window_label, path);
 }

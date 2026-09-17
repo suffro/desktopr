@@ -1,12 +1,12 @@
 fn main() {
     let defaults = [
-        ("MAIN_WINDOW_URL",             ""),
-        ("MAIN_WINDOW_TITLE",           "Desktopr"),
-        ("MAIN_WINDOW_WIDTH",           "1200"),
-        ("MAIN_WINDOW_HEIGHT",          "800"),
-        ("MAIN_WINDOW_BG_COLOR",        "#171717"),
-        ("MAIN_WINDOW_RESIZABLE",       "true"),
-        ("MAIN_WINDOW_VISIBLE",         "false"),
+        ("MAIN_WINDOW_URL", ""),
+        ("MAIN_WINDOW_TITLE", "Desktopr"),
+        ("MAIN_WINDOW_WIDTH", "1200"),
+        ("MAIN_WINDOW_HEIGHT", "800"),
+        ("MAIN_WINDOW_BG_COLOR", "#171717"),
+        ("MAIN_WINDOW_RESIZABLE", "true"),
+        ("MAIN_WINDOW_VISIBLE", "false"),
         ("MAIN_WINDOW_OPEN_FULLSCREEN", "false"),
     ];
 
@@ -16,7 +16,9 @@ fn main() {
             .lines()
             .filter_map(|l| {
                 let l = l.trim();
-                if l.is_empty() || l.starts_with('#') { return None; }
+                if l.is_empty() || l.starts_with('#') {
+                    return None;
+                }
                 let (k, v) = l.split_once('=')?;
                 Some((k.trim().to_string(), v.trim().to_string()))
             })

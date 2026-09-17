@@ -32,7 +32,7 @@ fn clamp_timeout(timeout_ms: u64) -> u64 {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NetworkStatus {
     pub online: bool,
-    pub reason: String,      // "ok" | "dns" | "timeout" | "tls" | "unknown"
+    pub reason: String, // "ok" | "dns" | "timeout" | "tls" | "unknown"
     pub latency_ms: Option<u128>,
 }
 
@@ -40,7 +40,12 @@ pub struct NetworkStatus {
 pub async fn dtr_network_get_status(app: AppHandle) -> Result<NetworkStatus, String> {
     // NOTE: Cheap probe to a fast, highly available endpoint.
     // Prefer a HEAD to a CDN endpoint you control; fallback to public.
-    probe(&app, Some("https://www.cloudflare.com/cdn-cgi/trace".to_string()), 2500).await
+    probe(
+        &app,
+        Some("https://www.cloudflare.com/cdn-cgi/trace".to_string()),
+        2500,
+    )
+    .await
 }
 
 #[tauri::command]
@@ -78,7 +83,9 @@ pub async fn dtr_network_bandwidth_estimate(
     timeout_ms: Option<u64>,
 ) -> Result<serde_json::Value, String> {
     // NOTE: Download a small static file to estimate throughput.
-    let url = validate_url(&url.unwrap_or_else(|| "https://speed.cloudflare.com/__down?bytes=200000".to_string()))?;
+    let url = validate_url(
+        &url.unwrap_or_else(|| "https://speed.cloudflare.com/__down?bytes=200000".to_string()),
+    )?;
     let timeout = clamp_timeout(timeout_ms.unwrap_or(4000));
     let start = Instant::now();
     let bytes_len = download_sample(&url, timeout, MAX_BANDWIDTH_BYTES).await? as u64;
@@ -105,7 +112,11 @@ async fn download_sample(url: &str, timeout_ms: u64, max_bytes: usize) -> Result
     Ok(received)
 }
 
-async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<NetworkStatus, String> {
+async fn probe(
+    app: &AppHandle,
+    url: Option<String>,
+    timeout_ms: u64,
+) -> Result<NetworkStatus, String> {
     // NOTE: First do a fast DNS check to discriminate reasons.
     let dns_ok = ("one.one.one.one", 443).to_socket_addrs().is_ok();
 
@@ -113,7 +124,8 @@ async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<
         .timeout(Duration::from_millis(clamp_timeout(timeout_ms)))
         .build()
         .map_err(|e| e.to_string())?;
-    let target = validate_url(&url.unwrap_or_else(|| "https://www.google.com/generate_204".to_string()))?;
+    let target =
+        validate_url(&url.unwrap_or_else(|| "https://www.google.com/generate_204".to_string()))?;
 
     let start = Instant::now();
     let res = client.head(&target).send().await;
@@ -121,15 +133,31 @@ async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<
         Ok(r) => {
             if r.status().is_success() || r.status().as_u16() == 204 {
                 let latency = start.elapsed().as_millis();
-                NetworkStatus { online: true, reason: "ok".into(), latency_ms: Some(latency) }
+                NetworkStatus {
+                    online: true,
+                    reason: "ok".into(),
+                    latency_ms: Some(latency),
+                }
             } else {
-                NetworkStatus { online: false, reason: "unknown".into(), latency_ms: None }
+                NetworkStatus {
+                    online: false,
+                    reason: "unknown".into(),
+                    latency_ms: None,
+                }
             }
         }
-        Err(e) if e.is_timeout() => NetworkStatus { online: false, reason: "timeout".into(), latency_ms: None },
+        Err(e) if e.is_timeout() => NetworkStatus {
+            online: false,
+            reason: "timeout".into(),
+            latency_ms: None,
+        },
         Err(_e) => {
             let reason = if !dns_ok { "dns" } else { "unknown" };
-            NetworkStatus { online: false, reason: reason.into(), latency_ms: None }
+            NetworkStatus {
+                online: false,
+                reason: reason.into(),
+                latency_ms: None,
+            }
         }
     };
 
@@ -149,17 +177,28 @@ struct MonitorState {
 static MONITOR: OnceLock<Mutex<MonitorState>> = OnceLock::new();
 
 #[tauri::command]
-pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: Option<Vec<String>>) -> Result<(), String> {
+pub async fn dtr_network_set_monitor(
+    app: AppHandle,
+    interval_ms: u64,
+    targets: Option<Vec<String>>,
+) -> Result<(), String> {
     // NOTE: Simple polling monitor; for OS-level callbacks use platform-specific crates.
     let app_handle = app.clone();
-    let tgts = targets.unwrap_or_else(|| vec![
-        "https://www.google.com/generate_204".to_string(),
-        "https://www.cloudflare.com/cdn-cgi/trace".to_string()
-    ]);
+    let tgts = targets.unwrap_or_else(|| {
+        vec![
+            "https://www.google.com/generate_204".to_string(),
+            "https://www.cloudflare.com/cdn-cgi/trace".to_string(),
+        ]
+    });
     if tgts.len() > MAX_MONITOR_TARGETS {
-        return Err(format!("at most {MAX_MONITOR_TARGETS} monitor targets are allowed"));
+        return Err(format!(
+            "at most {MAX_MONITOR_TARGETS} monitor targets are allowed"
+        ));
     }
-    let tgts = tgts.iter().map(|t| validate_url(t)).collect::<Result<Vec<_>, _>>()?;
+    let tgts = tgts
+        .iter()
+        .map(|t| validate_url(t))
+        .collect::<Result<Vec<_>, _>>()?;
     let interval_ms = interval_ms.max(MIN_MONITOR_INTERVAL_MS);
 
     let handle = tokio::spawn(async move {
@@ -173,7 +212,9 @@ pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: 
 
     let state = MONITOR.get_or_init(|| Mutex::new(MonitorState { handle: None }));
     let mut s = state.lock().unwrap();
-    if let Some(old) = s.handle.take() { old.abort(); }
+    if let Some(old) = s.handle.take() {
+        old.abort();
+    }
     s.handle = Some(handle);
     Ok(())
 }
@@ -182,7 +223,9 @@ pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: 
 pub async fn dtr_network_stop_monitor() -> Result<(), String> {
     if let Some(state) = MONITOR.get() {
         let mut s = state.lock().unwrap();
-        if let Some(h) = s.handle.take() { h.abort(); }
+        if let Some(h) = s.handle.take() {
+            h.abort();
+        }
     }
     Ok(())
 }
@@ -225,13 +268,19 @@ mod tests {
         });
 
         let cap = 1024 * 1024;
-        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         let received = runtime
             .block_on(download_sample(&format!("http://{addr}/"), 10_000, cap))
             .unwrap();
 
         assert!(received >= cap, "read {received} bytes");
-        assert!(received < cap + 1024 * 1024, "did not stop near the cap: {received} bytes");
+        assert!(
+            received < cap + 1024 * 1024,
+            "did not stop near the cap: {received} bytes"
+        );
     }
 
     #[test]

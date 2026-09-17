@@ -3,9 +3,9 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-use tauri::{AppHandle, Emitter, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use crate::bridge::acl::grant_companion_capability;
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
+use tauri::{AppHandle, Emitter, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 pub(crate) const COMPANION_LABEL_PREFIX: &str = "dtr-cache-only-window-";
 
@@ -192,7 +192,10 @@ pub async fn dtr_launch_companion(
     }
     log_debug(
         &app,
-        &format!("Cache-only window sandbox created successfully at {:?}", sandbox_path),
+        &format!(
+            "Cache-only window sandbox created successfully at {:?}",
+            sandbox_path
+        ),
     );
 
     // 3) Parse appearance options from the config object
