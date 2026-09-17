@@ -17,6 +17,8 @@ pub struct MenuConfig {
     #[serde(default)]
     pub window: Option<MenuSectionConfig>,
     #[serde(default)]
+    // Only read on macOS; still accepted everywhere as part of the JSON contract.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub macos_root: Option<MenuSectionConfig>, // camelCase -> macosRoot
     #[serde(default)]
     pub tray: Option<MenuSectionConfig>,
