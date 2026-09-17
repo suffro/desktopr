@@ -77,9 +77,10 @@ pub async fn dtr_network_resolve(host: String) -> Result<serde_json::Value, Stri
 
 #[tauri::command]
 pub async fn dtr_network_bandwidth_estimate(
-    app: AppHandle,
+    _app: AppHandle,
     url: Option<String>,
-    size_hint_bytes: Option<u64>,
+    // Accepted for API compatibility; the sample size is capped by MAX_BANDWIDTH_BYTES.
+    #[allow(unused_variables)] size_hint_bytes: Option<u64>,
     timeout_ms: Option<u64>,
 ) -> Result<serde_json::Value, String> {
     // NOTE: Download a small static file to estimate throughput.

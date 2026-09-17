@@ -124,13 +124,19 @@ keys and the manifest format.
 
 ## Checks
 
+`.github/workflows/ci.yml` runs these on every push to `main` and every pull
+request (Rust on Linux, Windows and macOS):
+
 ```sh
 npm run typecheck             # runtime and SDK TypeScript
 npm run check:standalone      # no hosted services, safe defaults, launchable entitlements
 npm run check:private-deps    # no private packages or credentials in manifests
 npm run check:menu-contract   # SDK menu schema matches the runtime
 npm run check:bridge-permissions  # bridge commands are registered and allowed; companion subset is intact
-npm run test:wasm-runtime     # builds the WASM modules and runs them in the runtime host
+npm run test:bridge           # bridge initialization, IPC argument names and SDK fallback
+npm run test:config           # generated configuration and capabilities for each scenario
+npm run lint:rust             # rustfmt and clippy with warnings as errors
+npm run test:rust             # Rust tests, including WASM modules run in the runtime host
 ```
 
 ## Contributing and security

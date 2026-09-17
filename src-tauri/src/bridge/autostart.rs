@@ -61,7 +61,7 @@ fn save_settings(app: &AppHandle, s: &AutostartSettings) -> Result<(), String> {
 /// Apply how the main window should appear when launched by the OS.
 fn apply_autostart_window_behavior(app: &AppHandle, mode: AutostartMode) {
     // ✅ v2 uses `get_webview_window`
-    let app_handle = app.clone();
+    let _app_handle = app.clone();
     if let Some(win) = app.get_webview_window("main") {
         match mode {
             AutostartMode::Shown => {
@@ -99,7 +99,7 @@ fn apply_autostart_window_behavior(app: &AppHandle, mode: AutostartMode) {
 pub fn init_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     tauri_plugin_autostart::init(
         MacosLauncher::LaunchAgent,
-        Some(vec!["--autostart".into()]), // any flags you want at OS launch
+        Some(vec!["--autostart"]), // any flags you want at OS launch
     )
 }
 
@@ -112,8 +112,8 @@ pub fn run_from_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Er
             // to prevent any flashing at startup.
             let _ = win.hide();
         }
-        let s = load_settings(&app.handle());
-        apply_autostart_window_behavior(&app.handle(), s.autostart_mode);
+        let s = load_settings(app.handle());
+        apply_autostart_window_behavior(app.handle(), s.autostart_mode);
     } else {
         // In dev / manual start the window may not exist yet at setup() time.
         // Retry for a short period and then show/focus it once available.

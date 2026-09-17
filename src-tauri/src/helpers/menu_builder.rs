@@ -34,6 +34,8 @@ pub enum MenuPlatform {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuSectionConfig {
+    // Part of the JSON contract; the Rust side selects sections by key.
+    #[allow(dead_code)]
     pub section: MenuSection,
     pub items: Vec<MenuItemUnion>,
 }

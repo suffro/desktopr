@@ -315,8 +315,8 @@ fn new_log_data(
 /// If a heartbeat exists at startup but "shutdown.ok" does not, a dirty shutdown is recorded.
 pub fn start_heartbeat(app: AppHandle) {
     let base = diagnostics_root(&app);
-    let hb_abs = base.join(&runtime_heartbeat_rel());
-    let ok_abs = base.join(&runtime_shutdown_ok_rel());
+    let hb_abs = base.join(runtime_heartbeat_rel());
+    let ok_abs = base.join(runtime_shutdown_ok_rel());
     let dirty = hb_abs.exists() && !ok_abs.exists();
 
     if dirty {
@@ -341,8 +341,8 @@ pub fn start_heartbeat(app: AppHandle) {
         let _ = append_jsonl(&app, &log_rel, &entry);
     }
 
-    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_shutdown_ok_rel().into(), false);
-    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_shutdown_ok_rel(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel(), false);
 
     thread::spawn(move || {
         while !HEARTBEAT_STOP.load(Ordering::Relaxed) {
@@ -359,7 +359,7 @@ pub fn start_heartbeat(app: AppHandle) {
         }
 
         let _ = fs_write_text(&app, &runtime_shutdown_ok_rel(), "ok", false);
-        let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+        let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel(), false);
     });
 }
 
@@ -368,7 +368,7 @@ pub fn mark_clean_shutdown_now(app: &AppHandle) {
     HEARTBEAT_STOP.store(true, Ordering::Relaxed);
 
     let _ = fs_write_text(app, &runtime_shutdown_ok_rel(), "ok", false);
-    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel().into(), false);
+    let _ = dtrfs::dtr_fs_diagnostics_rm(app.clone(), runtime_heartbeat_rel(), false);
 }
 
 // ==============================
@@ -651,7 +651,7 @@ pub fn dtr_logs_list_files(app: AppHandle, area: String) -> Result<Vec<ListedFil
         }
     }
 
-    out.sort_by(|a, b| b.modified_ms.cmp(&a.modified_ms));
+    out.sort_by_key(|f| std::cmp::Reverse(f.modified_ms));
 
     Ok(out)
 }

@@ -15,8 +15,6 @@ use tauri_plugin_global_shortcut as gsc;
 // Deep-link + single-instance
 use tauri_plugin_deep_link::DeepLinkExt;
 
-use tauri_plugin_shell;
-
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
@@ -109,7 +107,7 @@ fn main() {
         bridge::autostart::run_from_setup(app)?;
 
         // Initialize persistent env store.
-        let env_state = crate::bridge::global_vars::EnvState::init(&app.handle())
+        let env_state = crate::bridge::global_vars::EnvState::init(app.handle())
             .expect("Failed to init EnvState for global_vars module");
         app.manage(env_state);
 
@@ -140,7 +138,7 @@ fn main() {
         let start_urls = app.deep_link().get_current()?;
         if let Some(urls) = start_urls {
             if let Some(u) = urls.first() {
-                crate::bridge::deeplink::emit_parsed_deeplink(&app.handle(), u.as_str());
+                crate::bridge::deeplink::emit_parsed_deeplink(app.handle(), u.as_str());
             }
         }
 
@@ -186,7 +184,7 @@ fn main() {
                     let _ = window.emit("window:close-requested", ());
 
                     // Mark clean shutdown centrally.
-                    mark_clean_shutdown_now(&app);
+                    mark_clean_shutdown_now(app);
 
                     // Close for real.
                     let window_label = window.label().to_string();
@@ -205,7 +203,7 @@ fn main() {
 
                 WindowEvent::DragDrop(e) => match e {
                     DragDropEvent::Enter { paths, position } => {
-                        dragdrop::emit_enter(window, &paths, position.x, position.y);
+                        dragdrop::emit_enter(window, paths, position.x, position.y);
                     }
 
                     DragDropEvent::Over { position } => {
@@ -213,7 +211,7 @@ fn main() {
                     }
 
                     DragDropEvent::Drop { paths, position } => {
-                        dragdrop::emit_drop(window, &paths, position.x, position.y);
+                        dragdrop::emit_drop(window, paths, position.x, position.y);
                     }
 
                     DragDropEvent::Leave => {

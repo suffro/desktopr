@@ -15,15 +15,12 @@ impl LatestWindowLabel {
     pub fn set(&self, v: impl Into<String>) {
         *self.label.lock().unwrap() = v.into();
     }
-    pub fn get(&self) -> String {
-        self.label.lock().unwrap().clone()
-    }
 }
 
 pub fn get_latest_window_label(app: &AppHandle) -> String {
     let state = app.state::<LatestWindowLabel>();
-    let l = state.label.lock().unwrap().clone();
-    return l;
+    let label = state.label.lock().unwrap().clone();
+    label
 }
 
 // Companion sandbox registry keeps a mapping between a window label and its sandbox root.
@@ -52,15 +49,6 @@ impl CompanionSandboxRegistry {
             m.remove(key);
         }
     }
-
-    // Get the sandbox root for the given window label, if any.
-    pub fn get(&self, key: &str) -> Option<PathBuf> {
-        if let Ok(m) = self.map.lock() {
-            m.get(key).cloned()
-        } else {
-            None
-        }
-    }
 }
 
 // Convenience helpers to interact with the registry through the Tauri AppHandle.
@@ -76,10 +64,4 @@ pub fn register_companion_sandbox(app: &AppHandle, window_label: impl Into<Strin
 pub fn unregister_companion_sandbox(app: &AppHandle, window_label: &str) {
     let registry = app.state::<CompanionSandboxRegistry>();
     registry.remove(window_label);
-}
-
-// Resolve the sandbox root for a window label, if present.
-pub fn resolve_companion_sandbox(app: &AppHandle, window_label: &str) -> Option<PathBuf> {
-    let registry = app.state::<CompanionSandboxRegistry>();
-    registry.get(window_label)
 }

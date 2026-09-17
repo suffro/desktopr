@@ -89,7 +89,7 @@ pub struct CmPopupOptions {
     pub timeout_ms: Option<u64>,
 }
 
-/// ---------- Internal state for awaiting a single selection ----------
+// ---------- Internal state for awaiting a single selection ----------
 
 struct AwaitOnce {
     tx: oneshot::Sender<Option<String>>,
@@ -110,7 +110,7 @@ fn next_ticket() -> u64 {
     T.fetch_add(1, Ordering::SeqCst)
 }
 
-/// ---------- Build helpers ----------
+// ---------- Build helpers ----------
 
 fn build_menu_recursive<R: Runtime>(
     app: &AppHandle<R>,
@@ -285,7 +285,7 @@ fn build_submenu<R: Runtime>(
     sb.build()
 }
 
-/// ---------- Core command ----------
+// ---------- Core command ----------
 
 /// Show a native context menu and return the clicked item id (or null if closed).
 ///
@@ -335,7 +335,7 @@ pub async fn dtr_context_menu_popup(
     }
 
     // Temporary menu-event handler: on click, resolve the ticket and unregister
-    let handler = win.on_menu_event(move |_w, ev: MenuEvent| {
+    win.on_menu_event(move |_w, ev: MenuEvent| {
         // Acquire map; if ticket still present, match ev.id
         let maybe_tx = {
             let mut g = global_await_map().lock().unwrap();

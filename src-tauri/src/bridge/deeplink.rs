@@ -4,42 +4,20 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use tauri::{AppHandle, Emitter, Manager, Url};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 pub struct DeepLinkSegments {
     pub first: String,
     pub last: String,
     pub list: Vec<String>,
 }
 
-impl Default for DeepLinkSegments {
-    fn default() -> Self {
-        Self {
-            first: String::new(),
-            last: String::new(),
-            list: Vec::new(),
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 pub struct DeepLinkPayload {
     pub scheme: String,
     pub segments: DeepLinkSegments,
     pub query: HashMap<String, String>,
     pub raw: String,
     pub error: Option<String>,
-}
-
-impl Default for DeepLinkPayload {
-    fn default() -> Self {
-        Self {
-            scheme: String::new(),
-            segments: DeepLinkSegments::default(),
-            query: HashMap::new(),
-            raw: String::new(),
-            error: None,
-        }
-    }
 }
 
 impl FromStr for DeepLinkPayload {

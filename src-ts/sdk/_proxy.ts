@@ -1,6 +1,10 @@
 // src-ts/sdk/desktopr.ts
 import type { DesktoprAPI } from "../types";
 
+const UNAVAILABLE_MESSAGE =
+  "[Desktopr] window.Desktopr is not available. Is the desktop wrapper loaded? " +
+  "Guard native calls with isDesktoprAvailable().";
+
 // Internal helper: get a safe window reference
 function getWindow(): Window {
   if (typeof window === "undefined") {
@@ -10,17 +14,15 @@ function getWindow(): Window {
   return window;
 }
 
-// Internal helper: access the real global bridge
-function getGlobalBridge(): DesktoprAPI | undefined {
+// Internal helper: access the real global bridge.
+// Throws a descriptive error instead of a TypeError when the wrapper is missing.
+function getGlobalBridge(): DesktoprAPI {
   const w = getWindow() as any;
   const bridge = w.Desktopr;
 
   if (!bridge) {
     // Desktopr bridge is not yet injected by the wrapper
-    console.error(
-      "[Desktopr] window.Desktopr is not available. Is the desktop wrapper loaded?"
-    );
-    return;
+    throw new Error(UNAVAILABLE_MESSAGE);
   }
 
   return bridge as DesktoprAPI;
@@ -43,7 +45,7 @@ export function isDesktoprAvailable(): boolean {
 // but from the developer point of view it is strongly typed as DesktoprAPI.
 export const Desktopr: DesktoprAPI = new Proxy({} as DesktoprAPI, {
   get(_target, prop, _receiver) {
-    const bridge = getGlobalBridge() ?? undefined;
+    const bridge = getGlobalBridge();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const value = (bridge as any)[prop];
 
@@ -56,7 +58,7 @@ export const Desktopr: DesktoprAPI = new Proxy({} as DesktoprAPI, {
   },
 
   set(_target, prop, value) {
-    const bridge = getGlobalBridge() ?? undefined;
+    const bridge = getGlobalBridge();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (bridge as any)[prop] = value;
     return true;

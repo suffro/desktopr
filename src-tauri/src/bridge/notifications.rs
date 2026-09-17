@@ -36,7 +36,7 @@ pub fn dtr_notify(app: AppHandle, title: String, body: String) -> Result<NotifyR
         .notification()
         .permission_state()
         .map_err(|e| e.to_string())?;
-    let mut after = before.clone();
+    let mut after = before;
 
     if before != PermissionState::Granted {
         after = app

@@ -39,18 +39,23 @@ npm run dev
 
 ## Checks
 
-Run what applies to your change before opening a pull request:
+Pull requests run `.github/workflows/ci.yml` on Linux, Windows and macOS. Run
+what applies to your change locally first:
 
 ```sh
 npm run typecheck
-npm run ts:compile:bridge
-(cd src-tauri && cargo check --locked)
 npm run check:standalone
 npm run check:private-deps
 npm run check:menu-contract
 npm run check:bridge-permissions  # when adding or changing bridge commands
-npm run test:wasm-runtime        # when touching the plugin host or wasm/
+npm run test:bridge               # bridge initialization and SDK behavior
+npm run test:config               # when touching conf-templates/ or scripts/
+npm run lint:rust                 # cargo fmt --check and clippy -D warnings
+npm run test:rust                 # Rust tests, including the WASM runtime tests
 ```
+
+Clippy runs on every platform in CI because some runtime code is compiled only
+on Linux, Windows or macOS.
 
 When you change `.github/workflows/`, lint it with
 [actionlint](https://github.com/rhysd/actionlint) (with `shellcheck` installed).
@@ -71,8 +76,8 @@ When you change `.github/workflows/`, lint it with
 - Keep each pull request focused on one change and describe what it does and
   how you verified it.
 - Add or update tests and documentation when behavior changes.
-- Make sure the build workflow still passes on all platforms when you touch the
-  runtime, configuration or workflows.
+- CI must pass. When you touch packaging, signing or bundle configuration, also
+  run the build workflow, which builds and launches the app on all platforms.
 
 By contributing, you agree that your contributions are licensed under the
 [Apache License, Version 2.0](LICENSE).

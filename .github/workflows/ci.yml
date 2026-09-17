@@ -1,0 +1,181 @@
+# Checks and tests for every push to main and every pull request.
+#
+# Packaging, signing and the launch smoke test live in build.yml, which is run
+# on demand because full bundles on three platforms are slow and billed.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".context/**"
+      - "**/*.md"
+      - "LICENSE"
+  pull_request:
+    paths-ignore:
+      - ".context/**"
+      - "**/*.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  repository:
+    name: Repository checks and TypeScript
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Private dependency check
+        run: npm run check:private-deps
+
+      - name: Standalone defaults check
+        run: npm run check:standalone
+
+      - name: Bridge permissions check
+        run: npm run check:bridge-permissions
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Menu contract (builds the SDK)
+        run: npm run check:menu-contract
+
+      - name: Bridge and SDK tests
+        run: npm run test:bridge
+
+      - name: Configuration generation tests
+        run: npm run test:config
+
+      - name: Generated configuration is committed
+        run: git diff --exit-code
+
+  wasm:
+    name: WASM modules
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy --target wasm32-wasip1 --no-self-update
+          rustup default stable
+
+      - name: Cache Cargo registry and target
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            wasm/target
+          key: ${{ runner.os }}-ci-wasm-${{ hashFiles('wasm/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-ci-wasm-
+
+      - name: Format
+        working-directory: wasm
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        working-directory: wasm
+        run: cargo clippy --workspace --locked --all-targets --target wasm32-wasip1 -- -D warnings
+
+  rust:
+    name: Runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy --target wasm32-wasip1 --no-self-update
+          rustup default stable
+          rustc --version
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential file libayatana-appindicator3-dev libgtk-3-dev \
+            librsvg2-dev libssl-dev libwebkit2gtk-4.1-dev libxdo-dev pkg-config
+
+      - name: Cache Cargo registry and target
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            src-tauri/target
+            wasm/target
+          key: ${{ runner.os }}-ci-cargo-${{ hashFiles('src-tauri/Cargo.lock', 'wasm/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-ci-cargo-
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Format
+        if: runner.os == 'Linux'
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: Compile bridge
+        run: npm run ts:compile:bridge
+
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Clippy (updater feature)
+        if: runner.os == 'Linux'
+        working-directory: src-tauri
+        run: cargo clippy --locked --all-targets --features updater -- -D warnings
+
+      - name: Tests (including WASM runtime tests)
+        run: npm run test:rust

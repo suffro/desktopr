@@ -687,13 +687,31 @@ mod tests {
     }
 
     #[test]
+    fn module_uploads_require_a_plain_name_and_the_wasm_header() {
+        assert!(validate_wasm_name_and_bytes("math.wasm", b"\0asm\x01\0\0\0").is_ok());
+        assert!(validate_wasm_name_and_bytes("math.wasm", b"\0as").is_err());
+        assert!(validate_wasm_name_and_bytes("math.wasm", b"MZ\0\0").is_err());
+        for name in [
+            "",
+            "math",
+            "../math.wasm",
+            "sub/math.wasm",
+            "sub\\math.wasm",
+        ] {
+            assert!(
+                validate_wasm_name_and_bytes(name, b"\0asm\x01\0\0\0").is_err(),
+                "accepted {name:?}"
+            );
+        }
+    }
+
+    #[test]
     fn rejects_module_without_start() {
         let sandbox = Sandbox::new("no-start");
         let wasm = wat::parse_str(r#"(module (func (export "main")))"#).unwrap();
         let err = sandbox
             .run(&wasm, json!({}), 1_000)
-            .err()
-            .expect("expected an error");
+            .expect_err("expected an error");
         assert!(
             err.to_string().contains("_start"),
             "unexpected error: {err}"

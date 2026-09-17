@@ -1,0 +1,165 @@
+// Runs the configuration generators in a temporary copy of their inputs and
+// checks the generated Tauri configuration, capability and constants files.
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+const root = resolve(import.meta.dirname, "..");
+let failures = 0;
+
+function generate(script, environment = {}) {
+  const workdir = mkdtempSync(join(tmpdir(), "desktopr-conf-"));
+  cpSync(join(root, "scripts"), join(workdir, "scripts"), { recursive: true });
+  cpSync(join(root, "conf-templates"), join(workdir, "conf-templates"), { recursive: true });
+  mkdirSync(join(workdir, "src-tauri/capabilities"), { recursive: true });
+  mkdirSync(join(workdir, "src-ts"), { recursive: true });
+
+  // Start from a minimal environment so developer shell variables cannot leak in.
+  const result = spawnSync("bash", [`scripts/${script}`], {
+    cwd: workdir,
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, HOME: process.env.HOME, ...environment },
+  });
+  const read = (path) => readFileSync(join(workdir, path), "utf8");
+  const json = (path) => JSON.parse(read(path));
+  return {
+    status: result.status,
+    output: `${result.stdout}${result.stderr}`,
+    tauri: () => json("src-tauri/tauri.conf.json"),
+    capability: () => json("src-tauri/capabilities/remote.json"),
+    constants: () => json("src-ts/bridge.constants.json"),
+    windowEnv: () => read("src-tauri/window.env"),
+    cargo: () => read("src-tauri/Cargo.toml"),
+    cleanup: () => rmSync(workdir, { recursive: true, force: true }),
+  };
+}
+
+function scenario(name, script, environment, check) {
+  const run = generate(script, environment);
+  try {
+    check(run);
+    console.log(`ok - ${name}`);
+  } catch (error) {
+    failures += 1;
+    console.error(`not ok - ${name}\n${error.message}\n--- generator output ---\n${run.output}`);
+  } finally {
+    run.cleanup();
+  }
+}
+
+function assertSucceeded(run) {
+  assert.equal(run.status, 0, "generator exited with an error");
+}
+
+function assertMainOnly(capability) {
+  assert.deepEqual(capability.windows, ["main"]);
+  assert.deepEqual(capability.webviews, ["main"]);
+}
+
+scenario("production defaults are standalone", "prod-conf.sh", {}, (run) => {
+  assertSucceeded(run);
+  const tauri = run.tauri();
+  const capability = run.capability();
+  assertMainOnly(capability);
+  assert.equal(capability.remote, undefined);
+  assert.ok(!capability.permissions.includes("updater:default"));
+  assert.ok(!capability.permissions.includes("desktopr-bridge-debug"));
+  assert.ok(tauri.app.security.capabilities.includes("remote"));
+  assert.match(tauri.app.security.csp, /^default-src 'self';/u);
+  assert.equal(tauri.plugins?.updater, undefined);
+  assert.equal(tauri.bundle.createUpdaterArtifacts, false);
+  assert.equal(run.constants().appUrl, "");
+  assert.match(run.windowEnv(), /^MAIN_WINDOW_URL=$/mu);
+  assert.equal(
+    run.cargo(),
+    readFileSync(join(root, "src-tauri/Cargo.toml"), "utf8"),
+    "generated Cargo.toml drifted from the checked-in manifest; update conf-templates/Cargo.template.toml",
+  );
+});
+
+scenario(
+  "production APP_URL grants only its origin and subdomains",
+  "prod-conf.sh",
+  { APP_URL: "https://app.example.com:8443/some/path?x=1" },
+  (run) => {
+    assertSucceeded(run);
+    const capability = run.capability();
+    assertMainOnly(capability);
+    assert.deepEqual(capability.remote.urls, [
+      "https://app.example.com:8443/*",
+      "https://*.app.example.com:8443/*",
+    ]);
+    assert.equal(run.constants().appUrl, "https://app.example.com:8443");
+    assert.match(run.tauri().app.security.csp, /default-src 'self' https:\/\/app\.example\.com:8443;/u);
+  },
+);
+
+scenario("production rejects non-HTTP APP_URL", "prod-conf.sh", { APP_URL: "file:///etc" }, (run) => {
+  assert.notEqual(run.status, 0);
+});
+
+scenario("companion mode accepts any HTTPS origin", "prod-conf.sh", { COMPANION_MODE: "true" }, (run) => {
+  assertSucceeded(run);
+  const capability = run.capability();
+  assertMainOnly(capability);
+  assert.ok(capability.remote.urls.includes("https://*/*"));
+  assert.ok(!capability.remote.urls.some((url) => url.startsWith("http://") && !/localhost|127\.0\.0\.1/u.test(url)));
+});
+
+scenario(
+  "updater requires both endpoint and public key",
+  "prod-conf.sh",
+  { UPDATE_ENDPOINT: "https://updates.example.com/latest.json" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+);
+
+scenario(
+  "updater rejects non-HTTPS endpoints",
+  "prod-conf.sh",
+  { UPDATE_ENDPOINT: "http://updates.example.com/latest.json", ED25519_PUBKEY: "test-key" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+);
+
+scenario(
+  "developer updater configuration is applied",
+  "prod-conf.sh",
+  { UPDATE_ENDPOINT: "https://updates.example.com/latest.json", TAURI_SIGNING_PUBLIC_KEY: "test-key" },
+  (run) => {
+    assertSucceeded(run);
+    const tauri = run.tauri();
+    assert.deepEqual(tauri.plugins.updater, {
+      endpoints: ["https://updates.example.com/latest.json"],
+      pubkey: "test-key",
+    });
+    assert.equal(tauri.bundle.createUpdaterArtifacts, true);
+    assert.ok(run.capability().permissions.includes("updater:default"));
+  },
+);
+
+for (const script of ["dev-conf.sh", "local-dev-conf.sh"]) {
+  scenario(`${script} grants debug commands to main only`, script, {}, (run) => {
+    assertSucceeded(run);
+    const capability = run.capability();
+    assertMainOnly(capability);
+    assert.ok(capability.permissions.includes("desktopr-bridge-debug"));
+    assert.equal(capability.remote, undefined);
+    assert.equal(run.constants().appUrl, "");
+  });
+}
+
+scenario("dev APP_URL grants only its origin", "dev-conf.sh", { APP_URL: "http://localhost:5173/app" }, (run) => {
+  assertSucceeded(run);
+  assert.deepEqual(run.capability().remote.urls, ["http://localhost:5173/*"]);
+  assert.equal(run.constants().appUrl, "http://localhost:5173");
+});
+
+if (failures > 0) {
+  console.error(`${failures} configuration generation scenario(s) failed`);
+  process.exitCode = 1;
+}

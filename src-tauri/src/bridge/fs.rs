@@ -482,6 +482,7 @@ pub fn dtr_fs_stat(
 
 // ---- WRITE TEXT ----
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // IPC arguments
 pub fn dtr_fs_write_text(
     app: AppHandle,
     rel: String,
@@ -508,6 +509,7 @@ pub fn dtr_fs_write_text(
 }
 
 // Writes text in an explicit scope; for runtime code that has no calling window.
+#[allow(clippy::too_many_arguments)]
 pub fn fs_write_text_in_scope(
     app: AppHandle,
     rel: String,
@@ -578,6 +580,7 @@ pub fn fs_read_text_in_scope(
 
 // ---- WRITE BYTES (base64) ----
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // IPC arguments
 pub fn dtr_fs_write_bytes(
     app: AppHandle,
     rel: String,
@@ -649,6 +652,7 @@ pub fn dtr_fs_exists(
 
 // ---- MOVE ----
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // IPC arguments
 pub fn dtr_fs_move(
     app: AppHandle,
     src: String,
@@ -709,6 +713,7 @@ pub fn dtr_fs_move(
 
 // ---- COPY ----
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // IPC arguments
 pub fn dtr_fs_copy(
     app: AppHandle,
     src: String,
@@ -1312,5 +1317,35 @@ mod tests {
         assert!(safe_join(base, "../outside").is_err());
         assert!(safe_join(base, "a/../../outside").is_err());
         assert!(safe_join(base, "/etc/passwd").is_err());
+    }
+
+    #[test]
+    fn scope_names_reject_reserved_and_path_like_labels() {
+        assert_eq!(scope_dir_name(None), Ok(".main".into()));
+        assert_eq!(scope_dir_name(Some(COMPANION)), Ok(format!(".{COMPANION}")));
+        for label in ["", "  ", "main", "..", "../main", "a/b", "a\\b", "a.b"] {
+            assert!(scope_dir_name(Some(label)).is_err(), "accepted {label:?}");
+        }
+    }
+
+    #[test]
+    fn plugin_storage_modules_cannot_escape_the_storage_root() {
+        assert_eq!(
+            validate_plugin_storage_module(" math.wasm "),
+            Ok("math.wasm".into())
+        );
+        for module in [
+            "",
+            "math",
+            "../math.wasm",
+            "sub/math.wasm",
+            "sub\\math.wasm",
+            "/abs.wasm",
+        ] {
+            assert!(
+                validate_plugin_storage_module(module).is_err(),
+                "accepted {module:?}"
+            );
+        }
     }
 }

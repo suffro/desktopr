@@ -8,9 +8,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
 use tauri::{
-    menu::{
-        CheckMenuItemBuilder, IsMenuItem, MenuItemBuilder, MenuItemKind, Submenu, SubmenuBuilder,
-    },
+    menu::{CheckMenuItemBuilder, MenuItemBuilder, MenuItemKind, Submenu, SubmenuBuilder},
     AppHandle, Emitter, Manager, Wry,
 };
 
@@ -143,6 +141,8 @@ fn apply_menu_config(app: &AppHandle<Wry>, cfg: MenuConfig) -> tauri::Result<()>
 // Applies a MenuConfig only to a specific window.
 // It builds a menu from the given config and attaches it to the target window,
 // without touching the global app menu or shared MenuIndex/CheckState state.
+// The parameters are only read on platforms with per-window menus.
+#[cfg_attr(target_os = "macos", allow(unused_variables))]
 fn apply_menu_config_to_window(
     app: &AppHandle<Wry>,
     window_label: &str,
@@ -155,7 +155,7 @@ fn apply_menu_config_to_window(
             "[Desktopr][menu] Window-specific native menu is not supported on macOS; \
 dtr_init_menu_for_window_from_json is a no-op on this platform."
         );
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -441,7 +441,7 @@ fn build_submenu_from_section_handle(
 ) -> tauri::Result<Submenu<Wry>> {
     let mut built_menu_items: Vec<tauri::menu::MenuItem<Wry>> = Vec::new();
     let mut built_check_items: Vec<tauri::menu::CheckMenuItem<Wry>> = Vec::new();
-    let mut built_icon_items: Vec<tauri::menu::IconMenuItem<Wry>> = Vec::new();
+    let _built_icon_items: Vec<tauri::menu::IconMenuItem<Wry>> = Vec::new();
     let mut built_submenus: Vec<Submenu<Wry>> = Vec::new();
 
     let mut builder = SubmenuBuilder::new(app, title);
@@ -558,7 +558,6 @@ fn build_submenu_from_section_handle(
                 built_submenus.push(nested_submenu);
                 builder = builder.item(built_submenus.last().unwrap());
             }
-            _ => {}
         }
     }
 
@@ -646,7 +645,7 @@ fn attach_menu_events(app: AppHandle<Wry>) {
                 *val = !*val; // toggle known main-menu check item
                 let new_val = *val;
                 // align UI (idempotent even if OS already updated)
-                let _ = super::set_checked(&app, id, new_val);
+                let _ = super::set_checked(app, id, new_val);
                 Some(new_val)
             } else {
                 // Not a known main-menu check item → maybe a context-menu check
