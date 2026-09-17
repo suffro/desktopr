@@ -41,6 +41,24 @@ fi
 : "${MAIN_WINDOW_RESIZABLE:=true}"
 : "${MAIN_WINDOW_OPEN_FULLSCREEN:=false}"
 : "${COMPANION_MODE:=false}"
+# standalone: bundled fallback page (or APP_URL). companion: bundled Desktopr Companion app.
+: "${APP_FRONTEND:=standalone}"
+
+case "$APP_FRONTEND" in
+  standalone) ;;
+  companion)
+    if [ -n "$APP_URL" ]; then
+      echo "APP_FRONTEND=companion bundles its own UI and cannot be combined with APP_URL"
+      exit 1
+    fi
+    # The companion loads any web app the user enters in the main window.
+    COMPANION_MODE=true
+    ;;
+  *)
+    echo "APP_FRONTEND must be standalone or companion"
+    exit 1
+    ;;
+esac
 
 cat > src-tauri/window.env << EOF
 MAIN_WINDOW_URL=${MAIN_WINDOW_URL}
@@ -146,6 +164,11 @@ echo "  bridge.constants.json   -> patched"
 
 # tauri.conf.json
 cp "${TAURI_TEMPLATE}" src-tauri/tauri.conf.json
+
+if [ "$APP_FRONTEND" = "companion" ]; then
+  jq '.build.frontendDist = "../apps/companion/dist"' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+  echo "  frontend                -> apps/companion/dist"
+fi
 
 # -----------------------------
 # Patch configuration values

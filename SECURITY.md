@@ -42,8 +42,11 @@ native capabilities to it. When reviewing or reporting an issue, keep in mind:
   change autostart, or change and clear diagnostics. Their filesystem access is
   confined to their own scope, without access to plugin storage.
 - **Companion mode** (`COMPANION_MODE=true`) intentionally accepts bridge calls
-  from any HTTPS origin and is meant for development tooling only. Do not ship
-  production apps built in this mode.
+  from any HTTPS origin and from localhost. It is used by the Desktopr Companion
+  app (`APP_FRONTEND=companion`), which loads a URL the user enters in the main
+  window with the full bridge so every feature can be tried. Only load trusted
+  web apps in the companion, and do not ship production apps built in this
+  mode.
 - **Network diagnostics** (`network.ping`, `network.estimateBandwidth`, the network monitor)
   send native HTTP(S) requests, outside the webview's CORS rules, to URLs the
   app chooses. Local and LAN hosts are reachable on purpose; requests are

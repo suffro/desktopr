@@ -36,6 +36,8 @@ npm run dev
   regenerate with `npm run devconf`.
 - WASM plugins live in the `wasm/` Cargo workspace; see
   [wasm/README.md](wasm/README.md).
+- The Desktopr Companion app lives in `apps/companion/` and consumes the SDK
+  from the `sdk/` workspace; check it with `npm run companion:check`.
 
 ## Checks
 
@@ -50,6 +52,7 @@ npm run check:menu-contract
 npm run check:bridge-permissions  # when adding or changing bridge commands
 npm run test:bridge               # bridge initialization and SDK behavior
 npm run test:config               # when touching conf-templates/ or scripts/
+npm run companion:check           # when touching apps/companion or the SDK
 npm run lint:rust                 # cargo fmt --check and clippy -D warnings
 npm run test:rust                 # Rust tests, including the WASM runtime tests
 ```

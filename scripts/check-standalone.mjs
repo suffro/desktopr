@@ -5,8 +5,9 @@ const root = resolve(import.meta.dirname, "..");
 const excludedDirectories = new Set([
   ".context",
   ".git",
+  ".svelte-kit",
+  "dist",
   "docs",
-  "frontend",
   "node_modules",
   "target",
 ]);

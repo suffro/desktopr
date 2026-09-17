@@ -152,7 +152,8 @@ pub async fn dtr_launch_companion(
                 None
             }
         })
-        .unwrap_or_else(|| "/cache-only/blank.html".to_string());
+        // Without a URL the window opens the app's own bundled entry page.
+        .unwrap_or_else(|| "/".to_string());
 
     // Convert to Tauri WebviewUrl
     let companion_url = if url_str.starts_with("http://") || url_str.starts_with("https://") {

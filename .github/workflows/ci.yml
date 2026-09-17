@@ -71,6 +71,12 @@ jobs:
       - name: Configuration generation tests
         run: npm run test:config
 
+      - name: Companion check
+        run: npm run companion:check
+
+      - name: Companion build
+        run: npm run companion:build
+
       - name: Generated configuration is committed
         run: git diff --exit-code
 

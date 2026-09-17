@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Global layout using Tailwind utilities */
+body {
+  @apply min-h-screen bg-neutral-900 text-neutral-100 font-sans flex flex-col;
+}
+
+.cm-editor {
+	background: #0a0a0a;
+	color: #e5e5e5;
+}
+
+.cm-gutters {
+	background: #111111 !important;
+	color: #737373 !important;
+	border-right: 1px solid #262626 !important;
+}
+
+.cm-activeLineGutter {
+	background: #171717 !important;
+	color: #d4d4d4 !important;
+}
+
+.cm-foldGutter {
+	background: #111111 !important;
+}
+
+.cm-scroller {
+	background: #0a0a0a;
+}

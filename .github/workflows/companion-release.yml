@@ -1,0 +1,71 @@
+# Publishes the Desktopr Companion as a GitHub Release for Linux, Windows and
+# macOS, plus the MSIX uploaded to the existing Microsoft Store listing.
+#
+# The macOS build must be signed and notarized, so the APPLE_* secrets are
+# required. Windows builds are unsigned unless WINDOWS_CERTIFICATE is set; the
+# Store signs the MSIX. The MSIX version must be higher than the version
+# currently published in Partner Center.
+
+name: companion-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Companion version (X.Y.Z)"
+        type: string
+        required: true
+      draft:
+        description: "Create the release as a draft"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require macOS signing and notarization secrets
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing secret $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+  build:
+    name: build
+    needs: preflight
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: write
+    secrets: inherit
+    with:
+      frontend: companion
+      app_name: Desktopr Companion
+      app_identifier: app.desktopr.companion
+      app_version: ${{ inputs.version }}
+      icon: src-tauri/icons/icon-companion.svg
+      msix_identity_name: Desktopr.Desktopr
+      msix_identity_publisher: CN=B27DF8BD-5700-47C4-9719-CA85B3F0938A
+      msix_publisher_display_name: Desktopr
+      msix_display_name: Desktopr
+      release: true
+      release_draft: ${{ inputs.draft }}
+      release_tag_prefix: companion-v
+      release_notes_file: apps/companion/RELEASE_NOTES.md

@@ -23,6 +23,11 @@
 # and are not secret. The MSIX is signed only when the Windows certificate
 # subject matches msix_identity_publisher; Store submissions are signed by the
 # Store.
+#
+# frontend=companion bundles the Desktopr Companion app from apps/companion
+# instead of the standalone page; companion-release.yml runs it with the
+# published companion identity. release_tag_prefix and release_notes_file let
+# several apps publish releases from this repository.
 
 name: build
 
@@ -45,6 +50,11 @@ on:
         description: "App version (X.Y.Z). Empty uses the configuration default."
         type: string
         default: ""
+      frontend:
+        description: "Bundled frontend: standalone (fallback page or app_url) or companion (Desktopr Companion)"
+        type: choice
+        options: [standalone, companion]
+        default: standalone
       app_url:
         description: "External web app URL. Empty loads the bundled standalone page."
         type: string
@@ -97,6 +107,14 @@ on:
         description: "Create the release as a draft"
         type: boolean
         default: true
+      release_tag_prefix:
+        description: "Release tag prefix; the tag is <prefix><app_version>"
+        type: string
+        default: "v"
+      release_notes_file:
+        description: "Repository path of the release notes. Empty generates notes from commits."
+        type: string
+        default: ""
   workflow_call:
     inputs:
       platforms:
@@ -111,6 +129,9 @@ on:
       app_version:
         type: string
         default: ""
+      frontend:
+        type: string
+        default: standalone
       app_url:
         type: string
         default: ""
@@ -150,6 +171,12 @@ on:
       release_draft:
         type: boolean
         default: true
+      release_tag_prefix:
+        type: string
+        default: "v"
+      release_notes_file:
+        type: string
+        default: ""
     secrets:
       WINDOWS_CERTIFICATE:
         required: false
@@ -194,10 +221,12 @@ jobs:
         env:
           APP_VERSION: ${{ inputs.app_version }}
           APP_URL: ${{ inputs.app_url }}
+          FRONTEND: ${{ inputs.frontend }}
           UPDATE_ENDPOINT: ${{ inputs.update_endpoint || vars.DESKTOPR_UPDATE_ENDPOINT }}
           UPDATER_PUBLIC_KEY: ${{ inputs.updater_public_key || vars.TAURI_SIGNING_PUBLIC_KEY }}
           UPDATER_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           RELEASE: ${{ inputs.release }}
+          RELEASE_TAG_PREFIX: ${{ inputs.release_tag_prefix }}
           MSIX_IDENTITY_NAME: ${{ inputs.msix_identity_name }}
           MSIX_IDENTITY_PUBLISHER: ${{ inputs.msix_identity_publisher }}
           MSIX_PUBLISHER_DISPLAY_NAME: ${{ inputs.msix_publisher_display_name }}
@@ -236,6 +265,22 @@ jobs:
 
           if [ "$RELEASE" = "true" ] && [ -z "$APP_VERSION" ]; then
             echo "::error::app_version is required when release is enabled"
+            exit 1
+          fi
+
+          case "$FRONTEND" in
+            standalone) ;;
+            companion)
+              if [ -n "$APP_URL" ]; then
+                echo "::error::frontend=companion bundles its own UI and cannot be combined with app_url"
+                exit 1
+              fi
+              ;;
+            *) echo "::error::frontend must be standalone or companion"; exit 1 ;;
+          esac
+
+          if [ "$RELEASE" = "true" ] && ! printf '%s' "$RELEASE_TAG_PREFIX" | grep -Eq '^[A-Za-z0-9._-]*$'; then
+            echo "::error::release_tag_prefix may only contain letters, digits, '.', '_' and '-'"
             exit 1
           fi
 
@@ -372,6 +417,10 @@ jobs:
       - name: Install npm dependencies
         run: npm ci --no-audit --fund=false
 
+      - name: Build companion frontend
+        if: inputs.frontend == 'companion'
+        run: npm run companion:build
+
       - name: Generate icons
         env:
           ICON_SOURCE: ${{ inputs.icon }}
@@ -392,6 +441,7 @@ jobs:
           APP_IDENTIFIER: ${{ inputs.app_identifier }}
           APP_VERSION_INPUT: ${{ inputs.app_version }}
           APP_URL: ${{ inputs.app_url }}
+          APP_FRONTEND: ${{ inputs.frontend }}
           DEEPLINK_SCHEME: ${{ inputs.deeplink_scheme }}
           UPDATER: ${{ needs.prepare.outputs.updater }}
           UPDATE_ENDPOINT_INPUT: ${{ inputs.update_endpoint || vars.DESKTOPR_UPDATE_ENDPOINT }}
@@ -400,7 +450,7 @@ jobs:
           set -euo pipefail
 
           export MAIN_WINDOW_TITLE="$APP_NAME"
-          export APP_IDENTIFIER APP_URL DEEPLINK_SCHEME
+          export APP_IDENTIFIER APP_URL APP_FRONTEND DEEPLINK_SCHEME
           if [ -n "$APP_VERSION_INPUT" ]; then
             export APP_VERSION="$APP_VERSION_INPUT"
           fi
@@ -816,6 +866,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout release notes
+        if: inputs.release_notes_file != ''
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          path: source
+          sparse-checkout: ${{ inputs.release_notes_file }}
+          sparse-checkout-cone-mode: false
+
       - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -830,13 +889,21 @@ jobs:
           APP_NAME: ${{ inputs.app_name }}
           APP_VERSION: ${{ inputs.app_version }}
           DRAFT: ${{ inputs.release_draft }}
+          TAG_PREFIX: ${{ inputs.release_tag_prefix }}
+          NOTES_FILE: ${{ inputs.release_notes_file }}
           TARGET: ${{ github.sha }}
         run: |
           set -euo pipefail
 
-          args=(--title "$APP_NAME v$APP_VERSION" --target "$TARGET" --generate-notes)
+          args=(--title "$APP_NAME v$APP_VERSION" --target "$TARGET")
+          if [ -n "$NOTES_FILE" ]; then
+            test -s "source/$NOTES_FILE" || { echo "::error::Release notes not found: $NOTES_FILE"; exit 1; }
+            args+=(--notes-file "source/$NOTES_FILE")
+          else
+            args+=(--generate-notes)
+          fi
           if [ "$DRAFT" = "true" ]; then
             args+=(--draft)
           fi
 
-          gh release create "v$APP_VERSION" "${args[@]}" dist/*
+          gh release create "${TAG_PREFIX}${APP_VERSION}" "${args[@]}" dist/*

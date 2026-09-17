@@ -21,7 +21,8 @@ you ship the result yourself.
 | `wasm/` | WASI plugin template and example modules ([README](wasm/README.md)) |
 | `conf-templates/`, `scripts/` | Configuration generation for dev and production builds |
 | `.github/workflows/build.yml` | Cross-platform build, optional signing and releases |
-| `frontend/` | Legacy companion app, not part of the core build |
+| `.github/workflows/companion-release.yml` | Signed Desktopr Companion release |
+| `apps/companion/` | Desktopr Companion, a desktop app for trying the runtime and the bridge API |
 
 ## Requirements
 
@@ -98,8 +99,8 @@ inputs from Partner Center to add an MSIX package to the Windows build.
 #### Unsigned macOS builds
 
 Without Apple certificates the app is ad-hoc signed and not notarized, so
-Gatekeeper blocks it on first launch. Users can right-click the app and choose
-**Open**, or run:
+Gatekeeper blocks it on first launch. Users can open **System Settings →
+Privacy & Security** and choose **Open Anyway**, or run:
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/Your App.app"
@@ -122,6 +123,15 @@ permissions.
 See [Tauri's updater guide](https://v2.tauri.app/plugin/updater/) for generating
 keys and the manifest format.
 
+## Desktopr Companion
+
+`apps/companion/` is a SvelteKit app bundled into a Desktopr build with
+`frontend=companion` (`APP_FRONTEND=companion` for `npm run prodconf`). It loads
+any web app URL in the main window with the full bridge, and includes a bridge
+playground. Releases are published by `companion-release.yml` with the notes in
+[`apps/companion/RELEASE_NOTES.md`](apps/companion/RELEASE_NOTES.md), which
+include the first-launch steps for each platform.
+
 ## Checks
 
 `.github/workflows/ci.yml` runs these on every push to `main` and every pull
@@ -135,6 +145,7 @@ npm run check:menu-contract   # SDK menu schema matches the runtime
 npm run check:bridge-permissions  # bridge commands are registered and allowed; companion subset is intact
 npm run test:bridge           # bridge initialization, IPC argument names and SDK fallback
 npm run test:config           # generated configuration and capabilities for each scenario
+npm run companion:check       # companion svelte-check
 npm run lint:rust             # rustfmt and clippy with warnings as errors
 npm run test:rust             # Rust tests, including WASM modules run in the runtime host
 ```

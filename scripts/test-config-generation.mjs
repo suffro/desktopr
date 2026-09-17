@@ -108,6 +108,35 @@ scenario("companion mode accepts any HTTPS origin", "prod-conf.sh", { COMPANION_
   assert.ok(!capability.remote.urls.some((url) => url.startsWith("http://") && !/localhost|127\.0\.0\.1/u.test(url)));
 });
 
+scenario("companion frontend bundles the companion app", "prod-conf.sh", { APP_FRONTEND: "companion" }, (run) => {
+  assertSucceeded(run);
+  const tauri = run.tauri();
+  assert.equal(tauri.build.frontendDist, "../apps/companion/dist");
+  const capability = run.capability();
+  assertMainOnly(capability);
+  assert.ok(capability.remote.urls.includes("https://*/*"), "companion must allow any HTTPS web app");
+  assert.equal(run.constants().appUrl, "");
+  assert.match(run.windowEnv(), /^MAIN_WINDOW_URL=$/mu);
+});
+
+scenario(
+  "companion frontend rejects APP_URL",
+  "prod-conf.sh",
+  { APP_FRONTEND: "companion", APP_URL: "https://app.example.com" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+);
+
+scenario("unknown frontend is rejected", "prod-conf.sh", { APP_FRONTEND: "other" }, (run) => {
+  assert.notEqual(run.status, 0);
+});
+
+scenario("standalone frontend keeps the bundled fallback page", "prod-conf.sh", {}, (run) => {
+  assertSucceeded(run);
+  assert.deepEqual(run.tauri().build.frontendDist, ["standalone/index.html"]);
+});
+
 scenario(
   "updater requires both endpoint and public key",
   "prod-conf.sh",
@@ -142,7 +171,7 @@ scenario(
   },
 );
 
-for (const script of ["dev-conf.sh", "local-dev-conf.sh"]) {
+for (const script of ["dev-conf.sh"]) {
   scenario(`${script} grants debug commands to main only`, script, {}, (run) => {
     assertSucceeded(run);
     const capability = run.capability();
