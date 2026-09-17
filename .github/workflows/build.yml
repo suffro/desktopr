@@ -551,9 +551,13 @@ jobs:
               open -n "$app"
               ;;
             Linux)
-              sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb dbus-x11 >/dev/null
+              sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb dbus >/dev/null
               pattern="target/release/$CARGO_PACKAGE_NAME"
-              xvfb-run -a dbus-run-session -- "src-tauri/target/release/$CARGO_PACKAGE_NAME" > "$RUNNER_TEMP/smoke.log" 2>&1 &
+              # -ac: WebKit's sandboxed web process cannot read xvfb-run's Xauthority file.
+              Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp >/dev/null 2>&1 &
+              export DISPLAY=:99
+              sleep 2
+              dbus-run-session -- "src-tauri/target/release/$CARGO_PACKAGE_NAME" > "$RUNNER_TEMP/smoke.log" 2>&1 &
               launcher_pid=$!
               ;;
             Windows)
