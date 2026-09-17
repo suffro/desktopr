@@ -139,9 +139,13 @@ fn main() {
     )?;
 
     // Runtime registration only in dev on Win/Linux.
+    // Registration shells out to update-desktop-database/xdg-mime on Linux;
+    // missing desktop tools must not prevent the app from starting.
     #[cfg(any(target_os = "linux", all(debug_assertions, target_os = "windows")))]
     {
-      app.deep_link().register_all()?;
+      if let Err(e) = app.deep_link().register_all() {
+        eprintln!("[deep-link] registration failed, deep links may not open this app: {e}");
+      }
     }
 
     // Startup deep link URLs.
