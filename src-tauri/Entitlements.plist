@@ -10,8 +10,8 @@
   <key>com.apple.security.network.client</key>
   <true/>
 
-  <!-- Required for reliable User Notifications delivery on macOS Ventura+ -->
-  <key>com.apple.developer.usernotifications.time-sensitive</key>
-  <true/>
+  <!-- Do not add restricted com.apple.developer.* entitlements here: they need a
+       provisioning profile, and macOS refuses to launch unsigned or ad-hoc signed
+       builds that declare them. -->
 </dict>
 </plist>

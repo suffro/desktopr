@@ -81,6 +81,13 @@ if (/tauri-plugin-updater|"updater"/u.test(defaultFeatures)) {
   findings.push("src-tauri/Cargo.toml [updater included in default Cargo features]");
 }
 
+// Restricted `com.apple.developer.*` entitlements need a provisioning profile;
+// macOS kills unsigned or ad-hoc signed apps that declare them at launch.
+const entitlements = readFileSync(resolve(root, "src-tauri/Entitlements.plist"), "utf8");
+if (/<key>\s*com\.apple\.developer\./u.test(entitlements)) {
+  findings.push("src-tauri/Entitlements.plist [restricted entitlement prevents unsigned macOS builds from launching]");
+}
+
 if (findings.length > 0) {
   console.error("Standalone configuration checks failed:");
   for (const finding of findings) console.error(`- ${finding}`);

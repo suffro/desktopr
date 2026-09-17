@@ -42,6 +42,7 @@
     "wasm:check": "npm run check --prefix wasm/",
     "wasm:build:template": "npm run build:template --prefix wasm/",
     "wasm:build:math": "npm run build:math --prefix wasm/",
+    "test:wasm-runtime": "npm run build --prefix wasm/ && npm run ts:compile:bridge && cd src-tauri && cargo test --locked bridge::plugins -- --include-ignored",
     "typecheck": "npm run typecheck:runtime && npm run typecheck:sdk",
     "typecheck:runtime": "tsc --noEmit -p tsconfig.json",
     "typecheck:sdk": "tsc --noEmit -p tsconfig.sdk.json",

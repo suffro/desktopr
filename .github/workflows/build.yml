@@ -529,6 +529,58 @@ jobs:
             cargo tauri build --ci -- --locked
           fi
 
+      # A successful build does not prove the app starts (e.g. macOS kills apps
+      # with entitlements their signature cannot back). Launch it briefly.
+      - name: Launch smoke test
+        env:
+          SMOKE_SECONDS: "15"
+        run: |
+          set -euo pipefail
+
+          alive() {
+            local pattern="$1"
+            pgrep -f "$pattern" >/dev/null 2>&1
+          }
+
+          case "$RUNNER_OS" in
+            macOS)
+              app="$(find src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' | head -n 1)"
+              test -n "$app" || { echo "::error::No .app bundle to launch"; exit 1; }
+              pattern="$(basename "$app")/Contents/MacOS/"
+              open -n "$app"
+              ;;
+            Linux)
+              sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb dbus-x11 >/dev/null
+              pattern="target/release/$CARGO_PACKAGE_NAME"
+              xvfb-run -a dbus-run-session -- "src-tauri/target/release/$CARGO_PACKAGE_NAME" > "$RUNNER_TEMP/smoke.log" 2>&1 &
+              ;;
+            Windows)
+              pattern="$CARGO_PACKAGE_NAME.exe"
+              "src-tauri/target/release/$CARGO_PACKAGE_NAME.exe" > "$RUNNER_TEMP/smoke.log" 2>&1 &
+              ;;
+          esac
+
+          sleep "$SMOKE_SECONDS"
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            running="$(tasklist //FI "IMAGENAME eq $CARGO_PACKAGE_NAME.exe" //NH | grep -ci "$CARGO_PACKAGE_NAME" || true)"
+          else
+            running="$(alive "$pattern" && echo 1 || echo 0)"
+          fi
+
+          if [ "$running" = "0" ]; then
+            echo "::error::The app exited within ${SMOKE_SECONDS}s of launch"
+            cat "$RUNNER_TEMP/smoke.log" 2>/dev/null || true
+            exit 1
+          fi
+          echo "App still running after ${SMOKE_SECONDS}s"
+
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            taskkill //F //IM "$CARGO_PACKAGE_NAME.exe" >/dev/null
+          else
+            pkill -f "$pattern" || true
+          fi
+
       - name: Build MSIX package
         if: runner.os == 'Windows' && inputs.msix_identity_name != ''
         shell: pwsh

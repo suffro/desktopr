@@ -511,6 +511,19 @@ fn run_plugin_job_inner(
     storage_dir: &Path,
 ) -> Result<PluginResponse> {
     let wasm_bytes = read_wasm_module(app, module_name)?;
+    execute_wasm_module(id, &wasm_bytes, payload, timeout_ms, job_dir, storage_dir)
+}
+
+// Runs one module request in a WASI sandbox. Kept free of AppHandle so the
+// execution path can be tested without a running application.
+fn execute_wasm_module(
+    id: &str,
+    wasm_bytes: &[u8],
+    payload: serde_json::Value,
+    timeout_ms: u64,
+    job_dir: &Path,
+    storage_dir: &Path,
+) -> Result<PluginResponse> {
     let stdin_text = serde_json::to_string(&payload)? + "\n";
 
     let mut config = Config::new();
@@ -519,7 +532,7 @@ fn run_plugin_job_inner(
     config.epoch_interruption(true);
 
     let engine = Engine::new(&config)?;
-    let module = Module::from_binary(&engine, &wasm_bytes)?;
+    let module = Module::from_binary(&engine, wasm_bytes)?;
 
     let stdin = MemoryInputPipe::new(stdin_text.into_bytes());
     let stdout = MemoryOutputPipe::new(DEFAULT_STDIO_LIMIT_BYTES);
@@ -604,4 +617,138 @@ fn run_plugin_job_inner(
         error: None,
         duration_ms: 0,
     })
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use std::time::Duration;
+
+    // Job and storage directories under the system temp dir, removed on drop.
+    struct Sandbox {
+        root: PathBuf,
+    }
+
+    impl Sandbox {
+        fn new(name: &str) -> Self {
+            let root = std::env::temp_dir().join(format!(
+                "desktopr-plugin-test-{}-{}-{}",
+                name,
+                std::process::id(),
+                gen_plugin_job_id()
+            ));
+            fs::create_dir_all(root.join("storage")).unwrap();
+            Self { root }
+        }
+
+        fn new_job_dir(&self) -> PathBuf {
+            let dir = self.root.join(gen_plugin_job_id());
+            fs::create_dir_all(&dir).unwrap();
+            dir
+        }
+
+        fn storage(&self) -> PathBuf {
+            self.root.join("storage")
+        }
+
+        fn run(&self, wasm: &[u8], payload: serde_json::Value, timeout_ms: u64) -> Result<PluginResponse> {
+            let job_dir = self.new_job_dir();
+            let result = execute_wasm_module("test", wasm, payload, timeout_ms, &job_dir, &self.storage());
+            safe_remove_dir_all(&job_dir).unwrap();
+            result
+        }
+    }
+
+    impl Drop for Sandbox {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.root);
+        }
+    }
+
+    fn artifact(relative: &str) -> Vec<u8> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../wasm").join(relative);
+        fs::read(&path).unwrap_or_else(|e| {
+            panic!(
+                "missing WASM artifact {} ({e}); run `npm run test:wasm-runtime` from the repository root",
+                path.display()
+            )
+        })
+    }
+
+    #[test]
+    fn rejects_bytes_that_are_not_wasm() {
+        let sandbox = Sandbox::new("invalid");
+        assert!(sandbox.run(b"not a wasm module", json!({}), 1_000).is_err());
+    }
+
+    #[test]
+    fn rejects_module_without_start() {
+        let sandbox = Sandbox::new("no-start");
+        let wasm = wat::parse_str(r#"(module (func (export "main")))"#).unwrap();
+        let err = sandbox.run(&wasm, json!({}), 1_000).err().expect("expected an error");
+        assert!(err.to_string().contains("_start"), "unexpected error: {err}");
+    }
+
+    #[test]
+    fn interrupts_modules_that_exceed_the_timeout() {
+        let sandbox = Sandbox::new("timeout");
+        let wasm = wat::parse_str(r#"(module (func (export "_start") (loop (br 0))))"#).unwrap();
+
+        let started = Instant::now();
+        let response = sandbox.run(&wasm, json!({}), 200).unwrap();
+
+        assert!(!response.ok, "an endless loop must not succeed");
+        assert!(response.error.is_some());
+        assert!(started.elapsed() < Duration::from_secs(10), "timeout was not enforced");
+    }
+
+    #[test]
+    #[ignore = "requires built WASM artifacts; run `npm run test:wasm-runtime`"]
+    fn math_module_follows_the_request_protocol() {
+        let sandbox = Sandbox::new("math");
+        let wasm = artifact("modules/math/dist/math.wasm");
+
+        let response = sandbox.run(&wasm, json!({ "fn": "add", "args": [3, 5] }), 5_000).unwrap();
+        assert!(response.ok, "host error: {:?}", response.error);
+        assert_eq!(response.value, Some(json!({ "ok": true, "value": 8.0 })));
+
+        let response = sandbox.run(&wasm, json!({ "fn": "nope", "args": [] }), 5_000).unwrap();
+        assert_eq!(
+            response.value,
+            Some(json!({ "ok": false, "error": "unknown function: nope" }))
+        );
+    }
+
+    #[test]
+    #[ignore = "requires built WASM artifacts; run `npm run test:wasm-runtime`"]
+    fn template_module_keeps_only_storage_data_between_calls() {
+        let sandbox = Sandbox::new("template");
+        let wasm = artifact("module-template/dist/module-template.wasm");
+
+        for path in ["/storage/kept.txt", "scratch.txt"] {
+            let response = sandbox
+                .run(&wasm, json!({ "fn": "write", "args": { "path": path, "contents": "hello" } }), 5_000)
+                .unwrap();
+            assert_eq!(response.value.as_ref().and_then(|v| v.get("ok")), Some(&json!(true)), "{response:?}");
+        }
+
+        let kept = sandbox
+            .run(&wasm, json!({ "fn": "read", "args": { "path": "/storage/kept.txt" } }), 5_000)
+            .unwrap();
+        assert_eq!(
+            kept.value.as_ref().and_then(|v| v.pointer("/value/contents")),
+            Some(&json!("hello")),
+            "{kept:?}"
+        );
+        assert_eq!(fs::read_to_string(sandbox.storage().join("kept.txt")).unwrap(), "hello");
+
+        let scratch = sandbox
+            .run(&wasm, json!({ "fn": "read", "args": { "path": "scratch.txt" } }), 5_000)
+            .unwrap();
+        assert_eq!(
+            scratch.value.as_ref().and_then(|v| v.get("ok")),
+            Some(&json!(false)),
+            "relative files must not survive between calls: {scratch:?}"
+        );
+    }
 }

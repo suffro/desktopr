@@ -85,6 +85,9 @@ strip = true
 [build-dependencies]
 tauri-build = { version = "2.5.6", features = [] }
 
+[dev-dependencies]
+wat = "1.250.0"
+
 [[bin]]
 name = "%%CARGO_PACKAGE_NAME%%"
 path = "src/main.rs"
