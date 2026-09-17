@@ -40,9 +40,6 @@ const OPEN_EXTERNAL_SCRIPT: &str = r#"(function() {
 })();"#;
 
 fn main() {
-  // Disabled: tauri_plugin_prevent_default could block the context menu,
-  // DevTools and their shortcuts (F12, Ctrl+Shift+I, Cmd+Alt+I) in production.
-
   let mut builder = tauri::Builder::default();
 
   builder = builder.manage(CloseGuard {
@@ -63,7 +60,6 @@ fn main() {
   // --- 1) Desktopr bridge plugin and native plugins ---
   builder = builder
     .plugin(bridge())
-    // .plugin(prevent)
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_clipboard_manager::init())
     .plugin(tauri_plugin_dialog::init())
@@ -103,9 +99,6 @@ fn main() {
 
     // Run autostart bootstrap first so this setup owns the timing.
     bridge::autostart::run_from_setup(app)?;
-
-    // Native menu
-    // crate::bridge::menu::init_menu(app)?;
 
     // Initialize persistent env store.
     let env_state = crate::bridge::global_vars::EnvState::init(&app.handle())

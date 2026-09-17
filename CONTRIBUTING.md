@@ -48,6 +48,7 @@ npm run ts:compile:bridge
 npm run check:standalone
 npm run check:private-deps
 npm run check:menu-contract
+npm run check:bridge-permissions  # when adding or changing bridge commands
 npm run test:wasm-runtime        # when touching the plugin host or wasm/
 ```
 

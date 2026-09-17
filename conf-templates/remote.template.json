@@ -1,7 +1,7 @@
 {
   "identifier": "remote",
-  "windows": ["*"],
-  "webviews": ["*"],
+  "windows": ["main"],
+  "webviews": ["main"],
   "permissions": [
     "core:default",
 

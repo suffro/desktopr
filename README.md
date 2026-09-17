@@ -129,6 +129,7 @@ npm run typecheck             # runtime and SDK TypeScript
 npm run check:standalone      # no hosted services, safe defaults, launchable entitlements
 npm run check:private-deps    # no private packages or credentials in manifests
 npm run check:menu-contract   # SDK menu schema matches the runtime
+npm run check:bridge-permissions  # bridge commands are registered and allowed; companion subset is intact
 npm run test:wasm-runtime     # builds the WASM modules and runs them in the runtime host
 ```
 

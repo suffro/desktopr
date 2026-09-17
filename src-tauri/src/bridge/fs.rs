@@ -3,8 +3,9 @@ use std::{
     fs,
     path::{Component, Path, PathBuf},
 };
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, WebviewWindow};
 use std::io::{Read, Write};
+use crate::bridge::companion::is_companion_label;
 use base64::{engine::general_purpose, Engine as _}; // Cargo.toml: base64 = "0.22"
 use walkdir::WalkDir;
 
@@ -296,6 +297,41 @@ fn diagnostics_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 // ---------------------------------
+// Caller identity
+// ---------------------------------
+
+// Returns the filesystem scope of the calling window. The scope is derived from
+// the window Tauri injects into the command, never from frontend input:
+// companion windows are confined to their own scope and every other window uses
+// the main scope. A `window_label` sent by the frontend must match that scope.
+fn caller_scope(window: &WebviewWindow, requested: Option<String>) -> Result<Option<String>, String> {
+    scope_for_label(window.label(), requested)
+}
+
+fn scope_for_label(label: &str, requested: Option<String>) -> Result<Option<String>, String> {
+    let own = is_companion_label(label).then(|| label.to_string());
+
+    match requested {
+        Some(requested) if Some(requested.trim()) != own.as_deref() => {
+            Err("window_label does not match the calling window".into())
+        }
+        _ => Ok(own),
+    }
+}
+
+// Plugin storage belongs to the main app; companion windows cannot reach it.
+fn caller_plugin_storage(window: &WebviewWindow, module: Option<String>) -> Result<Option<String>, String> {
+    plugin_storage_for_label(window.label(), module)
+}
+
+fn plugin_storage_for_label(label: &str, module: Option<String>) -> Result<Option<String>, String> {
+    if module.is_some() && is_companion_label(label) {
+        return Err("plugin storage is not available to companion windows".into());
+    }
+    Ok(module)
+}
+
+// ---------------------------------
 // Public fs.data / fs.cache commands
 // ---------------------------------
 
@@ -304,11 +340,14 @@ pub fn dtr_fs_list_dir(
     app: AppHandle,
     rel: String,
     permanent: bool,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<Vec<FsEntry>, String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let dir = resolve_existing_scoped(
         &app,
         &rel,
@@ -341,11 +380,14 @@ pub fn dtr_fs_mkdir(
     app: AppHandle,
     rel: String,
     permanent: bool,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let dir = resolve_any_scoped(
         &app,
         &rel,
@@ -362,11 +404,14 @@ pub fn dtr_fs_rm(
     rel: String,
     permanent: bool,
     recursive: bool,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. Plugin storage deletes permanently
     // and does not use the data trash system.
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let p = resolve_any_scoped(
         &app,
         &rel,
@@ -425,11 +470,14 @@ pub fn dtr_fs_stat(
     app: AppHandle,
     rel: String,
     permanent: bool,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<FsEntry, String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let p = resolve_existing_scoped(
         &app,
         &rel,
@@ -452,6 +500,23 @@ pub fn dtr_fs_stat(
 // ---- WRITE TEXT ----
 #[tauri::command]
 pub fn dtr_fs_write_text(
+    app: AppHandle,
+    rel: String,
+    permanent: Option<bool>,
+    contents: String,
+    create_dirs: Option<bool>,
+    append: Option<bool>,
+    window: WebviewWindow,
+    window_label: Option<String>,
+    plugin_storage_module: Option<String>,
+) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
+    fs_write_text_in_scope(app, rel, permanent, contents, create_dirs, append, window_label, plugin_storage_module)
+}
+
+// Writes text in an explicit scope; for runtime code that has no calling window.
+pub fn fs_write_text_in_scope(
     app: AppHandle,
     rel: String,
     permanent: Option<bool>,
@@ -499,6 +564,20 @@ pub fn dtr_fs_read_text(
     app: AppHandle,
     rel: String,
     permanent: Option<bool>,
+    window: WebviewWindow,
+    window_label: Option<String>,
+    plugin_storage_module: Option<String>,
+) -> Result<String, String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
+    fs_read_text_in_scope(app, rel, permanent, window_label, plugin_storage_module)
+}
+
+// Reads text in an explicit scope; for runtime code that has no calling window.
+pub fn fs_read_text_in_scope(
+    app: AppHandle,
+    rel: String,
+    permanent: Option<bool>,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
@@ -523,11 +602,14 @@ pub fn dtr_fs_write_bytes(
     permanent: Option<bool>,
     data_base64: String,
     create_dirs: Option<bool>,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
     let path = resolve_any_scoped(
         &app,
@@ -553,11 +635,14 @@ pub fn dtr_fs_read_bytes(
     app: AppHandle,
     rel: String,
     permanent: Option<bool>,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<String, String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
     let path = resolve_existing_scoped(
         &app,
@@ -578,11 +663,14 @@ pub fn dtr_fs_exists(
     app: AppHandle,
     rel: String,
     permanent: Option<bool>,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, rel is resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<bool, String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
     let path = resolve_any_scoped(
         &app,
@@ -603,11 +691,14 @@ pub fn dtr_fs_move(
     permanent: Option<bool>,
     create_dirs: Option<bool>,
     overwrite: Option<bool>,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, src/dest are resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
     let src_path = resolve_existing_scoped(
         &app,
@@ -666,11 +757,14 @@ pub fn dtr_fs_copy(
     recursive: Option<bool>,
     create_dirs: Option<bool>,
     overwrite: Option<bool>,
+    window: WebviewWindow,
     window_label: Option<String>,
     // Optional plugin storage scope. When set, src/dest are resolved under
     // _external_modules_storage/<module> instead of data/cache.
     plugin_storage_module: Option<String>,
 ) -> Result<(), String> {
+    let window_label = caller_scope(&window, window_label)?;
+    let plugin_storage_module = caller_plugin_storage(&window, plugin_storage_module)?;
     let permanent = permanent.unwrap_or(false);
     let src_path = resolve_existing_scoped(
         &app,
@@ -754,8 +848,9 @@ pub fn dtr_fs_copy(
 }
 
 #[tauri::command]
-pub fn dtr_fs_clear_cache(app: AppHandle) -> Result<(), String> {
-    let base = base_dir(&app, false);
+pub fn dtr_fs_clear_cache(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+    let scope = caller_scope(&window, None)?;
+    let base = base_dir_scoped(&app, false, &scope)?;
     if base.exists() {
         fs::remove_dir_all(&base).map_err(|e| e.to_string())?;
         fs::create_dir_all(&base).map_err(|e| e.to_string())?;
@@ -764,9 +859,10 @@ pub fn dtr_fs_clear_cache(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn dtr_fs_clear_data(app: AppHandle) -> Result<(), String> {
-    let data = ensure_base_exists(&app, true)?;
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_clear_data(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+    let scope = caller_scope(&window, None)?;
+    let data = base_dir_scoped(&app, true, &scope)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
 
     for entry in std::fs::read_dir(&data).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
@@ -784,8 +880,9 @@ pub fn dtr_fs_clear_data(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn dtr_fs_data_clear_trash(app: AppHandle) -> Result<(), String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_data_clear_trash(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     if trash.exists() {
         std::fs::remove_dir_all(&trash).map_err(|e| e.to_string())?;
     }
@@ -794,9 +891,10 @@ pub fn dtr_fs_data_clear_trash(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn dtr_fs_data_recover_trash(app: AppHandle, trash_rel_path: String) -> Result<(), String> {
-    let data = ensure_base_exists(&app, true)?;
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_data_recover_trash(app: AppHandle, window: WebviewWindow, trash_rel_path: String) -> Result<(), String> {
+    let scope = caller_scope(&window, None)?;
+    let data = base_dir_scoped(&app, true, &scope)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
 
     let recover_one = |src: &Path| -> Result<(), String> {
         let rel_from_trash = src.strip_prefix(&trash).map_err(|e| e.to_string())?;
@@ -832,9 +930,10 @@ pub fn dtr_fs_data_recover_trash(app: AppHandle, trash_rel_path: String) -> Resu
 }
 
 #[tauri::command]
-pub fn dtr_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
-    let cache = base_dir(&app, false);
-    let data = base_dir(&app, true);
+pub fn dtr_fs_paths(app: AppHandle, window: WebviewWindow) -> Result<FsPaths, String> {
+    let scope = caller_scope(&window, None)?;
+    let cache = base_dir_scoped(&app, false, &scope)?;
+    let data = base_dir_scoped(&app, true, &scope)?;
     Ok(FsPaths {
         cache: cache.to_string_lossy().into_owned(),
         data: data.to_string_lossy().into_owned(),
@@ -920,8 +1019,9 @@ fn move_rel_in_data_to_trash(
 
 // ---- LIST DIR in _trash ----
 #[tauri::command]
-pub fn dtr_fs_trash_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_trash_list_dir(app: AppHandle, window: WebviewWindow, rel: String) -> Result<Vec<FsEntry>, String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let dir = {
         let p = safe_join(&trash, &rel)?;
         if !p.exists() {
@@ -949,8 +1049,9 @@ pub fn dtr_fs_trash_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>
 
 // Stat in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_stat(app: AppHandle, rel: String) -> Result<FsEntry, String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_trash_stat(app: AppHandle, window: WebviewWindow, rel: String) -> Result<FsEntry, String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
     if !p.exists() {
         return Err("No such file or directory in trash".into());
@@ -969,16 +1070,18 @@ pub fn dtr_fs_trash_stat(app: AppHandle, rel: String) -> Result<FsEntry, String>
 
 // Exists in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_exists(app: AppHandle, rel: String) -> Result<bool, String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_trash_exists(app: AppHandle, window: WebviewWindow, rel: String) -> Result<bool, String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
     Ok(p.exists())
 }
 
 // Read text in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_read_text(app: AppHandle, rel: String) -> Result<String, String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_trash_read_text(app: AppHandle, window: WebviewWindow, rel: String) -> Result<String, String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
     if !p.exists() {
         return Err("No such file or directory in trash".into());
@@ -991,8 +1094,9 @@ pub fn dtr_fs_trash_read_text(app: AppHandle, rel: String) -> Result<String, Str
 
 // Read bytes (base64) in _trash
 #[tauri::command]
-pub fn dtr_fs_trash_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
-    let trash = trash_dir(&app)?;
+pub fn dtr_fs_trash_read_bytes(app: AppHandle, window: WebviewWindow, rel: String) -> Result<String, String> {
+    let scope = caller_scope(&window, None)?;
+    let trash = trash_dir_scoped(&app, scope.as_deref())?;
     let p = safe_join(&trash, &rel)?;
     if !p.exists() {
         return Err("No such file or directory in trash".into());
@@ -1180,4 +1284,47 @@ pub fn dtr_fs_diagnostics_exists(app: AppHandle, rel: String) -> Result<bool, St
     let diag = diagnostics_dir(&app)?;
     let p = safe_join(&diag, &rel)?;
     Ok(p.exists())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const COMPANION: &str = "dtr-cache-only-window-0b6e2f3a";
+
+    #[test]
+    fn main_windows_use_the_main_scope() {
+        assert_eq!(scope_for_label("main", None), Ok(None));
+        assert_eq!(scope_for_label("settings", None), Ok(None));
+    }
+
+    #[test]
+    fn main_windows_cannot_select_another_scope() {
+        assert!(scope_for_label("main", Some(COMPANION.into())).is_err());
+        assert!(scope_for_label("settings", Some("settings".into())).is_err());
+    }
+
+    #[test]
+    fn companion_windows_are_confined_to_their_own_scope() {
+        assert_eq!(scope_for_label(COMPANION, None), Ok(Some(COMPANION.into())));
+        assert_eq!(scope_for_label(COMPANION, Some(COMPANION.into())), Ok(Some(COMPANION.into())));
+        assert!(scope_for_label(COMPANION, Some("dtr-cache-only-window-other".into())).is_err());
+        assert!(scope_for_label(COMPANION, Some("main".into())).is_err());
+    }
+
+    #[test]
+    fn plugin_storage_is_denied_to_companion_windows() {
+        assert_eq!(plugin_storage_for_label("main", Some("math.wasm".into())), Ok(Some("math.wasm".into())));
+        assert!(plugin_storage_for_label(COMPANION, Some("math.wasm".into())).is_err());
+        assert_eq!(plugin_storage_for_label(COMPANION, None), Ok(None));
+    }
+
+    #[test]
+    fn safe_join_rejects_traversal_and_absolute_paths() {
+        let base = Path::new("/base");
+        assert_eq!(safe_join(base, "a/b/../c"), Ok(PathBuf::from("/base/a/c")));
+        assert!(safe_join(base, "../outside").is_err());
+        assert!(safe_join(base, "a/../../outside").is_err());
+        assert!(safe_join(base, "/etc/passwd").is_err());
+    }
 }

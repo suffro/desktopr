@@ -8,6 +8,9 @@ set -euo pipefail
 
 APP_URL_ORIGIN=""
 cp conf-templates/remote.template.json src-tauri/capabilities/remote.json
+# Development builds also grant the debug-only diagnostics test commands.
+jq '.permissions += ["desktopr-bridge-debug"]' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp
+mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
 
 if [ -n "$APP_URL" ]; then
   APP_URL_ORIGIN="$(printf '%s' "$APP_URL" | sed -E 's#^(https?://[^/]+).*$#\1#')"

@@ -2,10 +2,10 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 9 (OSS cleanup) completed. The standalone runtime
-builds and launches on Linux, Windows and macOS through
-`.github/workflows/build.yml`; signing with real certificates is still
-unverified.
+Desktopr OSS migration phase 10 (hardening) completed locally; the CI run for
+it is pending. The standalone runtime builds and launches on Linux, Windows and
+macOS through `.github/workflows/build.yml`; signing with real certificates is
+still unverified.
 
 ## Recent relevant changes
 
@@ -141,12 +141,41 @@ unverified.
 - `build.yml` launches the built app on every platform for 15 seconds. Run
   35168452799 (commit `b592858`) passed on Linux, Windows and macOS with MSIX,
   verified checksums and no developer entitlements in the DMG app.
+- Phase 10 hardening: window identity is derived in Rust (injected
+  `WebviewWindow`); filesystem commands, including clear/trash/paths, use the
+  caller's scope and reject a mismatching `windowLabel`; companion windows cannot
+  use plugin storage. The static `remote` capability now covers only `main`, and
+  `bridge/acl.rs` grants runtime capabilities to windows from `dtr_win_open`
+  (full) and companions (reduced `desktopr-bridge-companion`, no autostart,
+  updater or debug permissions). `dtr_win_open` rejects the companion label
+  prefix, no longer fails without a declared main window config and no longer
+  has a stray `getrandom` assert; companion launch validates the URL before
+  creating a sandbox and cleans up on failure instead of panicking.
+- Added `npm run check:bridge-permissions` (TS invocations vs `main.rs` vs the
+  permission sets). It surfaced debug diagnostics commands that were never
+  allowed; they now live in `desktopr-bridge-debug`, granted only by the dev
+  config scripts.
+- Network probes accept only HTTP(S) URLs, clamp timeouts to 30 s, stop the
+  bandwidth download at 10 MB and enforce a 1 s monitor interval with at most 10
+  targets. LAN/localhost stay reachable by decision.
+- The WASM timeout thread now exits when the call finishes. Removed the unused
+  `tauri-plugin-prevent-default` and `getrandom` dependencies.
+- Actions are pinned to commit SHAs with Dependabot updates; Linux builds
+  pre-provision SHA-256-verified AppImage tools (scripts at fixed commits,
+  `linuxdeploy-plugin-appimage` at release `1-alpha-20250213-1` instead of
+  `continuous`).
+- Verified locally: unit tests (each new guard also observed failing), a debug
+  build self-test page with 24 expected allowed/denied calls across main, a
+  runtime-opened window and a companion, plus all repository checks and
+  actionlint. SECURITY.md documents the resulting trust model.
 
 ## Next
 
-Phase 10 (hardening) is next. Candidate hardening notes found so far: Linux AppImage bundling downloads an unpinned
-`linuxdeploy-plugin-gtk.sh` at build time (one run failed on a network reset);
-each WASM call keeps a timeout thread sleeping for the full timeout.
+Phase 11 (tests and CI) is next: a regular CI workflow for checks and tests.
+The runtime ACL self-test used in phase 10 was manual (debug build with a test
+page); automating a bridge self-test is a good phase 11 candidate. Known
+remaining items: the companion default URL `/cache-only/blank.html` does not
+exist, and diagnostics reads stay available to companion windows.
 
 ## Blockers
 

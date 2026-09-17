@@ -32,6 +32,14 @@
   `cargo check --locked` in `src-tauri/`.
 - For WASM changes also run `npm run wasm:check` and `npm run test:wasm-runtime`,
   which builds the modules and runs the runtime executor tests against them.
+- When adding or changing a bridge command, update `desktopr-bridge.toml`
+  (and `desktopr-bridge-companion` unless the command is companion-denied in
+  `scripts/check-bridge-permissions.mjs`), then run `npm run
+  check:bridge-permissions`.
+- Never take a window identity or filesystem scope from frontend input; inject
+  the calling `WebviewWindow` into the command instead.
+- Keep the static `remote` capability limited to `main`; grant capabilities to
+  runtime-created windows through `bridge/acl.rs`.
 - Never add restricted `com.apple.developer.*` entitlements to
   `src-tauri/Entitlements.plist`: without a provisioning profile macOS refuses
   to launch the app. `check:standalone` enforces this.
@@ -50,7 +58,8 @@
   secret sets fail early.
 - Keep the default token read-only; grant `contents: write` only to the job
   that creates a GitHub Release.
-- Prefer first-party `actions/*` and pinned tool versions; do not add
+- Pin actions to commit SHAs with the version in a comment (Dependabot keeps
+  them updated) and pin downloaded tools with SHA-256 checks; do not add
   `curl | bash` installers or uploads to external storage.
 - Keep the Cargo package name/version from `Cargo.lock` in CI; the app version
   belongs in `tauri.conf.json` so `--locked` stays valid.

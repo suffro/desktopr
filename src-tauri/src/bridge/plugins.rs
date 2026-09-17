@@ -510,6 +510,22 @@ fn run_plugin_job_inner(
     execute_wasm_module(id, &wasm_bytes, payload, timeout_ms, job_dir, storage_dir)
 }
 
+// Increments the engine epoch after `timeout`, interrupting the running module,
+// unless the returned sender is dropped first; the thread then exits at once
+// instead of sleeping for the whole timeout.
+fn spawn_epoch_deadline(
+    engine: Engine,
+    timeout: std::time::Duration,
+) -> (std::sync::mpsc::Sender<()>, std::thread::JoinHandle<()>) {
+    let (cancel, cancelled) = std::sync::mpsc::channel::<()>();
+    let handle = std::thread::spawn(move || {
+        if let Err(std::sync::mpsc::RecvTimeoutError::Timeout) = cancelled.recv_timeout(timeout) {
+            engine.increment_epoch();
+        }
+    });
+    (cancel, handle)
+}
+
 // Runs one module request in a WASI sandbox. Kept free of AppHandle so the
 // execution path can be tested without a running application.
 fn execute_wasm_module(
@@ -569,12 +585,9 @@ fn execute_wasm_module(
     // The first epoch increment after this point interrupts execution.
     store.set_epoch_deadline(1);
 
-    let engine_for_timeout = engine.clone();
-
-    std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_millis(timeout_ms));
-        engine_for_timeout.increment_epoch();
-    });
+    // Dropped when this function returns, which stops the deadline thread early.
+    let (_deadline, _deadline_thread) =
+        spawn_epoch_deadline(engine.clone(), std::time::Duration::from_millis(timeout_ms));
 
     let mut linker = Linker::<WasiP1Ctx>::new(&engine);
     p1::add_to_linker_sync(&mut linker, |ctx| ctx)?;
@@ -696,6 +709,18 @@ mod tests {
         assert!(!response.ok, "an endless loop must not succeed");
         assert!(response.error.is_some());
         assert!(started.elapsed() < Duration::from_secs(10), "timeout was not enforced");
+    }
+
+    #[test]
+    fn deadline_thread_exits_when_cancelled() {
+        let engine = Engine::new(&Config::new()).unwrap();
+        let (cancel, thread) = spawn_epoch_deadline(engine, Duration::from_secs(30));
+
+        let started = Instant::now();
+        drop(cancel);
+        thread.join().unwrap();
+
+        assert!(started.elapsed() < Duration::from_secs(5), "deadline thread kept sleeping");
     }
 
     #[test]

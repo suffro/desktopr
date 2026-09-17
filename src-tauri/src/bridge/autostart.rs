@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tokio::time::sleep;
 
-use crate::bridge::fs::{dtr_fs_read_text, dtr_fs_write_text};
+use crate::bridge::fs::{fs_read_text_in_scope, fs_write_text_in_scope};
 use crate::bridge::events::{dtr_event_emit};
 
 // ✅ Correct trait for v2 to access autostart manager via `app.autolaunch()`
@@ -27,7 +27,7 @@ struct AutostartSettings {
 const SETTINGS_REL_PATH: &str = "settings/autostart.json";
 
 fn load_settings(app: &AppHandle) -> AutostartSettings {
-  match dtr_fs_read_text(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true), None, None) {
+  match fs_read_text_in_scope(app.clone(), SETTINGS_REL_PATH.to_string(), Some(true), None, None) {
     Ok(text) => serde_json::from_str::<AutostartSettings>(&text)
       .unwrap_or(AutostartSettings { autostart_mode: AutostartMode::Shown }),
     Err(_) => AutostartSettings { autostart_mode: AutostartMode::Shown },
@@ -37,7 +37,7 @@ fn load_settings(app: &AppHandle) -> AutostartSettings {
 fn save_settings(app: &AppHandle, s: &AutostartSettings) -> Result<(), String> {
   let json = serde_json::to_string_pretty(s).map_err(|e| e.to_string())?;
   // create_dirs = true, append = false
-  dtr_fs_write_text(
+  fs_write_text_in_scope(
     app.clone(),
     SETTINGS_REL_PATH.to_string(),
     Some(true),

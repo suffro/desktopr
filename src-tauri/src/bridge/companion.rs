@@ -3,10 +3,18 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-use tauri::{AppHandle, Emitter, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use crate::bridge::acl::grant_companion_capability;
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
-const COMPANION_LABEL_PREFIX: &str = "dtr-cache-only-window-";
+pub(crate) const COMPANION_LABEL_PREFIX: &str = "dtr-cache-only-window-";
+
+/// Companion (cache-only) windows are recognised by the label the runtime assigns
+/// when it creates them. `dtr_win_open` refuses this prefix, so a label with it
+/// always belongs to a companion window.
+pub(crate) fn is_companion_label(label: &str) -> bool {
+    label.starts_with(COMPANION_LABEL_PREFIX)
+}
 
 fn log_debug(app: &AppHandle, msg: &str) {
     // [DEBUG] Forward logs both to stdout and to the frontend
@@ -122,8 +130,41 @@ fn build_sandbox_path(session_id: &str) -> PathBuf {
 #[tauri::command]
 pub async fn dtr_launch_companion(
     app: AppHandle,
+    window: WebviewWindow,
     app_config: serde_json::Value,
 ) -> Result<(), String> {
+    if is_companion_label(window.label()) {
+        return Err("companion windows cannot launch companion windows".into());
+    }
+
+    // Resolve the URL first so invalid input fails before any sandbox is created.
+    // Read URL from config; supports both plain string and object with `href`.
+    let url_str: String = app_config
+        .get("url")
+        .and_then(|v| {
+            if let Some(s) = v.as_str() {
+                Some(s.to_string())
+            } else if let Some(obj) = v.as_object() {
+                obj.get("href")
+                    .and_then(|h| h.as_str())
+                    .map(|s| s.to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "/cache-only/blank.html".to_string());
+
+    // Convert to Tauri WebviewUrl
+    let companion_url = if url_str.starts_with("http://") || url_str.starts_with("https://") {
+        WebviewUrl::External(
+            url_str
+                .parse()
+                .map_err(|e| format!("Invalid companion URL: {e}"))?,
+        )
+    } else {
+        WebviewUrl::App(url_str.clone().into())
+    };
+
     // 1) Generate session id and sandbox path
     let session_id = Uuid::new_v4().to_string();
     let sandbox_path = build_sandbox_path(&session_id);
@@ -171,36 +212,8 @@ pub async fn dtr_launch_companion(
     // Register sandbox root for this companion window so filesystem operations can be isolated.
     register_companion_sandbox(&app, window_label.clone(), sandbox_path.clone());
 
-    // 5) Choose the URL for the companion window.
-    //    Adjust this to match your actual frontend route (e.g. "/companion").
-    // Read URL from config; supports both plain string and object with `href`.
-    let url_str: String = app_config
-        .get("url")
-        .and_then(|v| {
-            if let Some(s) = v.as_str() {
-                Some(s.to_string())
-            } else if let Some(obj) = v.as_object() {
-                obj.get("href")
-                    .and_then(|h| h.as_str())
-                    .map(|s| s.to_string())
-            } else {
-                None
-            }
-        })
-        .unwrap_or_else(|| "/cache-only/blank.html".to_string());
-
-    // Convert to Tauri WebviewUrl
-    let companion_url = if url_str.starts_with("http://") || url_str.starts_with("https://") {
-        WebviewUrl::External(
-            url_str
-                .parse()
-                .expect("Invalid external URL in cache-only config"),
-        )
-    } else {
-        WebviewUrl::App(url_str.clone().into())
-    };
-
-    log_debug(&app, &format!("Cache-only window URL: {}", url_str));
+    // Grant the reduced companion capability before the window exists.
+    grant_companion_capability(&app, &window_label)?;
 
     // 6) Create the companion window with its own appearance
     let mut builder = WebviewWindowBuilder::new(&app, &window_label, companion_url)
@@ -222,9 +235,14 @@ pub async fn dtr_launch_companion(
         builder = builder.fullscreen(true);
     }
 
-    let companion_window = builder
-        .build()
-        .map_err(|e| format!("Failed to create cache-only window: {e}"))?;
+    let companion_window = match builder.build() {
+        Ok(window) => window,
+        Err(e) => {
+            unregister_companion_sandbox(&app, &window_label);
+            let _ = fs::remove_dir_all(&sandbox_path);
+            return Err(format!("Failed to create cache-only window: {e}"));
+        }
+    };
 
     log_debug(
         &app,

@@ -2,6 +2,9 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow};
 use url::Url;
 
+use crate::bridge::acl::grant_window_capability;
+use crate::bridge::companion::is_companion_label;
+
 #[derive(Serialize)]
 pub struct WindowSizeInfo {
   pub width: u32,
@@ -69,23 +72,30 @@ pub fn dtr_win_fullscreen(app: AppHandle, label: String, enable: bool) -> Result
 #[tauri::command]
 pub async fn dtr_win_open(
   app: AppHandle,
+  window: WebviewWindow,
   label: String,
   fullscreen: bool,
   url: String,
 ) -> Result<(), String> {
+  // Companion windows cannot open windows: a new window would not inherit
+  // their restrictions. The companion label prefix is reserved for them.
+  if is_companion_label(window.label()) {
+    return Err("companion windows cannot open new windows".into());
+  }
+  if is_companion_label(&label) {
+    return Err("this window label prefix is reserved".into());
+  }
   if app.get_webview_window(&label).is_some() {
     return Ok(());
   }
   let s = url.to_string();
 
+  // The main window is created in code, so production configs may not declare it.
   let mut conf = app.config().app.windows.iter()
     .find(|c| c.label == "main")
-    .ok_or_else(|| "main window config not found".to_string())?
-    .clone();
-  // This should be a unique label for all windows.
-  let mut buf = [0u8; 1];
-  assert_eq!(getrandom::fill(&mut buf), Ok(()));
-  conf.label = label;
+    .cloned()
+    .unwrap_or_default();
+  conf.label = label.clone();
   conf.visible = true;
   conf.fullscreen = fullscreen;
   if !s.is_empty(){
@@ -94,6 +104,7 @@ pub async fn dtr_win_open(
     );
     conf.url = webview_url;
   }
+  grant_window_capability(&app, &label)?;
   let _webview_window = tauri::WebviewWindowBuilder::from_config(&app, &conf)
     .map_err(|e| format!("Failed to build window config: {e}"))?
     .build()

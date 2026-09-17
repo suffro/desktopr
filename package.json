@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build:frontend": "npm ci --prefix frontend/ && npm run build --prefix frontend/",
+    "check:bridge-permissions": "node scripts/check-bridge-permissions.mjs",
     "check:menu-contract": "npm run sdk:build && node scripts/check-menu-contract.mjs",
     "check:private-deps": "node scripts/check-private-deps.mjs",
     "check:standalone": "node scripts/check-standalone.mjs",

@@ -17,6 +17,7 @@ pub mod context_menu;
 pub mod companion;
 pub mod global_vars;
 pub mod plugins;
+pub mod acl;
 
 pub use notifications::*;
 pub use clipboard::*;

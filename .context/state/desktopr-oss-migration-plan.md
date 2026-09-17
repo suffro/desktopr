@@ -441,28 +441,35 @@ Da fare **dopo la migrazione funzionale**, ma **prima della release stabile**.
 
 ## Companion/window isolation
 
-- [ ] non fidarsi di `windowLabel` fornito dal frontend;
-- [ ] ricavare l'identità della finestra lato Rust;
-- [ ] enforcement backend degli scope filesystem;
-- [ ] separare capability main/companion.
+- [x] non fidarsi di `windowLabel` fornito dal frontend;
+- [x] ricavare l'identità della finestra lato Rust;
+- [x] enforcement backend degli scope filesystem;
+- [x] separare capability main/companion.
 
 ## Remote capabilities
 
-- [ ] ridurre permessi non necessari;
-- [ ] rivedere remote origin;
-- [ ] documentare il trust model: Desktopr esegue la web app dello sviluppatore.
+- [x] ridurre permessi non necessari (companion ridotte, comandi debug solo in dev; i permessi di `main` restano perché `Desktopr.tauri` è API documentata);
+- [x] rivedere remote origin (origine di `APP_URL` più sottodomini, invariata e documentata);
+- [x] documentare il trust model: Desktopr esegue la web app dello sviluppatore.
 
 ## Networking
 
-- [ ] valutare accesso localhost/LAN;
-- [ ] limitarlo solo se contrario al modello desiderato.
+- [x] valutare accesso localhost/LAN (ammesso per scelta);
+- [x] limitarlo solo se contrario al modello desiderato (solo http/https, timeout, dimensione e frequenza limitati).
 
 ## Actions
 
-- [ ] `permissions:` minimali;
-- [ ] signing solo via Secrets;
-- [ ] valutare pinning SHA;
-- [ ] ridurre `curl | bash` e installazioni non pinned quando possibile.
+- [x] `permissions:` minimali;
+- [x] signing solo via Secrets;
+- [x] valutare pinning SHA (azioni a SHA + Dependabot);
+- [x] ridurre `curl | bash` e installazioni non pinned quando possibile (strumenti AppImage fissati e verificati).
+
+**Stato:** completata. Identità delle finestre ricavata lato Rust, capability per finestra a runtime
+(`main` completa, companion ridotta), scope filesystem imposti dal backend, controllo
+`check:bridge-permissions`, limiti network, deadline WASM che non lascia thread in attesa, azioni
+fissate a SHA con Dependabot e strumenti AppImage verificati. Verificato con test unitari (anche
+rotti apposta) e con un self-test runtime su build debug (24 chiamate consentite/negate). Vedi
+`decisions/window-isolation-and-capabilities.md`.
 
 ---
 

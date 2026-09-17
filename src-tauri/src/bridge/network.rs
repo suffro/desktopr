@@ -6,6 +6,29 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use tokio::time::Instant;
 
+// Network probes run natively, outside the webview's CORS rules, against URLs the
+// web app chooses. Local and LAN hosts stay reachable by design; requests are
+// limited to HTTP(S) and bounded in time, download size and polling rate.
+const MAX_TIMEOUT_MS: u64 = 30_000;
+const MAX_BANDWIDTH_BYTES: usize = 10 * 1024 * 1024;
+const MIN_MONITOR_INTERVAL_MS: u64 = 1_000;
+const MAX_MONITOR_TARGETS: usize = 10;
+
+fn validate_url(raw: &str) -> Result<String, String> {
+    let url = url::Url::parse(raw).map_err(|e| format!("invalid URL: {e}"))?;
+    if !matches!(url.scheme(), "http" | "https") {
+        return Err(format!("unsupported URL scheme: {}", url.scheme()));
+    }
+    if url.host_str().is_none() {
+        return Err("URL has no host".into());
+    }
+    Ok(url.into())
+}
+
+fn clamp_timeout(timeout_ms: u64) -> u64 {
+    timeout_ms.clamp(1, MAX_TIMEOUT_MS)
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NetworkStatus {
     pub online: bool,
@@ -26,7 +49,7 @@ pub async fn dtr_network_ping(
     url: Option<String>,
     timeout_ms: Option<u64>,
 ) -> Result<serde_json::Value, String> {
-    let timeout = timeout_ms.unwrap_or(2000);
+    let timeout = clamp_timeout(timeout_ms.unwrap_or(2000));
     let start = Instant::now();
     let status = probe(&app, url, timeout).await?;
     let elapsed = start.elapsed().as_millis() as u64;
@@ -55,20 +78,31 @@ pub async fn dtr_network_bandwidth_estimate(
     timeout_ms: Option<u64>,
 ) -> Result<serde_json::Value, String> {
     // NOTE: Download a small static file to estimate throughput.
-    let url = url.unwrap_or_else(|| "https://speed.cloudflare.com/__down?bytes=200000".to_string());
-    let timeout = timeout_ms.unwrap_or(4000);
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_millis(timeout))
-        .build()
-        .map_err(|e| e.to_string())?;
+    let url = validate_url(&url.unwrap_or_else(|| "https://speed.cloudflare.com/__down?bytes=200000".to_string()))?;
+    let timeout = clamp_timeout(timeout_ms.unwrap_or(4000));
     let start = Instant::now();
-    let resp = client.get(&url).send().await.map_err(|e| e.to_string())?;
-    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
+    let bytes_len = download_sample(&url, timeout, MAX_BANDWIDTH_BYTES).await? as u64;
     let ms = start.elapsed().as_millis().max(1) as u64;
-    let bytes_len = bytes.len() as u64;
     // kbps = (bytes * 8) / ms
     let kbps = ((bytes_len * 8) as f64) / (ms as f64);
     Ok(serde_json::json!({ "kbps": kbps, "bytes": bytes_len, "ms": ms }))
+}
+
+// Downloads at most `max_bytes` (plus the final chunk) and returns the bytes read.
+async fn download_sample(url: &str, timeout_ms: u64, max_bytes: usize) -> Result<usize, String> {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_millis(timeout_ms))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let mut resp = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let mut received: usize = 0;
+    while received < max_bytes {
+        match resp.chunk().await.map_err(|e| e.to_string())? {
+            Some(chunk) => received += chunk.len(),
+            None => break,
+        }
+    }
+    Ok(received)
 }
 
 async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<NetworkStatus, String> {
@@ -76,10 +110,10 @@ async fn probe(app: &AppHandle, url: Option<String>, timeout_ms: u64) -> Result<
     let dns_ok = ("one.one.one.one", 443).to_socket_addrs().is_ok();
 
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_millis(timeout_ms))
+        .timeout(Duration::from_millis(clamp_timeout(timeout_ms)))
         .build()
         .map_err(|e| e.to_string())?;
-    let target = url.unwrap_or_else(|| "https://www.google.com/generate_204".to_string());
+    let target = validate_url(&url.unwrap_or_else(|| "https://www.google.com/generate_204".to_string()))?;
 
     let start = Instant::now();
     let res = client.head(&target).send().await;
@@ -122,6 +156,11 @@ pub async fn dtr_network_set_monitor(app: AppHandle, interval_ms: u64, targets: 
         "https://www.google.com/generate_204".to_string(),
         "https://www.cloudflare.com/cdn-cgi/trace".to_string()
     ]);
+    if tgts.len() > MAX_MONITOR_TARGETS {
+        return Err(format!("at most {MAX_MONITOR_TARGETS} monitor targets are allowed"));
+    }
+    let tgts = tgts.iter().map(|t| validate_url(t)).collect::<Result<Vec<_>, _>>()?;
+    let interval_ms = interval_ms.max(MIN_MONITOR_INTERVAL_MS);
 
     let handle = tokio::spawn(async move {
         loop {
@@ -146,4 +185,59 @@ pub async fn dtr_network_stop_monitor() -> Result<(), String> {
         if let Some(h) = s.handle.take() { h.abort(); }
     }
     Ok(())
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_http_and_https_including_local_hosts() {
+        assert!(validate_url("https://example.com/health").is_ok());
+        assert!(validate_url("http://localhost:8080/").is_ok());
+        assert!(validate_url("http://192.168.1.20/status").is_ok());
+    }
+
+    #[test]
+    fn rejects_other_schemes_and_malformed_urls() {
+        assert!(validate_url("file:///etc/passwd").is_err());
+        assert!(validate_url("ftp://example.com").is_err());
+        assert!(validate_url("not a url").is_err());
+    }
+
+    #[test]
+    fn download_sample_stops_at_the_size_cap() {
+        use std::io::{Read, Write};
+
+        // Serve an endless body without Content-Length until the client disconnects.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut request = [0u8; 1024];
+            let _ = stream.read(&mut request);
+            let _ = stream.write_all(b"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\n");
+            let block = vec![0u8; 64 * 1024];
+            for _ in 0..(64 * 1024 * 1024 / block.len()) {
+                if stream.write_all(&block).is_err() {
+                    break;
+                }
+            }
+        });
+
+        let cap = 1024 * 1024;
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let received = runtime
+            .block_on(download_sample(&format!("http://{addr}/"), 10_000, cap))
+            .unwrap();
+
+        assert!(received >= cap, "read {received} bytes");
+        assert!(received < cap + 1024 * 1024, "did not stop near the cap: {received} bytes");
+    }
+
+    #[test]
+    fn clamps_timeouts() {
+        assert_eq!(clamp_timeout(0), 1);
+        assert_eq!(clamp_timeout(2_000), 2_000);
+        assert_eq!(clamp_timeout(600_000), MAX_TIMEOUT_MS);
+    }
 }

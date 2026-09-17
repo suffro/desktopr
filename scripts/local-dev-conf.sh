@@ -6,6 +6,9 @@ CARGO_PACKAGE_VERSION="0.2.1"
 CARGO_PACKAGE_NAME="desktopr-wrapper"
 
 cp conf-templates/remote.template.json src-tauri/capabilities/remote.json
+# Development builds also grant the debug-only diagnostics test commands.
+jq '.permissions += ["desktopr-bridge-debug"]' src-tauri/capabilities/remote.json > src-tauri/capabilities/remote.json.tmp
+mv src-tauri/capabilities/remote.json.tmp src-tauri/capabilities/remote.json
 
 
 sed -e "s/%%CARGO_PACKAGE_NAME%%/${CARGO_PACKAGE_NAME}/g" \

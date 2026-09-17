@@ -298,12 +298,12 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -322,8 +322,31 @@ jobs:
             build-essential file jq libayatana-appindicator3-dev libgtk-3-dev \
             librsvg2-dev libssl-dev libwebkit2gtk-4.1-dev libxdo-dev pkg-config
 
+      # The Tauri bundler downloads its AppImage tools from mutable release tags and
+      # branch heads when they are missing from its cache. Provide pinned,
+      # checksum-verified copies instead so Linux builds are reproducible.
+      - name: Provision pinned AppImage tools
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+
+          tools="${XDG_CACHE_HOME:-$HOME/.cache}/tauri"
+          mkdir -p "$tools"
+
+          while read -r sha256 name url; do
+            curl -fsSL --retry 3 --retry-delay 5 -o "$tools/$name" "$url"
+            echo "$sha256  $tools/$name" | sha256sum -c -
+            chmod +x "$tools/$name"
+          done <<'EOF'
+          f30140a43a0a59e46db21bdefdf749b9e9f2c6946e92afabbacf98b8ae73fb4f AppRun-x86_64 https://github.com/tauri-apps/binary-releases/releases/download/apprun-old/AppRun-x86_64
+          e762bea85c8eb0d4b3508d46e5c1f037f717d0f9303ae3b4aafc8b04991fa1ef linuxdeploy-x86_64.AppImage https://github.com/tauri-apps/binary-releases/releases/download/linuxdeploy/linuxdeploy-x86_64.AppImage
+          cb379f9b0733e9ad9f8bd78f8c2fa038aef2478523bb7d4c8e64ff6a1ea3501a linuxdeploy-plugin-gtk.sh https://raw.githubusercontent.com/tauri-apps/linuxdeploy-plugin-gtk/b5eb8d05b4c0ed40107fe2158c5d8527f94568ef/linuxdeploy-plugin-gtk.sh
+          c107b49d84edbffc6ab226ed1007e0626a4f7aa2c3a36b7782bef62351d49e94 linuxdeploy-plugin-gstreamer.sh https://raw.githubusercontent.com/tauri-apps/linuxdeploy-plugin-gstreamer/2a2e67491c32995a3f279ad0ecbe77abd512b42a/linuxdeploy-plugin-gstreamer.sh
+          992d502a248e14ab185448ddf6f6e7d25558cb84d4623c354c3af350c25fccb3 linuxdeploy-plugin-appimage.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-appimage-x86_64.AppImage
+          EOF
+
       - name: Cache Cargo registry and target
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: |
             ~/.cargo/registry/index
@@ -335,7 +358,7 @@ jobs:
 
       - name: Cache Tauri CLI
         id: tauri_cli_cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: |
             ~/.cargo/bin/cargo-tauri
@@ -774,7 +797,7 @@ jobs:
           echo "DIST_DIR=$out" >> "$GITHUB_ENV"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: desktopr-${{ matrix.platform }}
           path: ${{ env.DIST_DIR }}
@@ -794,7 +817,7 @@ jobs:
       contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: desktopr-*
           path: dist

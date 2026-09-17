@@ -9,7 +9,7 @@ build is established. The repository root is also the npm workspace root.
 ## Major components
 
 - `src-tauri/`: Rust/Tauri runtime and native bridge commands.
-- `src-ts/`: TypeScript bridge source, SDK source, and WASM worker source.
+- `src-ts/`: TypeScript bridge source and SDK source.
 - `src-ts/config/`: shared, standalone configuration contracts used by the
   bridge and exported by the SDK. The menu contract mirrors Rust deserialization
   and owns the JSON Schema used at the TypeScript boundary.
@@ -19,6 +19,11 @@ build is established. The repository root is also the npm workspace root.
 - WASM plugins run only through the native Wasmtime host in
   `src-tauri/src/bridge/plugins.rs`; the old JavaScript worker runner and its
   `dtr_worker_*` bridge module were removed in phase 9.
+- `src-tauri/src/bridge/acl.rs`: grants capabilities at runtime. The static
+  `remote` capability covers only `main`; windows opened with `dtr_win_open` get
+  a copy for their label and companion windows a reduced one. Filesystem
+  commands derive their scope from the calling window (see
+  `decisions/window-isolation-and-capabilities.md`).
 - `wasm/`: private npm and Cargo workspace for WASI Preview 1 modules. It owns
   the module template, the math example, one Cargo lockfile and the build helper
   that publishes ignored per-module artifacts.
@@ -72,7 +77,9 @@ directory plus dedicated persistent plugin storage.
 - The legacy companion frontend still has one retired dashboard link and stays
   isolated until its planned phase.
 - Generic network diagnostics currently use public Cloudflare and Google
-  probes. These are not Desktopr SaaS endpoints.
+  probes. These are not Desktopr SaaS endpoints. App-chosen probe URLs may target
+  local and LAN hosts; they are limited to HTTP(S) with bounded timeout,
+  download size and polling rate.
 
 ## Important constraints
 
