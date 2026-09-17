@@ -425,6 +425,14 @@ Solo dopo una build standalone funzionante.
 
 La repository sembra un progetto OSS intenzionale, non una repo interna resa pubblica per caso.
 
+**Stato:** completata. Rimossi `.DS_Store`, `deprecated/`, output SDK
+committato, vecchio worker WASM JavaScript, caricamento del menu da file
+all'avvio (disattivato), comandi non registrati e import inutilizzati (warning
+Rust da 56 a 19). Aggiunti LICENSE Apache 2.0, README, SECURITY.md,
+CONTRIBUTING.md e i campi licenza nei manifest. Il branding Bubbledesk resta
+solo nel `frontend/` companion, rimandato alla fase 12. Da decidere più avanti:
+il setup commentato di `tauri-plugin-prevent-default`.
+
 ---
 
 # Fase 10 — Hardening

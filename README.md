@@ -1,69 +1,142 @@
 # Desktopr
 
-**desktopr** is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
-It allows any web application to access native desktop features exposed by the Desktopr wrapper, using a clean, typed, importable API.
+Desktopr turns a web application into a native desktop app for Linux, Windows
+and macOS. It is built on [Tauri 2](https://v2.tauri.app/) and gives your web
+code a typed JavaScript bridge to native features: files and dialogs, windows,
+menus and context menus, tray, clipboard, notifications, global shortcuts,
+deep links, autostart, diagnostics, networking and sandboxed WebAssembly
+plugins.
 
-If the app is running in a normal browser environment, the SDK provides a safe detection method `isDesktoprAvailable()` so you can fallback.
+Desktopr is self-contained. It needs no account, backend or hosted service:
+you build it from this repository, on your machine or with GitHub Actions, and
+you ship the result yourself.
 
----
+## Repository layout
 
-## Installation
+| Path | Contents |
+| --- | --- |
+| `src-tauri/` | Rust/Tauri runtime and native commands |
+| `src-ts/` | TypeScript bridge injected into the app, and the SDK source |
+| `sdk/` | The `desktopr` npm package for your web application ([README](sdk/README.md)) |
+| `wasm/` | WASI plugin template and example modules ([README](wasm/README.md)) |
+| `conf-templates/`, `scripts/` | Configuration generation for dev and production builds |
+| `.github/workflows/build.yml` | Cross-platform build, optional signing and releases |
+| `frontend/` | Legacy companion app, not part of the core build |
 
-```bash
-npm install desktopr
+## Requirements
+
+- Node.js 22 and npm
+- Rust stable (`rustup`), plus `rustup target add wasm32-wasip1` for WASM plugins
+- Tauri CLI 2.11: `cargo install tauri-cli --version 2.11.1 --locked`
+- `jq`
+- Platform prerequisites from the
+  [Tauri guide](https://v2.tauri.app/start/prerequisites/). On Debian/Ubuntu:
+  `libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev build-essential`
+
+## Development
+
+```sh
+npm ci
+npm run dev
 ```
 
-or
+`npm run dev` bundles the bridge, generates the dev configuration and starts
+`cargo tauri dev`. By default the window shows the bundled page in
+`src-tauri/standalone/`. To wrap your own web app, set its URL:
 
-```bash
-yarn add desktopr
+```sh
+APP_URL=http://localhost:5173 npm run dev
 ```
 
----
+Only the origin of `APP_URL` is granted access to the native bridge.
 
-## Usage
+## Production builds
 
-```ts
-import { Desktopr, isDesktoprAvailable } from "desktopr";
+### Locally
 
-if (isDesktoprAvailable()) {
-  await Desktopr.window.new();
-} else {
-  console.log("Running in browser mode — native features unavailable.");
-}
+```sh
+APP_URL=https://app.example.com \
+APP_VERSION=1.0.0 \
+APP_IDENTIFIER=com.example.app \
+MAIN_WINDOW_TITLE="Example" \
+npm run build
 ```
 
----
+Bundles are written to `src-tauri/target/release/bundle/`. Other options
+(window size, deep link scheme, updater) are read from environment variables in
+[`scripts/prod-conf.sh`](scripts/prod-conf.sh).
 
-## API Shape
+### With GitHub Actions
 
-The SDK exposes TypeScript definitions for the entire bridge via `DesktoprAPI`, ensuring autocomplete and type safety.
+Run the **build** workflow from the Actions tab, or call it from another
+workflow with `uses: <owner>/<repo>/.github/workflows/build.yml@<ref>`. It
+builds the selected platforms, launches each app briefly as a smoke test, and
+uploads the installers as workflow artifacts:
 
----
+| Platform | Outputs |
+| --- | --- |
+| Linux | AppImage, `.deb`, `.rpm` |
+| Windows | NSIS installer, optional MSIX |
+| macOS | DMG |
 
-## Detecting Native Environment
+Set `release: true` (with `app_version`) to also create a draft GitHub Release.
+Nothing is uploaded anywhere else.
 
-The SDK includes a lightweight helper:
+Signing is optional and uses only your repository secrets. Without them the
+build is unsigned; if a set is incomplete, the workflow fails before building.
 
-```ts
-isDesktoprAvailable(): boolean
+| Purpose | Secrets |
+| --- | --- |
+| Windows code signing | `WINDOWS_CERTIFICATE` (base64 `.pfx`), `WINDOWS_CERTIFICATE_PASSWORD` |
+| macOS code signing | `APPLE_CERTIFICATE` (base64 `.p12`), `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` |
+| macOS notarization | `APPLE_ID`, `APPLE_PASSWORD` (app-specific password), `APPLE_TEAM_ID` |
+| Updater signatures | `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` |
+
+For the Microsoft Store or sideloading, provide the four `msix_*` identity
+inputs from Partner Center to add an MSIX package to the Windows build.
+
+#### Unsigned macOS builds
+
+Without Apple certificates the app is ad-hoc signed and not notarized, so
+Gatekeeper blocks it on first launch. Users can right-click the app and choose
+**Open**, or run:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Your App.app"
 ```
 
-It **never throws**, even in SSR or when running outside Desktopr.
+## Updates
 
-Useful for apps that must run both:
-- as a normal website
-- and as a desktop app wrapped with Desktopr
+The updater is off by default and is not compiled in. To enable it, host your
+own update manifest and provide both an HTTPS update endpoint and the updater
+public key; the configuration step then adds the updater config, artifacts and
+permissions.
 
+- **GitHub Actions:** set the `update_endpoint` and `updater_public_key` inputs
+  and the `TAURI_SIGNING_PRIVATE_KEY` secret. The workflow builds with the
+  `updater` Cargo feature.
+- **Locally:** set `UPDATE_ENDPOINT` and `ED25519_PUBKEY` for `npm run prodconf`,
+  then build with `cargo tauri build --features updater` from `src-tauri/`, with
+  `TAURI_SIGNING_PRIVATE_KEY` in the environment.
 
-### When Desktopr Is Not Available
+See [Tauri's updater guide](https://v2.tauri.app/plugin/updater/) for generating
+keys and the manifest format.
 
-If `Desktopr` is missing (e.g. browser mode), trying to call native APIs directly will throw.
+## Checks
 
-Make sure to guard features or provide fallbacks:
-
-```ts
-if (!isDesktoprAvailable()) return;
-await Desktopr.window.new(...);
+```sh
+npm run typecheck             # runtime and SDK TypeScript
+npm run check:standalone      # no hosted services, safe defaults, launchable entitlements
+npm run check:private-deps    # no private packages or credentials in manifests
+npm run check:menu-contract   # SDK menu schema matches the runtime
+npm run test:wasm-runtime     # builds the WASM modules and runs them in the runtime host
 ```
 
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Please report vulnerabilities privately
+as described in [SECURITY.md](SECURITY.md).
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).

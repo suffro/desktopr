@@ -9,7 +9,6 @@ import type { FsInterface } from "../modules/rs/fs/_types";
 import type { MenuInterface } from "../modules/rs/menu/_types";
 import type { DiagnosticsInterface } from "../modules/rs/diagnostics/_types";
 import type { BadgeInterface } from "../modules/rs/badge/_types";
-import type { WorkerInterface } from "../modules/rs/worker/_types";
 import type { ContextMenuInterface } from "../modules/rs/contextMenu/_types";
 // import type { CompanionInterface } from "../modules/rs/companion/_types";
 import type { AutostartInterface } from "../modules/rs/autostart/_types";
@@ -60,7 +59,6 @@ export type DesktoprAPI = {
   contextMenu: ContextMenuInterface & {listening?: boolean, listener?: EventListenerOrEventListenerObject};
   openBrowser: (url: string) => Promise<void>;
   // companion: CompanionInterface; DEPRECATED
-  // worker: WorkerInterface; DEPRECATED
 };
 
 export interface DesktoprInstanceInterface {

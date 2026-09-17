@@ -267,22 +267,6 @@ fn resolve_any_scoped(
     safe_join(&base, rel)
 }
 
-/// Existing path resolver for default data/cache.
-fn resolve_existing(app: &AppHandle, rel: &str, permanent: bool) -> Result<PathBuf, String> {
-    let base = ensure_base_exists(app, permanent)?;
-    let p = safe_join(&base, rel)?;
-    if !p.exists() {
-        return Err("No such file or directory".into());
-    }
-    Ok(p)
-}
-
-/// Non-existing path resolver for default data/cache.
-fn resolve_any(app: &AppHandle, rel: &str, permanent: bool) -> Result<PathBuf, String> {
-    let base = ensure_base_exists(app, permanent)?;
-    safe_join(&base, rel)
-}
-
 // ---------------------------------
 // Internal Desktopr dirs
 // ---------------------------------
@@ -309,18 +293,6 @@ fn diagnostics_dir_scoped(app: &AppHandle, window_label: Option<&str>) -> Result
 
 fn diagnostics_dir(app: &AppHandle) -> Result<PathBuf, String> {
     diagnostics_dir_scoped(app, None)
-}
-
-fn sandbox_dir_scoped(app: &AppHandle, window_label: Option<&str>) -> Result<PathBuf, String> {
-    let sandbox_dir_base = desktopr_scope_root(app, false, window_label)?.join("_sandbox");
-    if !sandbox_dir_base.exists() {
-        std::fs::create_dir_all(&sandbox_dir_base).map_err(|e| e.to_string())?;
-    }
-    Ok(sandbox_dir_base)
-}
-
-fn sandbox_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    sandbox_dir_scoped(app, None)
 }
 
 // ---------------------------------
@@ -869,28 +841,6 @@ pub fn dtr_fs_paths(app: AppHandle) -> Result<FsPaths, String> {
     })
 }
 
-// Exposes the persistent public "data" base dir.
-pub fn dtr_fs_data_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    ensure_base_exists(app, true)
-}
-
-// Exposes the non-persistent public "cache" base dir.
-pub fn dtr_fs_cache_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    ensure_base_exists(app, false)
-}
-
-// Safe join relative to public "data".
-pub fn dtr_fs_safe_join_data(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
-    let base = ensure_base_exists(app, true)?;
-    safe_join(&base, rel)
-}
-
-// Safe join relative to public "cache".
-pub fn dtr_fs_safe_join_cache(app: &AppHandle, rel: &str) -> Result<PathBuf, String> {
-    let base = ensure_base_exists(app, false)?;
-    safe_join(&base, rel)
-}
-
 /* =========================
    TRASH: helpers and commands
    ========================= */
@@ -1172,26 +1122,6 @@ pub fn dtr_fs_diagnostics_read_text(app: AppHandle, rel: String) -> Result<Strin
     std::fs::read_to_string(path).map_err(|e| e.to_string())
 }
 
-// --- write bytes base64 in _diagnostics ---
-#[tauri::command]
-pub fn dtr_fs_diagnostics_write_bytes(
-    app: AppHandle,
-    rel: String,
-    data_base64: String,
-    create_dirs: Option<bool>,
-) -> Result<(), String> {
-    let path = dtr_fs_safe_join_diagnostics(&app, &rel)?;
-    if create_dirs.unwrap_or(true) {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-        }
-    }
-    let bytes = general_purpose::STANDARD
-        .decode(data_base64.as_bytes())
-        .map_err(|e| e.to_string())?;
-    std::fs::write(path, bytes).map_err(|e| e.to_string())
-}
-
 // --- read bytes base64 in _diagnostics ---
 #[tauri::command]
 pub fn dtr_fs_diagnostics_read_bytes(app: AppHandle, rel: String) -> Result<String, String> {
@@ -1250,81 +1180,4 @@ pub fn dtr_fs_diagnostics_exists(app: AppHandle, rel: String) -> Result<bool, St
     let diag = diagnostics_dir(&app)?;
     let p = safe_join(&diag, &rel)?;
     Ok(p.exists())
-}
-
-/* =========================
-   SANDBOX: helpers and commands
-   ========================= */
-
-// Read text in _sandbox
-#[tauri::command]
-pub fn dtr_fs_sandbox_read_text(app: AppHandle, rel: String) -> Result<String, String> {
-    let sandbox_dir_base = sandbox_dir(&app)?;
-    let p = safe_join(&sandbox_dir_base, &rel)?;
-    if !p.exists() {
-        return Err("No such file or directory in sandbox".into());
-    }
-    if p.is_dir() {
-        return Err("Path is a directory".into());
-    }
-    std::fs::read_to_string(p).map_err(|e| e.to_string())
-}
-
-// Read _meta.txt in _sandbox
-#[tauri::command]
-pub fn dtr_fs_sandbox_read_meta(app: AppHandle, job_id: String) -> Result<String, String> {
-    let sandbox_dir_base = sandbox_dir(&app)?;
-    let rel = format!("{}/{}", job_id, "_meta.txt");
-    let p = safe_join(&sandbox_dir_base, &rel)?;
-    if !p.exists() {
-        return Err("No such file or directory in sandbox".into());
-    }
-    if p.is_dir() {
-        return Err("Path is a directory".into());
-    }
-    std::fs::read_to_string(p).map_err(|e| e.to_string())
-}
-
-// Read _stdin.json in _sandbox
-#[tauri::command]
-pub fn dtr_fs_sandbox_read_stdin(app: AppHandle, job_id: String) -> Result<String, String> {
-    let sandbox_dir_base = sandbox_dir(&app)?;
-    let rel = format!("{}/{}", job_id, "_stdin.json");
-    let p = safe_join(&sandbox_dir_base, &rel)?;
-    if !p.exists() {
-        return Err("No such file or directory in sandbox".into());
-    }
-    if p.is_dir() {
-        return Err("Path is a directory".into());
-    }
-    std::fs::read_to_string(p).map_err(|e| e.to_string())
-}
-
-// ---- LIST DIR in _sandbox ----
-#[tauri::command]
-pub fn dtr_fs_sandbox_list_dir(app: AppHandle, rel: String) -> Result<Vec<FsEntry>, String> {
-    let sandbox_dir_base = sandbox_dir(&app)?;
-    let dir = {
-        let p = safe_join(&sandbox_dir_base, &rel)?;
-        if !p.exists() {
-            return Err("No such file or directory in sandbox".into());
-        }
-        p
-    };
-    let mut out = Vec::new();
-    for e in fs::read_dir(&dir).map_err(|e| e.to_string())? {
-        let e = e.map_err(|e| e.to_string())?;
-        let md = e.metadata().map_err(|e| e.to_string())?;
-        let is_dir = md.is_dir();
-        let size = if md.is_file() { Some(md.len()) } else { None };
-        let name = e.file_name().to_string_lossy().into_owned();
-        let path_str = e.path().to_string_lossy().into_owned();
-        out.push(FsEntry {
-            name,
-            path: path_str,
-            is_dir,
-            size,
-        });
-    }
-    Ok(out)
 }

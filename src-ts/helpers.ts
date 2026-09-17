@@ -14,10 +14,10 @@ export * from "./modules/rs/diagnostics/_helpers";
 export * from "./modules/rs/network/_helpers";
 export * from "./modules/rs/autostart/_helpers";
 export * from "./modules/rs/badge/_helpers";
-export * from "./modules/rs/worker/_helpers";
 export * from "./modules/rs/contextMenu/_helpers";
 export * from "./modules/rs/companion/_helpers";
 export * from "./modules/rs/globalVariables/_helpers";
+export * from "./modules/rs/plugins/_helpers";
 
 
 import { wait } from "./utils";

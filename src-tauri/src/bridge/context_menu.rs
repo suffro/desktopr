@@ -1,6 +1,6 @@
 // src-tauri/src/bridge/context_menu.rs
 use tauri::{
-  AppHandle, Manager, Runtime, webview::WebviewWindow,
+  AppHandle, Manager, Runtime,
   menu::{
     Menu, MenuBuilder, Submenu, SubmenuBuilder,
     MenuItem, MenuItemBuilder, CheckMenuItem, CheckMenuItemBuilder,

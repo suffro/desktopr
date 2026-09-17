@@ -1,7 +1,6 @@
 // src/bridge/tray.rs
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::HashMap;
 use crate::helpers::states::*;
 
 use tauri::{
@@ -27,8 +26,6 @@ fn debounce(ms: u64) -> bool {
   LAST_CLICK_MS.store(now, Ordering::Relaxed);
   false
 }
-
-const NO_ACCEL: Option<&str> = None;
 const DESKTOPR_TRAY_ID: &str = "dtr-tray-ywapdpvw";
 
 /// Builds a single tray item from the JSON config.

@@ -2,11 +2,10 @@ use std::path::Path;
 
 use serde::Serialize;
 use tauri::{
-  App, AppHandle, Wry, Emitter, Manager,
-  menu::{Menu, MenuItemKind, IsMenuItem, Submenu,
-    MenuBuilder, SubmenuBuilder, MenuItemBuilder, CheckMenuItemBuilder, IconMenuItemBuilder
+  AppHandle, Wry, Emitter, Manager,
+  menu::{MenuItemKind, IsMenuItem, Submenu,
+    SubmenuBuilder, MenuItemBuilder, CheckMenuItemBuilder
   },
-  path::BaseDirectory
 };
 use std::fs;
 use std::collections::HashMap;
@@ -269,14 +268,6 @@ pub fn dtr_init_menu_for_window_from_json(
     .map_err(|e| e.to_string())
 }
 
-pub fn init_menu(app: &App<Wry>) -> tauri::Result<()> {
-  let cfg = match parse_menu_config(app) {
-    Some(c) => c,
-    None => return Ok(()),
-  };
-  apply_menu_config(&app.handle(), cfg)
-}
-
 // raccoglie tutti i check dell'albero e li mette in map (id -> checked)
 
 fn collect_check_items(map: &mut HashMap<String, bool>, items: &[MenuItemUnion]) {
@@ -420,18 +411,6 @@ fn item_to_slug(item: &MenuPredefinedMenuItemSlug) -> &'static str {
   }
 }
 
-fn add_if_some(
-  app: &App<Wry>,
-  acc: &mut Vec<Submenu<Wry>>,
-  title: &str,
-  sec: Option<&MenuSectionConfig>,
-) -> tauri::Result<()> {
-  if let Some(section) = sec {
-    acc.push(build_submenu_from_section(app, title, section)?);
-  }
-  Ok(())
-}
-
 // Local builder that mirrors helpers::menu_builder::build_submenu_from_section
 // but accepts an AppHandle (works at runtime commands). It only uses public
 // Tauri builders that accept any Manager (AppHandle implements Manager).
@@ -542,47 +521,6 @@ fn is_current_platform_in(list: &[MenuPlatform]) -> bool {
   #[cfg(target_os = "macos")]   { list.contains(&MenuPlatform::Macos) }
   #[cfg(target_os = "windows")] { list.contains(&MenuPlatform::Windows) }
   #[cfg(target_os = "linux")]   { list.contains(&MenuPlatform::Linux) }
-}
-
-// -------- config parsing (risorse) --------
-
-fn parse_menu_config(app: &App<Wry>) -> Option<MenuConfig> {
-  #[cfg(debug_assertions)]
-  {
-    if let Ok(root) = app.path().resolve("", BaseDirectory::Resource) {
-      eprintln!("[RES] root: {:?}", root);
-      if let Ok(entries) = fs::read_dir(&root) {
-        eprintln!("[RES] entries at root:");
-        for e in entries.flatten() {
-          eprintln!("  - {:?}", e.path());
-        }
-      }
-    }
-  }
-
-  // Copre sia la dichiarazione glob ("resources/**") sia il singolo file
-  let candidates = [
-    "menu/menu.config.json",           // se bundle: "resources/**"
-    "menu.config.json",                // se bundle: "resources/menu/menu.config.json"
-    "resources/menu/menu.config.json", // fallback
-    "resources/menu.config.json",
-  ];
-
-  for candidate in candidates {
-    if let Ok(path) = app.path().resolve(candidate, BaseDirectory::Resource) {
-      if let Ok(s) = fs::read_to_string(&path) {
-        if let Ok(cfg) = serde_json::from_str::<MenuConfig>(&s) {
-          #[cfg(debug_assertions)]
-          eprintln!("[RES] loaded: {:?}", path);
-          return Some(cfg);
-        }
-      }
-    }
-  }
-
-  #[cfg(debug_assertions)]
-  eprintln!("⚠️  No menu config found in resources (tried multiple candidates)");
-  None
 }
 
 // indicizza tutti gli item (custom) con sezione (lowercase) e parent (label+id)

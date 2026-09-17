@@ -1,6 +1,7 @@
 {
   "name": "tauri-skeleton",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "private": true,
   "workspaces": [
     "sdk",
@@ -12,7 +13,7 @@
   },
   "scripts": {
     "build:frontend": "npm ci --prefix frontend/ && npm run build --prefix frontend/",
-    "check:menu-contract": "node scripts/check-menu-contract.mjs",
+    "check:menu-contract": "npm run sdk:build && node scripts/check-menu-contract.mjs",
     "check:private-deps": "node scripts/check-private-deps.mjs",
     "check:standalone": "node scripts/check-standalone.mjs",
     "dev:frontend": "npm run dev --prefix frontend/",
@@ -23,7 +24,6 @@
     "ts:compile": "npx tsc -p tsconfig.json && npm run ts:compile --prefix src-tauri/",
     "ts:compile:src-ts": "npx tsc -p tsconfig.json",
     "ts:compile:bridge": "npm run ts:compile --prefix src-tauri/",
-    "build:worker": "npm run build:worker --prefix src-tauri/",
     "clean": "npm run clean --prefix src-tauri/",
     "clean:deep": "npm run ts:clean && npm run clean:deep --prefix src-tauri/",
     "build": "npm install && npm run build --prefix src-tauri/",
@@ -50,10 +50,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.8.0",
-    "@wasmer/wasi": "^1.2.2",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "buffer": "^6.0.3",
     "typescript": "^5.9.2"
   }
 }

@@ -2,7 +2,7 @@
 use serde::Serialize;
 use std::str::FromStr;
 use std::collections::HashMap;
-use tauri::{AppHandle, Emitter, Url, WebviewWindow, Manager};
+use tauri::{AppHandle, Emitter, Url, Manager};
 
 #[derive(Debug, Serialize)]
 pub struct DeepLinkSegments {

@@ -9,6 +9,11 @@
   values.
 - Run `npm run check:standalone` after changing runtime defaults, capabilities,
   configuration generation or updater wiring.
+- Do not commit generated output: `sdk/dist-sdk/`, `src-tauri/tsc/` and WASM
+  `dist/` directories are rebuilt by their scripts (`check:menu-contract`
+  builds the SDK itself).
+- Contributor-facing rules live in `CONTRIBUTING.md` and `SECURITY.md`; keep
+  them consistent with these conventions.
 - Do not copy generated output, SaaS data models or hosted distribution logic
   merely to preserve the layout of a source repository.
 - WASM crates belong to the shared `wasm/Cargo.toml` workspace and must target

@@ -35,8 +35,6 @@ jq --arg appUrl "$APP_URL_ORIGIN" '
 
 cp conf-templates/tauri.conf.template.dev.json src-tauri/tauri.conf.json
 
-cp conf-templates/menu.config.dev.json src-tauri/resources/menu/menu.config.json
-
 cat > src-tauri/window.env << EOF
 MAIN_WINDOW_URL=${APP_URL}
 MAIN_WINDOW_TITLE=Desktopr Dev

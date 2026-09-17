@@ -1,10 +1,8 @@
 // All comments are in English.
 
 use serde::{Deserialize, Serialize};
-use tauri::{App, AppHandle, Manager};
-use serde_json::{json, Value};
+use tauri::{AppHandle, Manager};
 use tokio::time::sleep;
-use std::time::Duration;
 
 use crate::bridge::fs::{dtr_fs_read_text, dtr_fs_write_text};
 use crate::bridge::events::{dtr_event_emit};

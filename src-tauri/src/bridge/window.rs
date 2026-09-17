@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow};
 use url::Url;
 
 #[derive(Serialize)]

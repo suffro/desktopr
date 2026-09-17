@@ -2,7 +2,7 @@ use tauri::{AppHandle, Manager};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 
 pub struct CloseGuard {
     pub closing: AtomicBool,

@@ -10,19 +10,12 @@ use crate::bridge::dragdrop;
 
 // Global Shortcut plugin
 use tauri_plugin_global_shortcut as gsc;
-use crate::gsc::Builder;
-use crate::gsc::ShortcutState;
 use helpers::states::*;
 
 // Deep-link + single-instance
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use tauri_plugin_shell;
-
-use tauri_plugin_prevent_default::{
-  Builder as PD, Flags, KeyboardShortcut,
-  ModifierKey::{CtrlKey, ShiftKey, AltKey, MetaKey}
-};
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -47,12 +40,8 @@ const OPEN_EXTERNAL_SCRIPT: &str = r#"(function() {
 })();"#;
 
 fn main() {
-  // let prevent = PD::new()
-  //   .with_flags(Flags::CONTEXT_MENU | Flags::DEV_TOOLS)
-  //   .shortcut(KeyboardShortcut::new("F12"))
-  //   .shortcut(KeyboardShortcut::with_modifiers("I", &[CtrlKey, ShiftKey]))
-  //   .shortcut(KeyboardShortcut::with_modifiers("I", &[MetaKey, AltKey]))
-  //   .build();
+  // Disabled: tauri_plugin_prevent_default could block the context menu,
+  // DevTools and their shortcuts (F12, Ctrl+Shift+I, Cmd+Alt+I) in production.
 
   let mut builder = tauri::Builder::default();
 

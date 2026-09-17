@@ -12,7 +12,7 @@ use std::{
 use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use serde_json::Value;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 

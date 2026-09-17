@@ -14,7 +14,11 @@ build is established. The repository root is also the npm workspace root.
   bridge and exported by the SDK. The menu contract mirrors Rust deserialization
   and owns the JSON Schema used at the TypeScript boundary.
 - `sdk/`: publishable `desktopr` JavaScript/TypeScript SDK workspace. Its
-  generated output comes from `src-ts/` through `tsconfig.sdk.json`.
+  output (`sdk/dist-sdk/`, not committed) is generated from `src-ts/` through
+  `tsconfig.sdk.json` and rebuilt before publishing.
+- WASM plugins run only through the native Wasmtime host in
+  `src-tauri/src/bridge/plugins.rs`; the old JavaScript worker runner and its
+  `dtr_worker_*` bridge module were removed in phase 9.
 - `wasm/`: private npm and Cargo workspace for WASI Preview 1 modules. It owns
   the module template, the math example, one Cargo lockfile and the build helper
   that publishes ignored per-module artifacts.

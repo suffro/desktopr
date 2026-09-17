@@ -1,6 +1,7 @@
 [package]
 name = "%%CARGO_PACKAGE_NAME%%"
 version = "%%CARGO_PACKAGE_VERSION%%"
+license = "Apache-2.0"
 edition = "2021"
 default-run = "%%CARGO_PACKAGE_NAME%%"
 

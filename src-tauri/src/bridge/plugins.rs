@@ -209,10 +209,6 @@ fn plugin_storage_dir(app: &AppHandle, module: &str) -> Result<PathBuf> {
     Ok(dir)
 }
 
-pub fn dtr_plugin_storage_dir(app: &AppHandle, module: &str) -> Result<PathBuf> {
-    plugin_storage_dir(app, module)
-}
-
 fn validate_wasm_file(path: &Path) -> Result<()> {
     let bytes = fs::read(path).with_context(|| format!("cannot read module: {}", path.display()))?;
 

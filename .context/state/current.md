@@ -2,10 +2,10 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 8 completed for unsigned builds: the standalone
-runtime builds and launches on Linux, Windows and macOS through
-`.github/workflows/build.yml`, which signs optionally from repository secrets
-and publishes only GitHub artifacts or an optional GitHub Release.
+Desktopr OSS migration phase 9 (OSS cleanup) completed. The standalone runtime
+builds and launches on Linux, Windows and macOS through
+`.github/workflows/build.yml`; signing with real certificates is still
+unverified.
 
 ## Recent relevant changes
 
@@ -113,17 +113,36 @@ and publishes only GitHub artifacts or an optional GitHub Release.
 - Found that Linux startup failed when `update-desktop-database`/`xdg-mime` are
   missing, because deep link registration errors aborted the setup hook. It now
   logs a warning and continues.
-- The custom panic hook replaced the default one, so panics were silent unless
-  crash reports were enabled. It now chains to the default hook.
+- The custom panic hook replaced the default one, so panics were only written
+  to diagnostics crash files (crash reports are enabled by default) and never
+  reached stderr. It now chains to the default hook.
+- Phase 9 cleanup: removed tracked `.DS_Store` files, `deprecated/`, the unused
+  `src-tauri/blank.html`, committed SDK build output (now ignored), the legacy
+  JavaScript WASM worker (`src-ts/worker`, `dtr_worker_*` bridge module,
+  `build:worker`, `@wasmer/wasi`, `buffer`), the disabled startup menu loaded
+  from `menu.config.json` (templates, resource file, dev-conf copy), unregistered
+  `dtr_fs_sandbox_*`/diagnostics write commands, other compiler-reported dead
+  helpers and unused imports. Rust warnings went from 56 to 19; remaining ones
+  are unused command parameters (part of the IPC argument names), the unused
+  glob re-exports in `bridge/mod.rs`, the `IsMenuItem` trait import kept for
+  non-macOS menu code, the `section` menu field kept for the JSON contract, and
+  two small state accessors.
+- Kept on purpose: the commented `tauri-plugin-prevent-default` setup (with its
+  still-declared dependency) and companion `[DEBUG]` logging, pending the
+  hardening and companion phases.
+- Renamed the local dev identifier from `app.desktopr.dashboard` to
+  `app.desktopr.local`.
+- Added `LICENSE` (official Apache 2.0 text), `README.md` (replacing a copy of
+  the SDK README), `SECURITY.md` (GitHub private vulnerability reporting and the
+  trust model) and `CONTRIBUTING.md`, plus `Apache-2.0` license fields in the npm
+  and Cargo manifests.
 - `build.yml` launches the built app on every platform for 15 seconds. Run
   35168452799 (commit `b592858`) passed on Linux, Windows and macOS with MSIX,
   verified checksums and no developer entitlements in the DMG app.
 
 ## Next
 
-Phase 8 is complete except signing with real certificates, which needs
-developer secrets. Phase 9 (OSS cleanup) is next. Candidate hardening notes
-found during phase 8: Linux AppImage bundling downloads an unpinned
+Phase 10 (hardening) is next. Candidate hardening notes found so far: Linux AppImage bundling downloads an unpinned
 `linuxdeploy-plugin-gtk.sh` at build time (one run failed on a network reset);
 each WASM call keeps a timeout thread sleeping for the full timeout.
 
@@ -141,5 +160,7 @@ each WASM call keeps a timeout thread sleeping for the full timeout.
 - The legacy `frontend/` companion UI still links the retired dashboard. It is
   intentionally excluded until the planned companion phase and is not required
   by the standalone runtime.
+- `SECURITY.md` points reporters to GitHub private vulnerability reporting,
+  which must be enabled in the repository settings before it is made public.
 - `cargo check` requires `npm run ts:compile:bridge` first because the generated
   bridge bundle is intentionally ignored by Git.

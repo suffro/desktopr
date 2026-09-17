@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use uuid::Uuid;
 
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, WebviewUrl, WebviewWindowBuilder};
 use crate::helpers::states::{register_companion_sandbox, unregister_companion_sandbox};
 
 const COMPANION_LABEL_PREFIX: &str = "dtr-cache-only-window-";
