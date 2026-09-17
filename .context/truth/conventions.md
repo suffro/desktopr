@@ -36,6 +36,9 @@
   can look unused elsewhere: use a targeted `cfg_attr(..., allow(...))` instead
   of renaming parameters. Never rename `#[tauri::command]` parameters to silence
   lints; they are the IPC argument names.
+- Companion changes: run `npm run companion:check` and `npm run companion:build`.
+  Import the SDK as `desktopr`, never from `desktopr/dist-sdk/...`; do not add
+  hosted links or private packages to `apps/companion/`.
 - Edit `conf-templates/Cargo.template.toml` together with `src-tauri/Cargo.toml`;
   `npm run test:config` fails when the generated manifest drifts.
 - When adding or changing a bridge command, update `desktopr-bridge.toml`
@@ -73,7 +76,7 @@
 ## Important rules
 
 - Never print or copy credential values found in source manifests or lockfiles.
-- Do not modify `docs`, `companion`, repository visibility, or repository name
-  during the core monorepo migration.
+- Do not modify `docs`, the source `companion` repository, repository
+  visibility, or repository name during the migration.
 - Preserve the existing runtime surface until a standalone cross-platform build
   exists.

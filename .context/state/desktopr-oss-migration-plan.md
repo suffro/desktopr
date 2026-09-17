@@ -562,6 +562,16 @@ Pubblicabili come:
 
 - GitHub Release.
 
+**Stato:** completata, prima release ancora da pubblicare. Il companion vive in `apps/companion/`
+(senza storia né lockfile del repo originale, senza `suffro-lib`, landing o link ospitati) al posto
+di `frontend/`. L'URL inserito si apre nella finestra principale con tutti i permessi. Build con
+`APP_FRONTEND=companion` / `frontend: companion`; release con `companion-release.yml` (tag
+`companion-v`, note di primo avvio, macOS firmato e notarizzato obbligatorio, MSIX per lo Store
+`Desktopr.Desktopr`). Niente modalità dev per provarlo. Verificato: CI 35244079211 e build companion
+35244107334 su Linux, Windows e macOS con smoke test di avvio, checksum e identità MSIX corretti.
+La prima release sarà la 3.0.0 (lo Store è a 2.3.0.0) dopo il caricamento dei secret Apple. Vedi
+`decisions/companion-app.md`.
+
 ---
 
 # Fase 13 — Secret scan finale

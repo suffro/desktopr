@@ -27,8 +27,10 @@ build is established. The repository root is also the npm workspace root.
 - `wasm/`: private npm and Cargo workspace for WASI Preview 1 modules. It owns
   the module template, the math example, one Cargo lockfile and the build helper
   that publishes ignored per-module artifacts.
-- `frontend/`: legacy companion/playground frontend. It is not part of the
-  current migration pass and is not an npm workspace yet.
+- `apps/companion/`: Desktopr Companion SvelteKit app (npm workspace), bundled
+  with `APP_FRONTEND=companion` and released by
+  `.github/workflows/companion-release.yml` (see
+  `decisions/companion-app.md`).
 - `src-tauri/standalone/`: bundled local fallback UI used when a developer does
   not configure an external application URL.
 - `conf-templates/` and `scripts/`: runtime configuration generation.
@@ -50,6 +52,8 @@ The source repositories have these roles (all four are archived on GitHub):
 - `wasm-module-template`: absorbed into `wasm/module-template/` in phase 5.
 - `wasm-modules`: its useful `math` example was absorbed into
   `wasm/modules/math/` in phase 5.
+- `companion`: imported into `apps/companion/` in phase 12 without history or
+  lockfile.
 - `github-actions`: legacy build/sign/distribution workflows, replaced in
   phase 7 by the in-repository `build.yml`. No hosted distribution, private
   wrapper checkout or logging worker logic was copied.
@@ -80,8 +84,6 @@ directory plus dedicated persistent plugin storage.
   crates.io and npm. Build outputs go only to GitHub Actions artifacts and
   optional GitHub Releases. Signing credentials are the consumer repository's
   own secrets.
-- The legacy companion frontend still has one retired dashboard link and stays
-  isolated until its planned phase.
 - Generic network diagnostics currently use public Cloudflare and Google
   probes. These are not Desktopr SaaS endpoints. App-chosen probe URLs may target
   local and LAN hosts; they are limited to HTTP(S) with bounded timeout,
@@ -94,5 +96,5 @@ directory plus dedicated persistent plugin storage.
   hosted-service constants into the monorepo.
 - Keep shared TypeScript configuration contracts aligned with the Rust structs
   that deserialize them.
-- Keep `docs` separate and integrate `companion` only after the core migration.
+- Keep `docs` separate.
 - The updater must remain disabled unless explicitly configured by a developer.

@@ -2,7 +2,7 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 11 (tests and CI) completed and verified in CI. The standalone runtime builds and launches on Linux, Windows and
+Desktopr OSS migration phase 12 (companion) completed and verified in CI; the first companion release is pending. The standalone runtime builds and launches on Linux, Windows and
 macOS through `.github/workflows/build.yml`; signing with real certificates is
 still unverified.
 
@@ -195,11 +195,26 @@ still unverified.
   all jobs: repository checks and TypeScript, WASM modules, and the runtime on
   Linux, Windows and macOS.
 
+- Phase 12: imported the companion app into `apps/companion/` (see
+  `decisions/companion-app.md`) and removed `frontend/`, the local-dev profile
+  and its template. `APP_FRONTEND=companion` bundles it; `build.yml` gained
+  `frontend`, `release_tag_prefix` and `release_notes_file`;
+  `companion-release.yml` publishes signed releases. CI runs
+  `companion:check` and `companion:build`. Companion windows without a URL now
+  open `/` instead of the missing `/cache-only/blank.html`.
+- CI run 35244079211 (commit `2071629`) passed. Companion build run 35244107334
+  passed on Linux, Windows and macOS with launch smoke tests, valid checksums
+  and an MSIX with the Store identity (`Desktopr.Desktopr`, display name
+  `Desktopr`). A local macOS build launched and created the companion window;
+  the UI and loading a web app were not checked visually.
+
 ## Next
 
-Phase 12 (companion) is next, only when requested. The runtime ACL self-test
-from phase 10 is still manual (it needs a real webview). Known remaining items: the companion default URL `/cache-only/blank.html` does not
-exist, and diagnostics reads stay available to companion windows.
+Load the Apple signing secrets (only after the user confirms the
+secret-to-file mapping) and run `companion-release.yml` with version `3.0.0`;
+the user then uploads the MSIX to Partner Center. Phase 13 (secret scan) comes
+after, only when requested. The runtime ACL self-test from phase 10 is still
+manual (it needs a real webview). Known remaining items: diagnostics reads stay available to companion windows.
 
 ## Blockers
 
@@ -214,9 +229,9 @@ exist, and diagnostics reads stay available to companion windows.
   `.context/` changes are skipped), including Windows and macOS runners.
 - Running `build.yml` on this private repository consumes GitHub Actions minutes
   (macOS and Windows runners are billed at higher multipliers).
-- The legacy `frontend/` companion UI still links the retired dashboard. It is
-  intentionally excluded until the planned companion phase and is not required
-  by the standalone runtime.
+- The source `companion` repository also contains the `suffro-lib` credential
+  in its manifest (and likely lockfile and history). It was not copied; the
+  credential must be revoked.
 - `SECURITY.md` points reporters to GitHub private vulnerability reporting,
   which must be enabled in the repository settings before it is made public.
 - `cargo check` requires `npm run ts:compile:bridge` first because the generated
