@@ -2,8 +2,7 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 10 (hardening) completed locally; the CI run for
-it is pending. The standalone runtime builds and launches on Linux, Windows and
+Desktopr OSS migration phase 10 (hardening) completed and verified in CI. The standalone runtime builds and launches on Linux, Windows and
 macOS through `.github/workflows/build.yml`; signing with real certificates is
 still unverified.
 
@@ -168,6 +167,9 @@ still unverified.
   build self-test page with 24 expected allowed/denied calls across main, a
   runtime-opened window and a companion, plus all repository checks and
   actionlint. SECURITY.md documents the resulting trust model.
+- Run 35209135359 (commit `bca61a3`) passed on Linux, Windows and macOS with
+  launch smoke tests, MSIX, valid checksums, all five AppImage tools verified
+  and no bundler downloads from remote sources.
 
 ## Next
 
