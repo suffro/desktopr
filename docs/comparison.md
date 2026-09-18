@@ -20,9 +20,6 @@ head:
   - - meta
     - name: twitter:card
       content: summary_large_image
-sidebar: false
-prev: false
-next: false
 ---
 
 <center>

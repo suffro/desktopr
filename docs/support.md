@@ -1,9 +1,6 @@
 ---
 title: FAQ
 description: Frequently asked questions about Desktopr, desktop builds, native features, signing, distribution, and ownership.
-sidebar: false
-prev: false
-next: false
 head:
   - - meta
     - property: og:title
