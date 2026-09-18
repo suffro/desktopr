@@ -11,7 +11,7 @@ head:
       content: "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API."
   - - meta
     - property: og:image
-      content: "https://desktopr.app/assets/logo/logo-color.png"
+      content: "https://desktopr.dev/assets/logo/logo-color.png"
   - - meta
     - name: twitter:title
       content: "Desktopr – Turn Your Web App Into a Desktop App"

@@ -189,9 +189,9 @@ A more detailed version for product pages, forums, blog posts, directories, pres
 
 <br>
 
-<a href="https://desktopr.app" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:14px;padding:14px 18px;min-width:120px;border:1px solid rgba(255,255,255,0.22);border-radius:18px;background:#1f1f1f;color:#ffffff;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:14px;padding:14px 18px;min-width:120px;border:1px solid rgba(255,255,255,0.22);border-radius:18px;background:#1f1f1f;color:#ffffff;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:transparent;overflow:hidden;">
-    <img src="https://desktopr.app/assets/logo/logo.svg" alt="Desktopr" style="width:100%;height:100%;object-fit:contain;display:block;" />
+    <img src="https://desktopr.dev/assets/logo/logo.svg" alt="Desktopr" style="width:100%;height:100%;object-fit:contain;display:block;" />
   </span>
   <span style="display:flex;flex-direction:column;line-height:1.05;">
     <span style="color:rgba(255,255,255,0.68);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;">Get started with</span>
@@ -200,9 +200,9 @@ A more detailed version for product pages, forums, blog posts, directories, pres
 </a>
 
 ```html
-<a href="https://desktopr.app" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:14px;padding:14px 18px;min-width:120px;border:1px solid rgba(255,255,255,0.22);border-radius:18px;background:#1f1f1f;color:#ffffff;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:14px;padding:14px 18px;min-width:120px;border:1px solid rgba(255,255,255,0.22);border-radius:18px;background:#1f1f1f;color:#ffffff;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:transparent;overflow:hidden;">
-    <img src="https://desktopr.app/assets/logo/logo.svg" alt="Desktopr" style="width:100%;height:100%;object-fit:contain;display:block;" />
+    <img src="https://desktopr.dev/assets/logo/logo.svg" alt="Desktopr" style="width:100%;height:100%;object-fit:contain;display:block;" />
   </span>
   <span style="display:flex;flex-direction:column;line-height:1.05;">
     <span style="color:rgba(255,255,255,0.68);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;">Get started with</span>
@@ -213,14 +213,14 @@ A more detailed version for product pages, forums, blog posts, directories, pres
 
 ---
 
-<a href="https://desktopr.app" target="_blank" rel="noopener noreferrer" style="margin-top:10px;display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
-  <img src="https://desktopr.app/assets/logo/logo.svg" alt="Desktopr" style="width:18px;height:18px;object-fit:contain;display:block;" />
+<a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="margin-top:10px;display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
+  <img src="https://desktopr.dev/assets/logo/logo.svg" alt="Desktopr" style="width:18px;height:18px;object-fit:contain;display:block;" />
   <span>Powered by <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
 </a>
 
 ```html
-<a href="https://desktopr.app" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
-  <img src="https://desktopr.app/assets/logo/logo.svg" style="width:18px;height:18px;object-fit:contain;display:block;" />
+<a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
+  <img src="https://desktopr.dev/assets/logo/logo.svg" style="width:18px;height:18px;object-fit:contain;display:block;" />
   <span>Powered by <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
 </a>
 ```

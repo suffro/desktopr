@@ -13,7 +13,7 @@ head:
       content: "Side-by-side comparison: Desktopr, Electron, Tauri, ToDesktop and Neutralino.js. Honest specs and a clear verdict."
   - - meta
     - property: og:image
-      content: "https://desktopr.app/assets/logo/logo-color.png"
+      content: "https://desktopr.dev/assets/logo/logo-color.png"
   - - meta
     - property: og:type
       content: website

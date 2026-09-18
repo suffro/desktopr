@@ -1,6 +1,6 @@
 import { defineConfig, HeadConfig } from "vitepress";
 
-const HOSTNAME = "https://desktopr.app";
+const HOSTNAME = "https://desktopr.dev";
 const REPOSITORY = "https://github.com/suffro/desktopr";
 
 const softwareApplicationSchema = {
@@ -261,11 +261,6 @@ export default defineConfig({
         ],
       },
       {
-        text: "No-code Integrations",
-        collapsed: false,
-        items: [{ text: "Bubble.io", link: "/guide/bubble-plugin" }],
-      },
-      {
         text: "Bridge API",
         link: "/guide/bridge/overview",
         collapsed: false,
@@ -294,6 +289,11 @@ export default defineConfig({
             ],
           },
         ],
+      },
+      {
+        text: "No-code Integrations",
+        collapsed: false,
+        items: [{ text: "Bubble.io", link: "/guide/bubble-plugin" }],
       },
       { text: "FAQ", link: "/support" },
       { text: "Comparison", link: "/comparison" },

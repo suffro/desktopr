@@ -33,7 +33,7 @@ workspace root (`desktopr-monorepo`).
   `decisions/companion-app.md`).
 - `docs/`: VitePress documentation site (npm workspace `@desktopr/docs`),
   absorbed from the separate `docs` repository in phase 14 and rewritten for the
-  open-source project. It is published to desktopr.app by the maintainer through
+  open-source project. It is published to desktopr.dev by the maintainer through
   Cloudflare; the repository holds only the sources.
 - `src-tauri/standalone/`: bundled local fallback UI used when a developer does
   not configure an external application URL.

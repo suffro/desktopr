@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://desktopr.app/sitemap.xml
+Sitemap: https://desktopr.dev/sitemap.xml

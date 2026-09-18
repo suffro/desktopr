@@ -35,14 +35,14 @@ if (!isDesktoprAvailable()) {
   throw new Error('Desktopr is not available in this environment.');
 }
 
-await Desktopr.openBrowser('https://desktopr.app');
+await Desktopr.openBrowser('https://desktopr.dev');
 ```
 
 If you want to open a URL inside a new native desktop window instead, use the [window module](/guide/bridge/api/window.md):
 
 ```ts
 await Desktopr.window.new({
-  url: 'https://desktopr.app'
+  url: 'https://desktopr.dev'
 });
 ```
 

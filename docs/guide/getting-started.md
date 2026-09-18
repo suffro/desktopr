@@ -10,7 +10,7 @@ head:
       content: "Step-by-step guide to turning your web app into a native desktop app with Desktopr. Open source, no account, no hosted service."
   - - meta
     - property: og:image
-      content: "https://desktopr.app/assets/logo/logo-color.png"
+      content: "https://desktopr.dev/assets/logo/logo-color.png"
   - - meta
     - name: twitter:title
       content: "Getting Started with Desktopr"

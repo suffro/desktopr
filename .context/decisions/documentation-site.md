@@ -21,9 +21,12 @@ only: no Git history and no lockfile.
   plugin page.
 - `npm run docs:build` runs in CI; VitePress fails the build on dead links.
 - Deployment is not in the repository: the maintainer publishes the static
-  output to Cloudflare. `desktopr.app` is therefore the project's own site, and
-  `scripts/check-standalone.mjs` allows that host while still rejecting hosted
-  Desktopr services such as `dashboard.desktopr.app`.
+  output to Cloudflare, which already serves `desktopr.dev`. That host is the
+  project's own site, so `scripts/check-standalone.mjs` allows it while still
+  rejecting hosted Desktopr services such as `dashboard.desktopr.dev`. The
+  bundle identifier default (`app.desktopr.app`) is deliberately unchanged: it
+  is an identifier, not a URL, and changing it would move app data for anyone
+  building with the defaults.
 
 ## Rejected
 
