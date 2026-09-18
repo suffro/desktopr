@@ -23,6 +23,7 @@ you ship the result yourself.
 | `.github/workflows/build.yml` | Cross-platform build, optional signing and releases |
 | `.github/workflows/companion-release.yml` | Signed Desktopr Companion release |
 | `apps/companion/` | Desktopr Companion, a desktop app for trying the runtime and the bridge API |
+| `docs/` | Documentation site (VitePress) published at [desktopr.app](https://desktopr.app) |
 
 ## Requirements
 
@@ -122,6 +123,12 @@ permissions.
 
 See [Tauri's updater guide](https://v2.tauri.app/plugin/updater/) for generating
 keys and the manifest format.
+
+## Documentation
+
+The full documentation lives in [`docs/`](docs/) and is published at
+[desktopr.app](https://desktopr.app). Run it locally with `npm run docs:dev`,
+or build the static site with `npm run docs:build`.
 
 ## Desktopr Companion
 

@@ -31,6 +31,10 @@ build is established. The repository root is also the npm workspace root.
   with `APP_FRONTEND=companion` and released by
   `.github/workflows/companion-release.yml` (see
   `decisions/companion-app.md`).
+- `docs/`: VitePress documentation site (npm workspace `@desktopr/docs`),
+  absorbed from the separate `docs` repository in phase 14 and rewritten for the
+  open-source project. It is published to desktopr.app by the maintainer through
+  Cloudflare; the repository holds only the sources.
 - `src-tauri/standalone/`: bundled local fallback UI used when a developer does
   not configure an external application URL.
 - `conf-templates/` and `scripts/`: runtime configuration generation.
@@ -54,6 +58,7 @@ The source repositories have these roles (all four are archived on GitHub):
   `wasm/modules/math/` in phase 5.
 - `companion`: imported into `apps/companion/` in phase 12 without history or
   lockfile.
+- `docs`: imported into `docs/` in phase 14 without history or lockfile.
 - `github-actions`: legacy build/sign/distribution workflows, replaced in
   phase 7 by the in-repository `build.yml`. No hosted distribution, private
   wrapper checkout or logging worker logic was copied.
@@ -96,5 +101,6 @@ directory plus dedicated persistent plugin storage.
   hosted-service constants into the monorepo.
 - Keep shared TypeScript configuration contracts aligned with the Rust structs
   that deserialize them.
-- Keep `docs` separate.
+- The documentation must describe the open build workflow only: no dashboard,
+  build credits, Desktopr Edge, hosted distribution, trackers or share widgets.
 - The updater must remain disabled unless explicitly configured by a developer.

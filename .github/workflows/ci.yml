@@ -77,6 +77,9 @@ jobs:
       - name: Companion build
         run: npm run companion:build
 
+      - name: Docs build
+        run: npm run docs:build
+
       - name: Generated configuration is committed
         run: git diff --exit-code
 

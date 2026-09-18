@@ -1,0 +1,221 @@
+/* custom.css */
+
+/* Root (light / default) */
+:root {
+  /* Brand / Accent color */
+  --vp-c-brand-1: #FE9A01;
+  --vp-c-brand-2: #e68a01; /* versione un po’ più scura o da hover */
+  --vp-c-brand-3: #ffd15c; /* colore chiaro secondario, facoltativo */
+
+  /* Background / testo generali */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-secondary: #f5f5f5;
+  --vp-c-text-1: #222222;
+  --vp-c-text-2: #555555;
+
+  --vp-sharicon-color: #f4f1f1;
+
+  /* Navbar / sidebar */
+  --vp-nav-bg-color: #ffffff;
+  --vp-sidebar-bg-color: #f9f9f9;
+
+  /* Link / elementi attivi */
+  --vp-c-link: var(--vp-c-brand-1);
+  --vp-c-link-hover: var(--vp-c-brand-2);
+}
+
+/* Dark mode */
+html.dark {
+  --vp-c-brand-1: #FE9A01;
+  --vp-c-brand-2: #e68a01;
+  --vp-c-brand-3: #ffd15c;
+
+  --vp-c-bg: #0d0d0d;
+  --vp-c-bg-secondary: #121212;
+  --vp-c-text-1: #ffffff;
+  --vp-c-text-2: #cccccc;
+
+  --vp-nav-bg-color: #111111;
+  --vp-sidebar-bg-color: #1a1a1a;
+
+  --vp-sharicon-color: #ffffff;
+
+  --vp-c-link: var(--vp-c-brand-1);
+  --vp-c-link-hover: var(--vp-c-brand-2);
+
+}
+
+/* Altri override utili */
+
+/* Favicon / header */
+:root {
+  --vp-header-height: 64px; /* se vuoi modificare altezza navbar */
+}
+
+/* Esempio: badge “tip” usa colore brand per test */
+:root {
+  --vp-badge-tip-text: var(--vp-c-brand-1);
+  --vp-badge-tip-bg: var(--vp-c-brand-3);
+}
+
+/* Link hover */
+a:hover {
+  color: var(--vp-c-link-hover);
+}
+
+/* Override generale dei background di content */
+main {
+  background-color: var(--vp-c-bg);
+}
+
+/* Sidebar links attivi / evidenziati */
+.vp-sidebar-link--active,
+.vp-sidebar-link:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* Toc (table of contents) link */
+.vp-outline-link {
+  color: var(--vp-c-text-2);
+}
+.vp-outline-link:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.brand {
+    background-color: var(--vp-c-brand-1) !important;
+    color: #222222 !important;
+}
+
+.brand:hover {
+    background-color: var(--vp-c-brand-2) !important;
+}
+
+.vp-doc h2 {
+  color: #FE9A01;
+}
+
+.VPNavBar.has-sidebar .content {
+  background-color: var(--vp-nav-bg-color) !important;
+}
+.VPNavBar.has-sidebar .title {
+  background-color: var(--vp-sidebar-bg-color) !important;
+}
+/* Scrollbar nascosta solo su sidebar, TOC, code blocks e tabelle overflow */
+.VPSidebar::-webkit-scrollbar,
+.VPDocAsideOutline::-webkit-scrollbar,
+.VPLocalSearchBox::-webkit-scrollbar,
+pre::-webkit-scrollbar,
+.vp-table-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.VPSidebar,
+.VPDocAsideOutline,
+.VPLocalSearchBox,
+pre,
+.vp-table-wrapper {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.st-total {
+  display: none !important;
+}
+
+.st-btn {
+  background-color: transparent !important;
+}
+
+.floating-share {
+  cursor: pointer !important;
+  background-color: #FE9A01 !important;
+  position: fixed;
+  right: 20px; /* Distanza dal bordo destro */
+  bottom: 10px;    /* Centrato verticalmente */
+  border-radius: 5px;
+  transform: translateY(-50%);
+  z-index: 100; /* Sempre sopra tutto */
+}
+
+.floating-share:hover {
+  opacity: 0.9;
+}
+
+.hidden-h2 {
+  height: 0;
+  opacity: 0;
+ }
+.hidden-h2 h2 {
+  font-size: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* .vitepress/theme/custom.css */
+.vp-doc .VPButton {
+  text-decoration: none !important;
+}
+
+summary {
+  padding-bottom: 2px !important;
+  border-bottom-width: 0.5px !important;
+  border-bottom-style: solid !important;
+  border-color: transparent !important;
+}
+
+summary:hover {
+  cursor: pointer !important;
+  opacity: 0.8 !important;
+  color: var(--vp-c-brand-1) !important;
+  border-color: var(--vp-c-brand-1) !important;
+}
+
+a.vp-external-link-icon:hover::after {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* Nascondi su schermi molto piccoli per non coprire il testo */
+@media (max-width: 768px) {
+  .floating-share {
+    display: none;
+  }
+}
+
+@media (min-width: 820px) {
+  /* Si attiva SOLO se dentro .items ci sono più di 6 elementi .VPMenuLink */
+  .VPMenu .items:has(> .VPMenuLink:nth-child(7)) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    gap: 4px 28px;
+    padding: 6px 0;
+    
+    /* Linea verticale continua */
+    background-image: linear-gradient(
+      to right, 
+      transparent calc(50% - 0.5px), 
+      var(--vp-c-divider) calc(50% - 0.5px), 
+      var(--vp-c-divider) calc(50% + 0.5px), 
+      transparent calc(50% + 0.5px)
+    );
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+  }
+
+  /* MODIFICATO: Applica la larghezza minima SOLO al pannello del dropdown aperto (.VPFlyout)
+     evitando di influenzare gli spazi della barra di navigazione principale */
+  .VPFlyout .menu:has(.items > .VPMenuLink:nth-child(7)) {
+    min-width: 440px !important;
+    width: max-content !important;
+  }
+}
+
+

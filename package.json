@@ -6,7 +6,8 @@
   "workspaces": [
     "sdk",
     "wasm",
-    "apps/companion"
+    "apps/companion",
+    "docs"
   ],
   "devDependencies": {
     "@types/node": "^25.9.1",
@@ -27,6 +28,8 @@
     "clean:deep": "npm run ts:clean && npm run clean:deep --prefix src-tauri/",
     "companion:build": "npm run build --workspace @desktopr/companion",
     "companion:check": "npm run check --workspace @desktopr/companion",
+    "docs:dev": "npm run dev --workspace @desktopr/docs",
+    "docs:build": "npm run build --workspace @desktopr/docs",
     "build": "npm install && npm run build --prefix src-tauri/",
     "build:dev": "npm install && npm run build:dev --prefix src-tauri/",
     "build:dev:clean": "npm install && npm run build:dev:clean --prefix src-tauri/",

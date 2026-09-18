@@ -24,7 +24,11 @@ const textExtensions = new Set([
   ".yaml",
   ".yml",
 ]);
-const hostedDomainPattern = /https?:\/\/[^\s"'<>]*(?:desktopr\.app|bubbledesk\.[a-z]+)/iu;
+// The documentation site (desktopr.app) is the project's own static site and is
+// allowed. Hosted Desktopr/Bubbledesk services are not: the runtime must never
+// depend on one.
+const hostedDomainPattern =
+  /https?:\/\/[^\s"'<>]*(?:[a-z0-9-]+\.desktopr\.app|bubbledesk\.[a-z]+)/iu;
 const findings = [];
 
 function inspectTextFile(path) {
