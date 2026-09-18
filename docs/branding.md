@@ -215,13 +215,13 @@ A more detailed version for product pages, forums, blog posts, directories, pres
 
 <a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="margin-top:10px;display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
   <img src="https://desktopr.dev/assets/logo/logo.svg" alt="Desktopr" style="width:18px;height:18px;object-fit:contain;display:block;" />
-  <span>Powered by <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
+  <span>Built with <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
 </a>
 
 ```html
 <a href="https://desktopr.dev" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(255,255,255,0.18);border-radius:999px;background:#1f1f1f;color:rgba(255,255,255,0.76);text-decoration:none;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;font-weight:500;line-height:1;">
   <img src="https://desktopr.dev/assets/logo/logo.svg" style="width:18px;height:18px;object-fit:contain;display:block;" />
-  <span>Powered by <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
+  <span>Built with <strong style="color:#ffffff;font-weight:750;">Desktopr</strong></span>
 </a>
 ```
 
