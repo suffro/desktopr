@@ -1,4 +1,10 @@
+import { readFileSync } from "node:fs";
 import { defineConfig, HeadConfig } from "vitepress";
+import { markdownFileFor, recordPage, writeLlmsFiles } from "./llms.mjs";
+
+const version = JSON.parse(
+  readFileSync(new URL("../../sdk/package.json", import.meta.url), "utf8"),
+).version;
 
 const HOSTNAME = "https://desktopr.dev";
 const REPOSITORY = "https://github.com/suffro/desktopr";
@@ -158,15 +164,23 @@ export default defineConfig({
     hostname: HOSTNAME,
   },
   transformHead({ pageData }) {
-    const relativePath = pageData.relativePath
-      .replace(/index\.md$/, "")
-      .replace(/\.md$/, "");
-    const canonicalUrl = relativePath
-      ? `${HOSTNAME}/${relativePath}`
-      : `${HOSTNAME}/`;
+    // Recording the page is what feeds llms.txt and the Markdown twins; see ./llms.mjs.
+    const route = recordPage(pageData);
+    const canonicalUrl = `${HOSTNAME}${route}`;
 
     const heads: HeadConfig[] = [
       ["link", { rel: "canonical", href: canonicalUrl }],
+      // The Markdown twin of this page, discoverable without asking for it. `functions/` serves the
+      // same file to anything sending `Accept: text/markdown`, and `PageActions.vue` reads this
+      // link rather than deriving the path again.
+      [
+        "link",
+        {
+          rel: "alternate",
+          type: "text/markdown",
+          href: `${HOSTNAME}/${markdownFileFor(route)}`,
+        },
+      ],
       ["meta", { property: "og:url", content: canonicalUrl }],
     ];
 
@@ -188,6 +202,22 @@ export default defineConfig({
 
     return heads;
   },
+  // The Markdown surface, written after the pages are rendered: /llms.txt, /llms-full.txt and one
+  // `.md` twin per page. See ./llms.mjs.
+  async buildEnd(siteConfig) {
+    const written = await writeLlmsFiles({
+      outDir: siteConfig.outDir,
+      srcDir: siteConfig.srcDir,
+      hostname: HOSTNAME,
+      version,
+      sidebar: siteConfig.site.themeConfig.sidebar,
+      siteDescription: siteConfig.site.description,
+    });
+    console.log(
+      `generated llms.txt (${written.indexed} pages), llms-full.txt and ${written.twins} Markdown page twins`,
+    );
+  },
+
   appearance: {
     initialValue: "dark",
   },
