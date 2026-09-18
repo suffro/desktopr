@@ -1,6 +1,6 @@
 ---
 title: "Turn web apps into desktop apps"
-description: "Open source toolkit that turns your web app into a native desktop app for Windows, macOS and Linux — native features, no account, no hosted service, full ownership."
+description: "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API."
 layout: home
 head:
   - - meta
@@ -8,7 +8,7 @@ head:
       content: "Desktopr – Turn Your Web App Into a Desktop App"
   - - meta
     - property: og:description
-      content: "Open source toolkit that turns your web app into a native desktop app. Multi-platform builds, native OS features, no lock-in, full ownership."
+      content: "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API."
   - - meta
     - property: og:image
       content: "https://desktopr.app/assets/logo/logo-color.png"
@@ -17,12 +17,12 @@ head:
       content: "Desktopr – Turn Your Web App Into a Desktop App"
   - - meta
     - name: twitter:description
-      content: "Open source toolkit that turns your web app into a native desktop app. Multi-platform builds, native OS features, no lock-in, full ownership."
+      content: "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API."
 
 hero:
   name: "Desktopr"
   text: "From web to desktop."
-  tagline: "Open source. Turn your web app into a desktop app.\nNative features, no account, no hosted service, full ownership."
+  tagline: "Easily build and sign lightweight desktop applications using web stacks,\nwith Desktopr GitHub actions and a straightforward Node API."
   actions:
     - theme: brand
       text: Get Started

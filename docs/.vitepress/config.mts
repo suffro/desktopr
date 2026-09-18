@@ -10,7 +10,7 @@ const softwareApplicationSchema = {
       "@type": "SoftwareApplication",
       name: "Desktopr",
       description:
-        "Open source toolkit that turns a web app into a native desktop app for Windows, macOS and Linux, with a typed bridge to native features.",
+        "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API.",
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Windows, macOS, Linux",
       url: HOSTNAME,
@@ -152,7 +152,7 @@ export default defineConfig({
   head,
   title: "Desktopr",
   description:
-    "Open source toolkit that turns your web app into a native desktop app",
+    "Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API.",
   cleanUrls: true,
   sitemap: {
     hostname: HOSTNAME,

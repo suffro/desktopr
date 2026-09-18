@@ -1,5 +1,7 @@
 # Desktopr
 
+Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API.
+
 This is the official JavaScript/TypeScript SDK for communicating with the native Desktopr bridge.  
 It allows any web application to access native desktop features exposed by the Desktopr wrapper, using a clean, typed, importable API.
 

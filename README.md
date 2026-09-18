@@ -1,5 +1,8 @@
 # Desktopr
 
+Easily build and sign lightweight desktop applications using web stacks, with
+Desktopr GitHub actions and a straightforward Node API.
+
 Desktopr turns a web application into a native desktop app for Linux, Windows
 and macOS. It is built on [Tauri 2](https://v2.tauri.app/) and gives your web
 code a typed JavaScript bridge to native features: files and dialogs, windows,

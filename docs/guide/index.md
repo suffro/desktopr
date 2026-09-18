@@ -5,6 +5,8 @@ description: Learn what Desktopr is, how it works, and what makes it different f
 
 # What is Desktopr?
 
+> Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API.
+
 **Desktopr** is an open source, cross‑platform desktop builder that wraps any web app into a fully native desktop application for **Windows**, **macOS**, and **Linux** — powered by [**Tauri**](./what-is-tauri.md) and a TypeScript ↔ Rust bridge API.
 
 It allows developers to take any existing web app (built with SvelteKit, React, Vue, Bubble.io or any other framework) and easily transform it into a real native desktop app, with full white-label and total ownership on your builds. The whole toolchain is [on GitHub](https://github.com/suffro/desktopr) under the Apache 2.0 license.

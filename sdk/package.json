@@ -2,7 +2,7 @@
   "name": "desktopr",
   "version": "2.2.0",
   "license": "Apache-2.0",
-  "description": "Official JS/TS SDK for the Desktopr native bridge",
+  "description": "Straightforward Node API for the Desktopr native bridge: build and sign lightweight desktop apps using web stacks",
   "main": "dist-sdk/sdk/index.js",
   "types": "dist-sdk/sdk/index.d.ts",
   "module": "dist-sdk/sdk/index.js",

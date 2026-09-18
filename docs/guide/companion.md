@@ -1,9 +1,6 @@
 ---
 title: Try Desktopr with the Companion
 description: Try every Desktopr desktop feature before building your own app, with the Desktopr Companion and its Bridge API playground.
-sidebar: false
-prev: false
-next: false
 ---
 
 # Try Desktopr with the Companion

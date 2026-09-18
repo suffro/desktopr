@@ -22,6 +22,8 @@ head:
 
 # Getting Started with Desktopr
 
+> Easily build and sign lightweight desktop applications using web stacks, with Desktopr GitHub actions and a straightforward Node API.
+
 **Desktopr** turns your web application into a cross-platform desktop application for macOS, Windows and Linux, using Rust and Tauri to produce lightweight, native apps.
 
 Desktopr is free and open source (Apache 2.0). You build it yourself, on your machine or with GitHub Actions, and the resulting installers are yours. There is no account, backend or hosted service.
