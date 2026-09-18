@@ -208,11 +208,23 @@ still unverified.
   `Desktopr`). A local macOS build launched and created the companion window;
   the UI and loading a web app were not checked visually.
 
+- The Apple signing secrets are set in the repository. Notarization first failed
+  with Apple's misleading `403 ... required agreement is missing`: the cause was
+  a stale app-specific password, not an agreement. `APPLE_PASSWORD` now holds a
+  working one.
+- Companion release run 35247666202 (commit `4405603`) created the draft release
+  `companion-v3.0.0` with the Linux, Windows and macOS artifacts. Verified from
+  the release: checksums match, the MSIX is `3.0.0.0` with the Store identity,
+  and the DMG's app is Developer ID signed, notarized and stapled
+  (`spctl: source=Notarized Developer ID`).
+- GitHub renames assets with spaces, which broke `SHA256SUMS` verification for
+  downloaders. The release job now renames artifacts and rewrites the checksum
+  files before publishing; the 3.0.0 checksum assets were replaced by hand.
+
 ## Next
 
-Load the Apple signing secrets (only after the user confirms the
-secret-to-file mapping) and run `companion-release.yml` with version `3.0.0`;
-the user then uploads the MSIX to Partner Center. Phase 13 (secret scan) comes
+Publish the `companion-v3.0.0` draft release and upload the MSIX to Partner
+Center (both are the user's to do). Phase 13 (secret scan) comes
 after, only when requested. The runtime ACL self-test from phase 10 is still
 manual (it needs a real webview). Known remaining items: diagnostics reads stay available to companion windows.
 

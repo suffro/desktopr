@@ -895,6 +895,20 @@ jobs:
         run: |
           set -euo pipefail
 
+          # GitHub replaces spaces in asset names with dots, so rename the files
+          # and the SHA256SUMS entries to what downloads will actually be called.
+          for path in dist/*; do
+            name="$(basename "$path")"
+            renamed="${name// /.}"
+            [ "$name" = "$renamed" ] || mv "$path" "dist/$renamed"
+          done
+          for sums in dist/SHA256SUMS-*.txt; do
+            awk '{hash=$1; $1=""; sub(/^[ ]*/,""); sub(/^\*/,""); gsub(/ /,"."); print hash "  " $0}' \
+              "$sums" > "$sums.tmp"
+            mv "$sums.tmp" "$sums"
+          done
+          (cd dist && if command -v sha256sum >/dev/null; then sha256sum -c SHA256SUMS-*.txt; else shasum -a 256 -c SHA256SUMS-*.txt; fi)
+
           args=(--title "$APP_NAME v$APP_VERSION" --target "$TARGET")
           if [ -n "$NOTES_FILE" ]; then
             test -s "source/$NOTES_FILE" || { echo "::error::Release notes not found: $NOTES_FILE"; exit 1; }
