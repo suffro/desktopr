@@ -85,5 +85,15 @@ names and output step references were cross-checked against `build.yml`. The
 runtime-root arithmetic was checked against both the local and the simulated
 cross-repository action path. `npm run test:config` covers the `bundled` mode,
 including that `frontendDist` resolves to the staged `index.html` from
-`src-tauri/`, and each new guard was observed failing. The refactored workflow
-has not yet run on GitHub: no CI run has exercised the action end to end.
+`src-tauri/`, and each new guard was observed failing.
+
+On GitHub, run 35383004743 built through the action on Linux, Windows and macOS
+with the launch smoke test green on each, and the macOS app was Developer ID
+signed and notarized (`Accepted`), which exercises passing secrets as action
+inputs. Run 35383013081 exercised `frontend=bundled`: the caller's directory was
+staged, `frontendDist` pointed at it and the generated capability granted no
+remote origin.
+
+Not yet verified: a real cross-repository run. Both runs used the local
+`./.github/actions/build` path; the `_actions/<owner>/<repo>/<ref>` layout was
+only simulated locally.

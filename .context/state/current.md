@@ -259,14 +259,27 @@ still unverified.
   output cross-check, runtime-root resolution for both action paths,
   `npm run test:config` (6 new `bundled` scenarios, each guard observed
   failing), `check:standalone`, `check:private-deps` and `docs:build`.
-  **No CI run has exercised the refactored workflow or the action yet.**
+- Run 35383004743 (branch `build-action`, commit `59711df`) passed on all three
+  platforms through the action: Linux 12 min, macOS 10 min, Windows 14 min, with
+  AppImage/deb/rpm, an aarch64 DMG and the NSIS setup, and the 15-second launch
+  smoke test green everywhere. The macOS app was signed with the real Developer
+  ID certificate and notarization finished `Accepted`, so passing secrets as
+  action inputs works.
+- Run 35383013081 exercised `frontend=bundled` with
+  `frontend_dist=src-tauri/standalone`: the action staged the directory,
+  `prod-conf.sh` reported `frontend -> frontend-dist`, the generated
+  `remote.urls` stayed empty and the app launched.
+- Still unverified: the cross-repository path, where another repository uses
+  `suffro/desktopr/.github/actions/build@<ref>`. Only the local `./` path has
+  run on GitHub; the `_actions/<owner>/<repo>/<ref>` layout was checked by
+  simulating the path, not by a real run.
 
 ## Next
 
-Run `build.yml` once on GitHub to confirm the composite-action refactor still
-builds on all three platforms, and run a `frontend_dist` build from a separate
-repository to exercise the cross-repository action path. Then cut the first OSS
-release of the runtime itself (tag `v<version>` through `build.yml` with
+Merge `build-action`, then run a `frontend_dist` build from a separate
+repository to exercise the cross-repository action path and tag the action
+(`v1`) so consumers can pin it. Then cut the first OSS release of the runtime
+itself (tag `v<version>` through `build.yml` with
 `release: true`), and decide whether to archive the source `docs` and
 `companion` repositories. Phase 13 (secret scan) comes
 after, only when requested. The runtime ACL self-test from phase 10 is still
