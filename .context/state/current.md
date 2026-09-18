@@ -242,11 +242,14 @@ still unverified.
   every runtime job after the move. CI run 35348570372 is green on all
   platforms.
 
-- Every per-platform build step moved from `build.yml` into the composite
-  action the action at the repository root; the workflow shrank from 925 to ~450 lines and
-  now only validates inputs, resolves the matrix, calls the action and releases.
-  Other repositories can use the action directly against their own web app (see
-  `decisions/external-build-action.md`).
+- Every per-platform build step moved from `build.yml` into the composite action
+  `action.yml` at the repository root; the workflow shrank from 925 to ~450
+  lines and now only validates inputs, resolves the matrix, calls the action
+  with `uses: ./` and releases. Other repositories use it as
+  `suffro/desktopr@v1` against their own web app (see
+  `decisions/external-build-action.md`). The root is where GitHub Marketplace
+  requires the metadata file, and only one action per repository can be listed;
+  signing is part of this action, not a separate one.
 - `prod-conf.sh` gained the `bundled` frontend mode (`APP_FRONTEND_DIST`), which
   embeds a developer-built web app with no remote origin and the `'self'` CSP.
   `build.yml` exposes it as `frontend: bundled` + `frontend_dist` for a
@@ -269,16 +272,21 @@ still unverified.
   `frontend_dist=src-tauri/standalone`: the action staged the directory,
   `prod-conf.sh` reported `frontend -> frontend-dist`, the generated
   `remote.urls` stayed empty and the app launched.
+- Run 35386270081 (commit `0e454b7`) confirmed the move to the repository root:
+  the action resolved its runtime to the workspace and built and launched a
+  `frontend=bundled` app on Linux. The `v1` tag now points at that commit.
 - Still unverified: the cross-repository path, where another repository uses
-  `suffro/desktopr@<ref>`. Only the local `./` path has
-  run on GitHub; the `_actions/<owner>/<repo>/<ref>` layout was checked by
-  simulating the path, not by a real run.
+  `suffro/desktopr@v1`. Every run so far used the local `./` path; the
+  `_actions/<owner>/<repo>/<ref>` layout was checked by simulating the path,
+  not by a real run.
 
 ## Next
 
-Merge `build-action`, then run a `frontend_dist` build from a separate
-repository to exercise the cross-repository action path and tag the action
-(`v1`) so consumers can pin it. Then cut the first OSS release of the runtime
+Run a `frontend_dist` build from a separate repository to exercise the
+cross-repository action path. Publishing the action in GitHub Marketplace is
+then a manual step in the GitHub UI (a release with the Marketplace box ticked,
+plus 2FA and the Marketplace Developer Agreement); it is optional, since a
+public repository's action already works for everyone. Then cut the first OSS release of the runtime
 itself (tag `v<version>` through `build.yml` with
 `release: true`), and decide whether to archive the source `docs` and
 `companion` repositories. Phase 13 (secret scan) comes
