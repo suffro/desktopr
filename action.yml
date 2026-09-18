@@ -6,7 +6,7 @@
 #
 #   - uses: actions/checkout@v5                  # the caller's own repository
 #   - run: npm ci && npm run build               # the caller's web application
-#   - uses: suffro/desktopr/.github/actions/build@v1
+#   - uses: suffro/desktopr@v1
 #       with:
 #         app_name: My App
 #         app_identifier: com.example.app
@@ -22,6 +22,9 @@
 
 name: Build a Desktopr app
 description: Build a Desktopr desktop app from a web app URL or a locally built web app.
+branding:
+  icon: package
+  color: blue
 
 inputs:
   app_name:
@@ -158,9 +161,11 @@ runs:
       run: |
         set -euo pipefail
 
-        # The action lives at <runtime>/.github/actions/build, both when it is
-        # used from this repository and when GitHub checks it out from another.
-        runtime="$(cd "$ACTION_PATH/../../.." && pwd)"
+        # The action metadata sits at the repository root, so the action path is
+        # the runtime itself: the repository checked out next to the caller's
+        # workspace when another repository uses this action, and the workspace
+        # itself when this repository uses it locally.
+        runtime="$(cd "$ACTION_PATH" && pwd)"
         for required in src-tauri/Cargo.lock package-lock.json scripts/prod-conf.sh; do
           if [ ! -f "$runtime/$required" ]; then
             echo "::error::The Desktopr runtime is incomplete: missing $required in $runtime"

@@ -16,7 +16,7 @@ Both produce the same installers, run the same smoke test and upload the same ar
 
 ## The build action
 
-`suffro/desktopr/.github/actions/build` builds a desktop app from the repository that calls it. You do not clone or vendor Desktopr: GitHub checks the runtime out together with the action.
+`suffro/desktopr` builds a desktop app from the repository that calls it. You do not clone or vendor Desktopr: GitHub checks the runtime out together with the action.
 
 The action builds for the runner it is running on, so a matrix gives you the three platforms:
 
@@ -43,7 +43,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - uses: suffro/desktopr/.github/actions/build@v1
+      - uses: suffro/desktopr@v1
         with:
           app_name: Example
           app_identifier: com.example.app
@@ -116,7 +116,7 @@ Signing is optional and uses only your repository's own secrets. A platform whos
 | `tauri_signing_private_key`, `tauri_signing_private_key_password` | updater artifacts |
 
 ```yaml
-      - uses: suffro/desktopr/.github/actions/build@v1
+      - uses: suffro/desktopr@v1
         with:
           app_name: Example
           frontend_dist: dist

@@ -1,9 +1,9 @@
 # Builds Desktopr for Linux, Windows and macOS on GitHub-hosted runners.
 #
-# The per-platform build lives in the composite action .github/actions/build,
-# which this workflow calls once per runner. A repository that keeps its web
-# application elsewhere can use that action directly instead of this workflow:
-# see .github/actions/build/action.yml and
+# The per-platform build lives in the composite action at the repository root
+# (action.yml), which this workflow calls once per runner. A repository that
+# keeps its web application elsewhere can use that action directly instead of
+# this workflow (`uses: suffro/desktopr@v1`): see action.yml and
 # docs/guide/configuration/github-actions.md.
 #
 # Outputs are GitHub Actions artifacts and, optionally, a GitHub Release.
@@ -377,7 +377,7 @@ jobs:
       # Every build step lives in the composite action, so this workflow and a
       # workflow in someone else's repository build the app the same way.
       - name: Build the app
-        uses: ./.github/actions/build
+        uses: ./
         with:
           app_name: ${{ inputs.app_name }}
           app_identifier: ${{ inputs.app_identifier }}

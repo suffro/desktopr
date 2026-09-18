@@ -15,7 +15,7 @@
    Release from the artifacts. Only this job has `contents: write`.
 
 The steps of the `build` job were later moved into the composite action
-`.github/actions/build`, which the job now calls; see
+the action at the repository root, which the job now calls; see
 `external-build-action.md`. Everything below still describes what that action
 does, and the workflow remains the entry point for this repository.
 

@@ -99,7 +99,7 @@ If your web app lives in its own repository, use the **build action** instead: b
 
 ```yaml
       - run: npm run build
-      - uses: suffro/desktopr/.github/actions/build@v1
+      - uses: suffro/desktopr@v1
         with:
           app_name: Example
           app_identifier: com.example.app

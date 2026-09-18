@@ -2,12 +2,15 @@
 
 ## Decision
 
-The per-platform build lives in the composite action
-`.github/actions/build/action.yml`. `.github/workflows/build.yml` keeps only
-input validation, the platform matrix and the release job, and calls the action
-once per runner with `uses: ./.github/actions/build`. There is one
-implementation of the build, used both inside this repository and by other
-repositories.
+The per-platform build lives in the composite action `action.yml` at the
+repository root. `.github/workflows/build.yml` keeps only input validation, the
+platform matrix and the release job, and calls the action once per runner with
+`uses: ./`. There is one implementation of the build, used both inside this
+repository and by other repositories.
+
+The metadata file sits at the root because GitHub Marketplace only lists an
+action whose `action.yml` is there, and because it shortens the reference to
+`suffro/desktopr@v1`.
 
 A workflow in any repository can build a desktop app from its own web
 application:
@@ -15,17 +18,16 @@ application:
 ```yaml
 - uses: actions/checkout@v5
 - run: npm ci && npm run build
-- uses: suffro/desktopr/.github/actions/build@v1
+- uses: suffro/desktopr@v1
   with:
     app_name: Example
     frontend_dist: dist
 ```
 
 GitHub checks out the whole action repository, so the action carries the
-runtime with it. It resolves the runtime root from `$GITHUB_ACTION_PATH/../../..`,
-which is the repository root both for a local `./.github/actions/build` and for
-a cross-repository `_actions/<owner>/<repo>/<ref>/.github/actions/build`
-checkout. Caller-supplied paths (`frontend_dist`, `icon`) are resolved against
+runtime with it. The runtime root is `$GITHUB_ACTION_PATH` itself: the workspace
+for a local `uses: ./`, and `_actions/<owner>/<repo>/<ref>` for a
+cross-repository checkout. Caller-supplied paths (`frontend_dist`, `icon`) are resolved against
 `$GITHUB_WORKSPACE` instead, and the caller's checkout is never modified.
 
 `scripts/prod-conf.sh` gained the `bundled` frontend mode: with
@@ -94,6 +96,5 @@ inputs. Run 35383013081 exercised `frontend=bundled`: the caller's directory was
 staged, `frontendDist` pointed at it and the generated capability granted no
 remote origin.
 
-Not yet verified: a real cross-repository run. Both runs used the local
-`./.github/actions/build` path; the `_actions/<owner>/<repo>/<ref>` layout was
-only simulated locally.
+Not yet verified: a real cross-repository run. Both runs used the local `./`
+path; the `_actions/<owner>/<repo>/<ref>` layout was only simulated locally.

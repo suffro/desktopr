@@ -243,7 +243,7 @@ still unverified.
   platforms.
 
 - Every per-platform build step moved from `build.yml` into the composite
-  action `.github/actions/build`; the workflow shrank from 925 to ~450 lines and
+  action the action at the repository root; the workflow shrank from 925 to ~450 lines and
   now only validates inputs, resolves the matrix, calls the action and releases.
   Other repositories can use the action directly against their own web app (see
   `decisions/external-build-action.md`).
@@ -270,7 +270,7 @@ still unverified.
   `prod-conf.sh` reported `frontend -> frontend-dist`, the generated
   `remote.urls` stayed empty and the app launched.
 - Still unverified: the cross-repository path, where another repository uses
-  `suffro/desktopr/.github/actions/build@<ref>`. Only the local `./` path has
+  `suffro/desktopr@<ref>`. Only the local `./` path has
   run on GitHub; the `_actions/<owner>/<repo>/<ref>` layout was checked by
   simulating the path, not by a real run.
 
