@@ -148,10 +148,10 @@ const bridgeFeatures = [
 }
 
 .hero-tagline {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 3.2vw, 1.25rem);
   line-height: 1.6;
   color: var(--vp-c-text-2);
-  margin-bottom: 40px;
+  margin-bottom: clamp(28px, 5vw, 40px);
   max-width: 700px;
 }
 
@@ -170,6 +170,17 @@ const bridgeFeatures = [
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
+}
+
+/* On a phone, three wrapped buttons of different widths read as debris; stack them instead. */
+@media (max-width: 480px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    max-width: 320px;
+  }
 }
 
 .btn {
@@ -207,9 +218,9 @@ const bridgeFeatures = [
 /* MAIN FEATURES */
 .main-features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
-  padding: 64px 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: clamp(16px, 3vw, 24px);
+  padding: clamp(40px, 7vw, 64px) 0;
 }
 
 .feature-card {
@@ -247,29 +258,30 @@ const bridgeFeatures = [
 
 /* NATIVE BRIDGE (BENTO GRID) */
 .native-bridge {
-  padding: 64px 0;
+  padding: clamp(40px, 7vw, 64px) 0;
 }
 
 .bridge-header {
   text-align: center;
   max-width: 600px;
-  margin: 0 auto 48px;
+  margin: 0 auto clamp(32px, 6vw, 48px);
 }
 
 .bridge-header h2 {
-  font-size: 2.5rem;
+  font-size: clamp(1.75rem, 5.5vw, 2.5rem);
   font-weight: 700;
   margin-bottom: 16px;
+  line-height: 1.2;
 }
 
 .bridge-header p {
   color: var(--vp-c-text-2);
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 2.8vw, 1.1rem);
 }
 
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -306,30 +318,39 @@ const bridgeFeatures = [
 
 /* CTA SECTION */
 .cta-section {
-  padding: 96px 0;
+  padding: clamp(56px, 10vw, 96px) 0;
   text-align: center;
 }
 
 .cta-content {
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-border);
-  padding: 48px 24px;
-  border-radius: 24px;
+  padding: clamp(32px, 6vw, 48px) clamp(20px, 4vw, 24px);
+  border-radius: clamp(16px, 3vw, 24px);
   max-width: 800px;
   margin: 0 auto;
 }
 
 .cta-content h2 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 5vw, 2rem);
   font-weight: 700;
   margin-bottom: 16px;
+  line-height: 1.2;
 }
 
 .cta-content p {
   color: var(--vp-c-text-2);
-  font-size: 1.1rem;
+  font-size: clamp(1rem, 2.8vw, 1.1rem);
   margin-bottom: 32px;
   max-width: 600px;
   margin-inline: auto;
+}
+
+/* The CTA button is the page's last action; full width on a phone keeps it a comfortable target. */
+@media (max-width: 480px) {
+  .cta-content .btn {
+    display: flex;
+    width: 100%;
+  }
 }
 </style>
