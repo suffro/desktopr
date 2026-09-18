@@ -91,26 +91,31 @@ const bridgeFeatures = [
 .desktopr-home {
   max-width: 1152px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 24px);
 }
 
 /* HERO SECTION */
 .hero-section {
   position: relative;
   text-align: center;
-  padding: 96px 0 64px;
+  padding: clamp(48px, 10vw, 96px) 0 clamp(40px, 7vw, 64px);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/**
+ * The glow is decorative and wider than the text it sits behind, so it is sized relative to the
+ * hero rather than in fixed pixels — a fixed 600px block would reach past a phone viewport and
+ * give the whole page a horizontal scrollbar.
+ */
 .hero-glow {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 400px;
+  width: min(600px, 100%);
+  height: clamp(240px, 50vw, 400px);
   background: radial-gradient(circle, var(--vp-c-brand-1) 0%, transparent 60%);
   filter: blur(100px);
   opacity: 0.15;
@@ -126,12 +131,13 @@ const bridgeFeatures = [
 }
 
 .hero-title {
-  font-size: clamp(3rem, 6vw, 5rem);
+  font-size: clamp(2.25rem, 8vw, 5rem);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--vp-c-text-1);
   margin-bottom: 24px;
+  text-wrap: balance;
 }
 
 .text-gradient {

@@ -43,7 +43,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - uses: suffro/desktopr/.github/actions/build@main
+      - uses: suffro/desktopr/.github/actions/build@v1
         with:
           app_name: Example
           app_identifier: com.example.app
@@ -53,7 +53,7 @@ jobs:
 
 Each job uploads a `desktopr-<platform>` artifact containing the installers and a `SHA256SUMS-<platform>.txt` file.
 
-Pin the action to a tag or commit rather than `@main` once you depend on it.
+`v1` moves forward with every compatible change, so you get fixes without editing your workflow. Pin a commit SHA instead if you want a build that never changes underneath you — the tag carries the Desktopr runtime as well as the action.
 
 ### Bundled app, or remote URL
 
@@ -116,7 +116,7 @@ Signing is optional and uses only your repository's own secrets. A platform whos
 | `tauri_signing_private_key`, `tauri_signing_private_key_password` | updater artifacts |
 
 ```yaml
-      - uses: suffro/desktopr/.github/actions/build@main
+      - uses: suffro/desktopr/.github/actions/build@v1
         with:
           app_name: Example
           frontend_dist: dist
