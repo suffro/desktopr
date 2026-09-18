@@ -106,8 +106,8 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             wasm/target
-          key: ${{ runner.os }}-ci-wasm-${{ hashFiles('wasm/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-ci-wasm-
+          key: ${{ runner.os }}-ci-wasm-${{ github.event.repository.name }}-${{ hashFiles('wasm/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-ci-wasm-${{ github.event.repository.name }}-
 
       - name: Format
         working-directory: wasm
@@ -163,8 +163,10 @@ jobs:
             ~/.cargo/git/db
             src-tauri/target
             wasm/target
-          key: ${{ runner.os }}-ci-cargo-${{ hashFiles('src-tauri/Cargo.lock', 'wasm/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-ci-cargo-
+          # The checkout path is part of the key: Tauri records absolute paths in the
+          # build artifacts, so a cache from another path fails the build.
+          key: ${{ runner.os }}-ci-cargo-${{ github.event.repository.name }}-${{ hashFiles('src-tauri/Cargo.lock', 'wasm/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-ci-cargo-${{ github.event.repository.name }}-
 
       - name: Install npm dependencies
         run: npm ci

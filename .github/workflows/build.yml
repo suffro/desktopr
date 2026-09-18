@@ -398,8 +398,10 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          # The checkout path is part of the key: Tauri records absolute paths in the
+          # build artifacts, so a cache from another path fails the build.
+          key: ${{ runner.os }}-cargo-${{ github.event.repository.name }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-${{ github.event.repository.name }}-
 
       - name: Cache Tauri CLI
         id: tauri_cli_cache
