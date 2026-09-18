@@ -2,7 +2,9 @@
 
 ## Current focus
 
-Desktopr OSS migration phase 12 (companion) completed and verified in CI; the first companion release is pending. The standalone runtime builds and launches on Linux, Windows and
+Desktopr OSS migration phases 12-14 completed: the repository is public as
+`suffro/desktopr`, the companion 3.0.0 release is published and the docs are part
+of the monorepo. The first OSS release of the runtime itself is still pending. The standalone runtime builds and launches on Linux, Windows and
 macOS through `.github/workflows/build.yml`; signing with real certificates is
 still unverified.
 
@@ -221,30 +223,50 @@ still unverified.
   downloaders. The release job now renames artifacts and rewrites the checksum
   files before publishing; the 3.0.0 checksum assets were replaced by hand.
 
+- The `companion-v3.0.0` release is published (9 assets). The DMG's app is
+  Developer ID signed, notarized and stapled; the MSIX is `3.0.0.0` with the
+  Store identity. Notarization first failed with Apple's misleading
+  `403 ... required agreement is missing`, which was a stale app-specific
+  password; `APPLE_PASSWORD` now holds a working one.
+- The repository was renamed and moved to `suffro/desktopr` and made public
+  before the phase 13 scan. The scan then found the revoked `suffro-lib` token
+  in 5 old commits; the history was rewritten with `git filter-repo` and
+  force-pushed (same tree, same 216 commits, new SHAs), with a backup in
+  `~/desktopr-history-backup-20260918-0344.git`.
+- Phase 14: the documentation was absorbed into `docs/` as the `@desktopr/docs`
+  workspace and rewritten for the open-source project (see
+  `decisions/documentation-site.md`). `npm run docs:build` runs in CI and fails
+  on dead links. The site is deployed to Cloudflare by the user.
+- Cargo cache keys now include the repository name: Tauri writes absolute paths
+  into its generated build artifacts, so caches saved as `tauri-skeleton` broke
+  every runtime job after the move. CI run 35348570372 is green on all
+  platforms.
+
 ## Next
 
-Publish the `companion-v3.0.0` draft release and upload the MSIX to Partner
-Center (both are the user's to do). Phase 13 (secret scan) comes
+Cut the first OSS release of the runtime itself (tag `v<version>` through
+`build.yml` with `release: true`), and decide whether to archive the source
+`docs` and `companion` repositories. Phase 13 (secret scan) comes
 after, only when requested. The runtime ACL self-test from phase 10 is still
 manual (it needs a real webview). Known remaining items: diagnostics reads stay available to companion windows.
 
 ## Blockers
 
-- The separate `project-globals` repository contains a credential in current
-  manifest/lockfile data. It must be revoked/rotated and scrubbed in that source
-  repository and its history before that repository can be shared. The value
-  was never printed or copied.
+- The `suffro-lib` credential was revoked by the user. It still exists in the
+  history of the private `project-globals` and `companion` repositories, which
+  must stay private or be scrubbed before sharing.
 - Real-certificate signing, notarization, the updater build and the GitHub
   Release job have not run; they need developer secrets or an explicit release.
   Local test launches of GUI apps require running outside the command sandbox.
 - `ci.yml` runs on every push to `main` and pull request (Markdown and
   `.context/` changes are skipped), including Windows and macOS runners.
-- Running `build.yml` on this private repository consumes GitHub Actions minutes
-  (macOS and Windows runners are billed at higher multipliers).
+- `build.yml` and `ci.yml` consume GitHub Actions minutes; public repositories
+  get free minutes, but macOS and Windows runners remain the slow part.
 - The source `companion` repository also contains the `suffro-lib` credential
   in its manifest (and likely lockfile and history). It was not copied; the
   credential must be revoked.
 - `SECURITY.md` points reporters to GitHub private vulnerability reporting,
-  which must be enabled in the repository settings before it is made public.
+  which must be enabled in the repository settings now that the repository is
+  public.
 - `cargo check` requires `npm run ts:compile:bridge` first because the generated
   bridge bundle is intentionally ignored by Git.

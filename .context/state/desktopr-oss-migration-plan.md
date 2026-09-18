@@ -578,15 +578,24 @@ La prima release sarà la 3.0.0 (lo Store è a 2.3.0.0) dopo il caricamento dei 
 
 Prima di rendere pubblico:
 
-- [ ] cercare PAT/token;
-- [ ] cercare URL Git credentialed;
-- [ ] cercare riferimenti a `suffro-lib`;
-- [ ] cercare repository private;
-- [ ] cercare endpoint Desktopr/Bubbledesk morti;
-- [ ] verificare lockfile;
-- [ ] verificare history della nuova superficie pubblica.
+- [x] cercare PAT/token;
+- [x] cercare URL Git credentialed;
+- [x] cercare riferimenti a `suffro-lib`;
+- [x] cercare repository private;
+- [x] cercare endpoint Desktopr/Bubbledesk morti;
+- [x] verificare lockfile;
+- [x] verificare history della nuova superficie pubblica.
 
 Preferibile mantenere il nuovo monorepo con history pulita/sanitizzata se la vecchia history contiene credenziali.
+
+**Stato:** completata, ma **dopo** che la repo era già pubblica. La history conteneva il token
+`suffro-lib` in 5 commit (`frontend/package.json`, lockfile e configurazioni, dal 2025-08-26 al
+2026-04-24). Il token è stato revocato dall'utente, la history riscritta con `git filter-repo`
+(unico valore sostituito con `REDACTED-REVOKED-TOKEN`, stesso albero e stessi 216 commit) e
+forzata su tutti i branch e tag. Backup della history precedente in
+`~/desktopr-history-backup-20260918-0344.git`. Verificato su un clone nuovo dal remoto: zero token,
+nemmeno nei ref delle PR. I vecchi oggetti possono restare raggiungibili su GitHub per SHA finché
+non fa pulizia; serve il supporto GitHub per forzarla.
 
 ---
 
@@ -594,12 +603,21 @@ Preferibile mantenere il nuovo monorepo con history pulita/sanitizzata se la vec
 
 Solo alla fine:
 
-- [ ] rinominare `tauri-skeleton` in `desktopr`;
-- [ ] aggiornare package metadata;
-- [ ] aggiornare badge/link;
-- [ ] collegare le docs separate;
-- [ ] rendere pubblico;
-- [ ] creare prima release OSS.
+- [x] rinominare `tauri-skeleton` in `desktopr` (spostata anche l'owner: `suffro/desktopr`);
+- [x] aggiornare package metadata;
+- [x] aggiornare badge/link;
+- [x] collegare le docs separate (assorbite in `docs/`, non più separate);
+- [x] rendere pubblico;
+- [ ] creare prima release OSS del runtime (pubblicata solo `companion-v3.0.0`).
+
+**Stato:** quasi completata. La repo è pubblica come `suffro/desktopr`. Le docs sono state assorbite
+in `docs/` e riscritte per il progetto open source: rimosse le pagine dei servizi (prezzi, crediti,
+Edge, terms, privacy), il tracker ShareThis, i componenti YouTube, il video in home e i badge; le
+pagine su avvio, architettura, companion, firma e configurazione descrivono il workflow aperto e i
+secret del repository. `npm run docs:build` è nella CI e fallisce sui link morti. Il sito viene
+caricato su Cloudflare dall'utente. Le chiavi di cache Cargo ora includono il nome della repo,
+perché Tauri scrive percorsi assoluti negli artefatti e la cache di `tauri-skeleton` rompeva la
+build dopo lo spostamento. Manca solo la prima release OSS del runtime.
 
 ## Gate finale
 

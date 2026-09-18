@@ -2,9 +2,9 @@
 
 ## Overview
 
-`tauri-skeleton` is the target Desktopr monorepo. The runtime stays at the
-repository root during the migration to avoid a broad move before a standalone
-build is established. The repository root is also the npm workspace root.
+`suffro/desktopr` (formerly `Bubbledesk/tauri-skeleton`) is the public Desktopr
+monorepo. The runtime stays at the repository root, which is also the npm
+workspace root (`desktopr-monorepo`).
 
 ## Major components
 
