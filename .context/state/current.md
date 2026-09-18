@@ -242,11 +242,33 @@ still unverified.
   every runtime job after the move. CI run 35348570372 is green on all
   platforms.
 
+- Every per-platform build step moved from `build.yml` into the composite
+  action `.github/actions/build`; the workflow shrank from 925 to ~450 lines and
+  now only validates inputs, resolves the matrix, calls the action and releases.
+  Other repositories can use the action directly against their own web app (see
+  `decisions/external-build-action.md`).
+- `prod-conf.sh` gained the `bundled` frontend mode (`APP_FRONTEND_DIST`), which
+  embeds a developer-built web app with no remote origin and the `'self'` CSP.
+  `build.yml` exposes it as `frontend: bundled` + `frontend_dist` for a
+  directory already present in the checkout.
+- The Cargo cache key now includes a hash of the runtime checkout path, which
+  also covers the action being checked out under `_actions/<owner>/<repo>/<ref>`.
+- Verified locally: `actionlint` (no new finding; the pre-existing
+  `workflow_dispatch` input-count warning is unchanged), `shellcheck` on the
+  action's bash steps and on `prod-conf.sh`, the action/workflow input and
+  output cross-check, runtime-root resolution for both action paths,
+  `npm run test:config` (6 new `bundled` scenarios, each guard observed
+  failing), `check:standalone`, `check:private-deps` and `docs:build`.
+  **No CI run has exercised the refactored workflow or the action yet.**
+
 ## Next
 
-Cut the first OSS release of the runtime itself (tag `v<version>` through
-`build.yml` with `release: true`), and decide whether to archive the source
-`docs` and `companion` repositories. Phase 13 (secret scan) comes
+Run `build.yml` once on GitHub to confirm the composite-action refactor still
+builds on all three platforms, and run a `frontend_dist` build from a separate
+repository to exercise the cross-repository action path. Then cut the first OSS
+release of the runtime itself (tag `v<version>` through `build.yml` with
+`release: true`), and decide whether to archive the source `docs` and
+`companion` repositories. Phase 13 (secret scan) comes
 after, only when requested. The runtime ACL self-test from phase 10 is still
 manual (it needs a real webview). Known remaining items: diagnostics reads stay available to companion windows.
 

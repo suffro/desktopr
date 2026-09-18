@@ -1,4 +1,6 @@
 # Build output
+# Web application staged by .github/actions/build for frontend=bundled.
+frontend-dist/
 src-tauri/target/
 wasm/target/
 wasm/**/dist/

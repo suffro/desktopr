@@ -44,4 +44,9 @@ cd src-tauri && cargo check --locked
 
 ## Where your web app fits
 
-Your web application is **not** part of this repository. You point Desktopr at it with `APP_URL`, and install the [`desktopr` SDK](/guide/bridge/overview) in it to call native features. Desktopr can also ship a bundled local page instead, which is what the default configuration and the Companion app do.
+Your web application is **not** part of this repository. Install the [`desktopr` SDK](/guide/bridge/overview) in it to call native features, then choose how the app reaches it:
+
+- **as a URL**, with `APP_URL` — the app loads your site, and only that origin is granted the bridge;
+- **embedded**, with `APP_FRONTEND=bundled` and `APP_FRONTEND_DIST` pointing at your build output — the app runs offline from its own files. In CI the [build action](/guide/configuration/github-actions) builds your app in its own repository and hands the directory over.
+
+With neither, Desktopr ships the bundled local page, which is what the default configuration and the Companion app do.

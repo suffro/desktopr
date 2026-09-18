@@ -16,7 +16,8 @@ Desktopr apps are configured with environment variables read by `scripts/prod-co
 | `APP_IDENTIFIER` | `app_identifier` | `app.desktopr.app` | Bundle identifier in reverse-domain form, e.g. `com.example.app`. |
 | `MAIN_WINDOW_TITLE` | `app_name` | `Desktopr` | Product name and main window title. |
 | `DEEPLINK_SCHEME` | `deeplink_scheme` | *(empty)* | Custom protocol scheme, e.g. `example` for `example://…`. |
-| `APP_FRONTEND` | `frontend` | `standalone` | `standalone` bundles the local page (or loads `APP_URL`); `companion` bundles the [Companion](/guide/companion) app. |
+| `APP_FRONTEND` | `frontend` | `standalone` | `standalone` bundles the local page (or loads `APP_URL`); `bundled` embeds your own built web app; `companion` bundles the [Companion](/guide/companion) app. |
+| `APP_FRONTEND_DIST` | `frontend_dist` | *(empty)* | With `bundled`: directory of the built web app, relative to the repository root. Must contain `index.html`. |
 
 Only the origin of `APP_URL` and its subdomains are granted access to the native bridge. Do not point `APP_URL` at a domain whose subdomains third parties control.
 

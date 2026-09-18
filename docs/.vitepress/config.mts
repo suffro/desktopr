@@ -277,6 +277,7 @@ export default defineConfig({
           { text: "Project Structure", link: "/guide/configuration/project-structure" },
           { text: "App Settings", link: "/guide/configuration/app-settings" },
           { text: "Tauri Config", link: "/guide/configuration/tauri-config" },
+          { text: "GitHub Actions", link: "/guide/configuration/github-actions" },
           { text: "Distribution", link: "/guide/configuration/distribution" },
         ],
       },

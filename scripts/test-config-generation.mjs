@@ -2,19 +2,20 @@
 // checks the generated Tauri configuration, capability and constants files.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 let failures = 0;
 
-function generate(script, environment = {}) {
+function generate(script, environment = {}, prepare) {
   const workdir = mkdtempSync(join(tmpdir(), "desktopr-conf-"));
   cpSync(join(root, "scripts"), join(workdir, "scripts"), { recursive: true });
   cpSync(join(root, "conf-templates"), join(workdir, "conf-templates"), { recursive: true });
   mkdirSync(join(workdir, "src-tauri/capabilities"), { recursive: true });
   mkdirSync(join(workdir, "src-ts"), { recursive: true });
+  prepare?.(workdir);
 
   // Start from a minimal environment so developer shell variables cannot leak in.
   const result = spawnSync("bash", [`scripts/${script}`], {
@@ -27,6 +28,8 @@ function generate(script, environment = {}) {
   return {
     status: result.status,
     output: `${result.stdout}${result.stderr}`,
+    // Tauri resolves frontendDist from the directory holding tauri.conf.json.
+    resolvedFrontend: (entry) => resolve(workdir, "src-tauri", json("src-tauri/tauri.conf.json").build.frontendDist, entry),
     tauri: () => json("src-tauri/tauri.conf.json"),
     capability: () => json("src-tauri/capabilities/remote.json"),
     constants: () => json("src-ts/bridge.constants.json"),
@@ -36,8 +39,8 @@ function generate(script, environment = {}) {
   };
 }
 
-function scenario(name, script, environment, check) {
-  const run = generate(script, environment);
+function scenario(name, script, environment, check, prepare) {
+  const run = generate(script, environment, prepare);
   try {
     check(run);
     console.log(`ok - ${name}`);
@@ -123,6 +126,82 @@ scenario(
   "companion frontend rejects APP_URL",
   "prod-conf.sh",
   { APP_FRONTEND: "companion", APP_URL: "https://app.example.com" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+);
+
+// Stages a built web application the way the build action copies it into the
+// runtime checkout.
+function withFrontendDist(directory, files = { "index.html": "<!doctype html><title>app</title>" }) {
+  return (workdir) => {
+    mkdirSync(join(workdir, directory), { recursive: true });
+    for (const [name, content] of Object.entries(files)) {
+      writeFileSync(join(workdir, directory, name), content);
+    }
+  };
+}
+
+scenario(
+  "bundled frontend serves the developer's own build",
+  "prod-conf.sh",
+  { APP_FRONTEND: "bundled", APP_FRONTEND_DIST: "frontend-dist" },
+  (run) => {
+    assertSucceeded(run);
+    const tauri = run.tauri();
+    assert.equal(tauri.build.frontendDist, "../frontend-dist");
+    assert.ok(
+      existsSync(run.resolvedFrontend("index.html")),
+      "frontendDist must resolve to the staged directory from src-tauri/",
+    );
+    // Local content is served by the app itself: no remote origin is granted.
+    const capability = run.capability();
+    assertMainOnly(capability);
+    assert.equal(capability.remote, undefined);
+    assert.match(tauri.app.security.csp, /^default-src 'self';/u);
+    assert.equal(run.constants().appUrl, "");
+    assert.match(run.windowEnv(), /^MAIN_WINDOW_URL=$/mu);
+  },
+  withFrontendDist("frontend-dist"),
+);
+
+scenario(
+  "bundled frontend rejects APP_URL",
+  "prod-conf.sh",
+  { APP_FRONTEND: "bundled", APP_FRONTEND_DIST: "frontend-dist", APP_URL: "https://app.example.com" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+  withFrontendDist("frontend-dist"),
+);
+
+scenario("bundled frontend requires a directory", "prod-conf.sh", { APP_FRONTEND: "bundled" }, (run) => {
+  assert.notEqual(run.status, 0);
+});
+
+scenario(
+  "bundled frontend rejects a missing directory",
+  "prod-conf.sh",
+  { APP_FRONTEND: "bundled", APP_FRONTEND_DIST: "frontend-dist" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+);
+
+scenario(
+  "bundled frontend rejects a directory without index.html",
+  "prod-conf.sh",
+  { APP_FRONTEND: "bundled", APP_FRONTEND_DIST: "frontend-dist" },
+  (run) => {
+    assert.notEqual(run.status, 0);
+  },
+  withFrontendDist("frontend-dist", { "app.js": "console.log(1);" }),
+);
+
+scenario(
+  "bundled frontend rejects a path escaping the checkout",
+  "prod-conf.sh",
+  { APP_FRONTEND: "bundled", APP_FRONTEND_DIST: "../elsewhere" },
   (run) => {
     assert.notEqual(run.status, 0);
   },

@@ -1,0 +1,910 @@
+# Builds a Desktopr desktop application for the runner's own platform.
+#
+# The action carries the Desktopr runtime with it: GitHub checks out the whole
+# repository the action comes from, so a workflow in any repository can build a
+# desktop app without vendoring or checking out this project.
+#
+#   - uses: actions/checkout@v5                  # the caller's own repository
+#   - run: npm ci && npm run build               # the caller's web application
+#   - uses: suffro/desktopr/.github/actions/build@v1
+#       with:
+#         app_name: My App
+#         app_identifier: com.example.app
+#         frontend_dist: dist                    # or: app_url: https://app.example.com
+#
+# Paths given by the caller (frontend_dist, icon) are resolved against the
+# caller's workspace. Everything else happens inside the runtime the action
+# ships with, which is never modified in the caller's checkout.
+#
+# Secrets are inputs, because composite actions cannot read the secrets context.
+# A platform whose signing inputs are absent is built unsigned; macOS builds are
+# then ad-hoc signed. Partial sets fail early.
+
+name: Build a Desktopr app
+description: Build a Desktopr desktop app from a web app URL or a locally built web app.
+
+inputs:
+  app_name:
+    description: "Product name and main window title"
+    default: Desktopr
+  app_identifier:
+    description: "Bundle identifier (reverse domain)"
+    default: app.desktopr.app
+  app_version:
+    description: "App version (X.Y.Z). Empty uses the runtime default."
+    default: ""
+  frontend:
+    description: "auto, standalone, bundled or companion. auto picks bundled when frontend_dist is set."
+    default: auto
+  frontend_dist:
+    description: "Directory of the caller's built web application, relative to the workspace"
+    default: ""
+  app_url:
+    description: "External web app URL. Empty loads the bundled page."
+    default: ""
+  icon:
+    description: "Square source icon (PNG or SVG), relative to the workspace. Empty uses the runtime icon."
+    default: ""
+  deeplink_scheme:
+    description: "Deep link scheme. Empty keeps the runtime default."
+    default: ""
+  update_endpoint:
+    description: "Updater HTTPS endpoint. Empty disables the updater."
+    default: ""
+  updater_public_key:
+    description: "Updater public key. Required with update_endpoint."
+    default: ""
+  msix_identity_name:
+    description: "MSIX: Package/Identity/Name from Partner Center. Empty skips MSIX."
+    default: ""
+  msix_identity_publisher:
+    description: "MSIX: Package/Identity/Publisher (CN=...)"
+    default: ""
+  msix_publisher_display_name:
+    description: "MSIX: Publisher display name"
+    default: ""
+  msix_display_name:
+    description: "MSIX: Package display name reserved for the listing"
+    default: ""
+  msix_background_color:
+    description: "MSIX: Tile background color"
+    default: "#ffffff"
+  msix_short_name:
+    description: "MSIX: Optional tile short name"
+    default: ""
+  smoke_test:
+    description: "Launch the built app briefly to prove it starts"
+    default: "true"
+  upload_artifact:
+    description: "Upload the packages as a GitHub Actions artifact"
+    default: "true"
+  artifact_name:
+    description: "Artifact name. Empty uses desktopr-<platform>."
+    default: ""
+  node_version:
+    description: "Node.js version used to build the bridge and frontends"
+    default: "22"
+  tauri_cli_version:
+    description: "Tauri CLI version"
+    default: "2.11.1"
+  windows_certificate:
+    description: "Base64 .pfx for Windows signing"
+    default: ""
+  windows_certificate_password:
+    description: "Password of the Windows .pfx"
+    default: ""
+  apple_certificate:
+    description: "Base64 .p12 for macOS signing"
+    default: ""
+  apple_certificate_password:
+    description: "Password of the macOS .p12"
+    default: ""
+  apple_signing_identity:
+    description: "macOS signing identity (Developer ID Application: ...)"
+    default: ""
+  apple_id:
+    description: "Apple ID used for notarization"
+    default: ""
+  apple_password:
+    description: "App-specific password used for notarization"
+    default: ""
+  apple_team_id:
+    description: "Apple team ID used for notarization"
+    default: ""
+  tauri_signing_private_key:
+    description: "Updater signing private key"
+    default: ""
+  tauri_signing_private_key_password:
+    description: "Password of the updater signing private key"
+    default: ""
+
+outputs:
+  platform:
+    description: "linux, windows or macos"
+    value: ${{ steps.context.outputs.platform }}
+  dist_dir:
+    description: "Directory holding the built packages and their SHA256SUMS file"
+    value: ${{ steps.collect.outputs.dist_dir }}
+  artifact_name:
+    description: "Name of the uploaded artifact, when upload_artifact is enabled"
+    value: ${{ steps.context.outputs.artifact_name }}
+  updater:
+    description: "Whether updater artifacts were produced"
+    value: ${{ steps.context.outputs.updater }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve build context
+      id: context
+      shell: bash
+      env:
+        APP_VERSION: ${{ inputs.app_version }}
+        APP_URL: ${{ inputs.app_url }}
+        FRONTEND: ${{ inputs.frontend }}
+        FRONTEND_DIST: ${{ inputs.frontend_dist }}
+        ICON: ${{ inputs.icon }}
+        UPDATE_ENDPOINT: ${{ inputs.update_endpoint }}
+        UPDATER_PUBLIC_KEY: ${{ inputs.updater_public_key }}
+        UPDATER_PRIVATE_KEY: ${{ inputs.tauri_signing_private_key }}
+        MSIX_IDENTITY_NAME: ${{ inputs.msix_identity_name }}
+        MSIX_IDENTITY_PUBLISHER: ${{ inputs.msix_identity_publisher }}
+        MSIX_PUBLISHER_DISPLAY_NAME: ${{ inputs.msix_publisher_display_name }}
+        MSIX_DISPLAY_NAME: ${{ inputs.msix_display_name }}
+        MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color }}
+        ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        SMOKE_TEST: ${{ inputs.smoke_test }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+
+        # The action lives at <runtime>/.github/actions/build, both when it is
+        # used from this repository and when GitHub checks it out from another.
+        runtime="$(cd "$ACTION_PATH/../../.." && pwd)"
+        for required in src-tauri/Cargo.lock package-lock.json scripts/prod-conf.sh; do
+          if [ ! -f "$runtime/$required" ]; then
+            echo "::error::The Desktopr runtime is incomplete: missing $required in $runtime"
+            exit 1
+          fi
+        done
+
+        case "$RUNNER_OS" in
+          Linux)   platform=linux ;;
+          Windows) platform=windows ;;
+          macOS)   platform=macos ;;
+          *) echo "::error::Unsupported runner: $RUNNER_OS"; exit 1 ;;
+        esac
+
+        # Actions written in JavaScript need native paths; bash steps need POSIX ones.
+        if [ "$platform" = "windows" ]; then
+          runtime_native="$(cygpath -w "$runtime")"
+        else
+          runtime_native="$runtime"
+        fi
+
+        hash_file() {
+          if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | cut -d' ' -f1
+        }
+        hash_text() {
+          if command -v sha256sum >/dev/null; then printf '%s' "$1" | sha256sum; else printf '%s' "$1" | shasum -a 256; fi | cut -d' ' -f1
+        }
+
+        # Tauri records absolute paths in its build artifacts, so a cache saved
+        # from a different checkout path cannot be reused.
+        path_key="$(hash_text "$runtime" | cut -c1-16)"
+
+        frontend="$FRONTEND"
+        if [ "$frontend" = "auto" ]; then
+          if [ -n "$FRONTEND_DIST" ]; then frontend=bundled; else frontend=standalone; fi
+        fi
+
+        case "$frontend" in
+          standalone)
+            if [ -n "$FRONTEND_DIST" ]; then
+              echo "::error::frontend_dist requires frontend=bundled"
+              exit 1
+            fi
+            ;;
+          bundled)
+            if [ -z "$FRONTEND_DIST" ]; then
+              echo "::error::frontend=bundled requires frontend_dist"
+              exit 1
+            fi
+            if [ -n "$APP_URL" ]; then
+              echo "::error::frontend=bundled serves its own files and cannot be combined with app_url"
+              exit 1
+            fi
+            ;;
+          companion)
+            if [ -n "$APP_URL" ] || [ -n "$FRONTEND_DIST" ]; then
+              echo "::error::frontend=companion bundles its own UI and cannot be combined with app_url or frontend_dist"
+              exit 1
+            fi
+            ;;
+          *)
+            echo "::error::frontend must be auto, standalone, bundled or companion"
+            exit 1
+            ;;
+        esac
+
+        if [ -n "$APP_URL" ] && ! printf '%s' "$APP_URL" | grep -Eq '^https?://[^/]+'; then
+          echo "::error::app_url must be an absolute HTTP(S) URL"
+          exit 1
+        fi
+
+        if [ -n "$APP_VERSION" ] && ! printf '%s' "$APP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$'; then
+          echo "::error::app_version must be X.Y.Z (optionally with a pre-release or build suffix)"
+          exit 1
+        fi
+
+        msix_fields=0
+        for v in MSIX_IDENTITY_NAME MSIX_IDENTITY_PUBLISHER MSIX_PUBLISHER_DISPLAY_NAME MSIX_DISPLAY_NAME; do
+          [ -n "${!v}" ] && msix_fields=$((msix_fields + 1))
+        done
+        if [ "$msix_fields" -ne 0 ] && [ "$msix_fields" -ne 4 ]; then
+          echo "::error::MSIX requires msix_identity_name, msix_identity_publisher, msix_publisher_display_name and msix_display_name"
+          exit 1
+        fi
+        msix=false
+        if [ "$msix_fields" -eq 4 ]; then
+          msix=true
+          if [ -n "$APP_VERSION" ] && ! printf '%s' "$APP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::MSIX requires a numeric X.Y.Z app_version"
+            exit 1
+          fi
+          if ! printf '%s' "$MSIX_IDENTITY_PUBLISHER" | grep -Eq '^CN='; then
+            echo "::error::msix_identity_publisher must be a distinguished name starting with CN="
+            exit 1
+          fi
+          if [ -n "$MSIX_BACKGROUND_COLOR" ] && ! printf '%s' "$MSIX_BACKGROUND_COLOR" | grep -Eq '^(#[0-9A-Fa-f]{6}|transparent)$'; then
+            echo "::error::msix_background_color must be #RRGGBB or transparent"
+            exit 1
+          fi
+        fi
+
+        updater=false
+        if [ -n "$UPDATE_ENDPOINT" ] || [ -n "$UPDATER_PUBLIC_KEY" ]; then
+          if [ -z "$UPDATE_ENDPOINT" ] || [ -z "$UPDATER_PUBLIC_KEY" ]; then
+            echo "::error::The updater requires both update_endpoint and updater_public_key"
+            exit 1
+          fi
+          if [ -z "$UPDATER_PRIVATE_KEY" ]; then
+            echo "::error::The updater requires tauri_signing_private_key"
+            exit 1
+          fi
+          updater=true
+        fi
+
+        # Caller-supplied paths are relative to the caller's checkout.
+        icon="$runtime/src-tauri/icons/icon.png"
+        if [ -n "$ICON" ]; then
+          case "$ICON" in
+            /*) icon="$ICON" ;;
+            *) icon="$GITHUB_WORKSPACE/$ICON" ;;
+          esac
+        fi
+        if [ ! -s "$icon" ]; then
+          echo "::error::Icon not found: $icon"
+          exit 1
+        fi
+
+        artifact="$ARTIFACT_NAME"
+        [ -n "$artifact" ] || artifact="desktopr-$platform"
+
+        smoke=false
+        if [ "$SMOKE_TEST" = "true" ]; then smoke=true; fi
+
+        {
+          echo "runtime=$runtime"
+          echo "runtime_native=$runtime_native"
+          echo "platform=$platform"
+          echo "frontend=$frontend"
+          echo "updater=$updater"
+          echo "msix=$msix"
+          echo "smoke=$smoke"
+          echo "icon=$icon"
+          echo "artifact_name=$artifact"
+          echo "path_key=$path_key"
+          echo "cargo_lock_hash=$(hash_file "$runtime/src-tauri/Cargo.lock")"
+          echo "npm_lock_hash=$(hash_file "$runtime/package-lock.json")"
+        } >> "$GITHUB_OUTPUT"
+
+        {
+          echo "DESKTOPR_RUNTIME=$runtime"
+          echo "DESKTOPR_RUNTIME_NATIVE=$runtime_native"
+          echo "DESKTOPR_PLATFORM=$platform"
+          echo "DESKTOPR_UPDATER=$updater"
+        } >> "$GITHUB_ENV"
+
+        echo "Runtime:  $runtime"
+        echo "Platform: $platform"
+        echo "Frontend: $frontend"
+        echo "Updater:  $updater"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Resolve the npm cache directory
+      id: npm_cache
+      shell: bash
+      run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache npm downloads
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      with:
+        path: ${{ steps.npm_cache.outputs.dir }}
+        key: ${{ runner.os }}-npm-${{ steps.context.outputs.npm_lock_hash }}
+        restore-keys: ${{ runner.os }}-npm-
+
+    - name: Setup Rust
+      shell: bash
+      run: |
+        rustup toolchain install stable --profile minimal --no-self-update
+        rustup default stable
+        rustc --version
+
+    - name: Install Linux system dependencies
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+          build-essential file jq libayatana-appindicator3-dev libgtk-3-dev \
+          librsvg2-dev libssl-dev libwebkit2gtk-4.1-dev libxdo-dev pkg-config
+
+    # The Tauri bundler downloads its AppImage tools from mutable release tags and
+    # branch heads when they are missing from its cache. Provide pinned,
+    # checksum-verified copies instead so Linux builds are reproducible.
+    - name: Provision pinned AppImage tools
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        tools="${XDG_CACHE_HOME:-$HOME/.cache}/tauri"
+        mkdir -p "$tools"
+
+        while read -r sha256 name url; do
+          curl -fsSL --retry 3 --retry-delay 5 -o "$tools/$name" "$url"
+          echo "$sha256  $tools/$name" | sha256sum -c -
+          chmod +x "$tools/$name"
+        done <<'EOF'
+        f30140a43a0a59e46db21bdefdf749b9e9f2c6946e92afabbacf98b8ae73fb4f AppRun-x86_64 https://github.com/tauri-apps/binary-releases/releases/download/apprun-old/AppRun-x86_64
+        e762bea85c8eb0d4b3508d46e5c1f037f717d0f9303ae3b4aafc8b04991fa1ef linuxdeploy-x86_64.AppImage https://github.com/tauri-apps/binary-releases/releases/download/linuxdeploy/linuxdeploy-x86_64.AppImage
+        cb379f9b0733e9ad9f8bd78f8c2fa038aef2478523bb7d4c8e64ff6a1ea3501a linuxdeploy-plugin-gtk.sh https://raw.githubusercontent.com/tauri-apps/linuxdeploy-plugin-gtk/b5eb8d05b4c0ed40107fe2158c5d8527f94568ef/linuxdeploy-plugin-gtk.sh
+        c107b49d84edbffc6ab226ed1007e0626a4f7aa2c3a36b7782bef62351d49e94 linuxdeploy-plugin-gstreamer.sh https://raw.githubusercontent.com/tauri-apps/linuxdeploy-plugin-gstreamer/2a2e67491c32995a3f279ad0ecbe77abd512b42a/linuxdeploy-plugin-gstreamer.sh
+        992d502a248e14ab185448ddf6f6e7d25558cb84d4623c354c3af350c25fccb3 linuxdeploy-plugin-appimage.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-appimage-x86_64.AppImage
+        EOF
+
+    - name: Cache Cargo registry and target
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          ${{ steps.context.outputs.runtime_native }}/src-tauri/target
+        key: ${{ runner.os }}-cargo-${{ steps.context.outputs.path_key }}-${{ steps.context.outputs.cargo_lock_hash }}
+        restore-keys: ${{ runner.os }}-cargo-${{ steps.context.outputs.path_key }}-
+
+    - name: Cache Tauri CLI
+      id: tauri_cli_cache
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      with:
+        path: |
+          ~/.cargo/bin/cargo-tauri
+          ~/.cargo/bin/cargo-tauri.exe
+        key: ${{ runner.os }}-tauri-cli-${{ inputs.tauri_cli_version }}
+
+    - name: Install Tauri CLI
+      if: steps.tauri_cli_cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install tauri-cli --version "${{ inputs.tauri_cli_version }}" --locked
+
+    - name: Install npm dependencies
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      run: npm ci --no-audit --fund=false
+
+    - name: Build companion frontend
+      if: steps.context.outputs.frontend == 'companion'
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      run: npm run companion:build
+
+    # The caller's build output is copied into the runtime instead of being
+    # referenced in place: Tauri resolves frontendDist from its configuration
+    # directory, and the caller's workspace is not under it.
+    - name: Stage the bundled web application
+      if: steps.context.outputs.frontend == 'bundled'
+      shell: bash
+      env:
+        FRONTEND_DIST: ${{ inputs.frontend_dist }}
+        RUNTIME: ${{ steps.context.outputs.runtime }}
+      run: |
+        set -euo pipefail
+
+        case "$FRONTEND_DIST" in
+          /*) source="$FRONTEND_DIST" ;;
+          *) source="$GITHUB_WORKSPACE/$FRONTEND_DIST" ;;
+        esac
+
+        if [ ! -d "$source" ]; then
+          echo "::error::frontend_dist is not a directory: $source"
+          echo "Did the web application build run before this action?"
+          exit 1
+        fi
+        if [ ! -s "$source/index.html" ]; then
+          echo "::error::frontend_dist must contain a non-empty index.html: $source/index.html"
+          exit 1
+        fi
+
+        destination="$RUNTIME/frontend-dist"
+        rm -rf "$destination"
+        mkdir -p "$destination"
+        cp -R "$source/." "$destination/"
+
+        files="$(find "$destination" -type f | wc -l | tr -d ' ')"
+        echo "Staged $files file(s) from $source"
+
+    - name: Generate icons
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      env:
+        ICON_SOURCE: ${{ steps.context.outputs.icon }}
+      run: |
+        set -euo pipefail
+
+        out="$RUNNER_TEMP/icons"
+        (cd src-tauri && cargo tauri icon "$ICON_SOURCE" --output "$out")
+        for icon in icon.png icon.icns icon.ico; do
+          test -s "$out/$icon" || { echo "::error::Icon generation did not produce $icon"; exit 1; }
+          cp "$out/$icon" "src-tauri/icons/$icon"
+        done
+
+    - name: Configure production build
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      env:
+        APP_NAME: ${{ inputs.app_name }}
+        APP_IDENTIFIER: ${{ inputs.app_identifier }}
+        APP_VERSION_INPUT: ${{ inputs.app_version }}
+        APP_URL: ${{ inputs.app_url }}
+        APP_FRONTEND: ${{ steps.context.outputs.frontend }}
+        DEEPLINK_SCHEME: ${{ inputs.deeplink_scheme }}
+        UPDATER: ${{ steps.context.outputs.updater }}
+        UPDATE_ENDPOINT_INPUT: ${{ inputs.update_endpoint }}
+        UPDATER_PUBLIC_KEY: ${{ inputs.updater_public_key }}
+      run: |
+        set -euo pipefail
+
+        export MAIN_WINDOW_TITLE="$APP_NAME"
+        export APP_IDENTIFIER APP_URL APP_FRONTEND DEEPLINK_SCHEME
+        if [ "$APP_FRONTEND" = "bundled" ]; then
+          export APP_FRONTEND_DIST="frontend-dist"
+        fi
+        if [ -n "$APP_VERSION_INPUT" ]; then
+          export APP_VERSION="$APP_VERSION_INPUT"
+        fi
+
+        # The app version lives in tauri.conf.json. The Cargo package keeps the
+        # name/version recorded in Cargo.lock so `--locked` builds stay valid.
+        CARGO_PACKAGE_NAME="$(sed -nE 's/^name = "([^"]+)"$/\1/p' src-tauri/Cargo.toml | head -n 1)"
+        CARGO_PACKAGE_VERSION="$(sed -nE 's/^version = "([^"]+)"$/\1/p' src-tauri/Cargo.toml | head -n 1)"
+        if [ -z "$CARGO_PACKAGE_NAME" ] || [ -z "$CARGO_PACKAGE_VERSION" ]; then
+          echo "::error::Could not read the Cargo package name/version from src-tauri/Cargo.toml"
+          exit 1
+        fi
+        export CARGO_PACKAGE_NAME CARGO_PACKAGE_VERSION
+        echo "CARGO_PACKAGE_NAME=$CARGO_PACKAGE_NAME" >> "$GITHUB_ENV"
+
+        if [ "$UPDATER" = "true" ]; then
+          export UPDATE_ENDPOINT="$UPDATE_ENDPOINT_INPUT"
+          export ED25519_PUBKEY="$UPDATER_PUBLIC_KEY"
+        else
+          export UPDATE_ENDPOINT="" ED25519_PUBKEY=""
+        fi
+
+        bash scripts/prod-conf.sh
+
+        (cd src-tauri && cargo metadata --locked --format-version 1 >/dev/null)
+
+    - name: Compile bridge
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      run: |
+        set -euo pipefail
+        npm run ts:compile:bridge
+        grep -qE 'window\.Desktopr|globalThis\.Desktopr' src-tauri/tsc/bridge.js || {
+          echo "::error::Compiled bridge does not expose Desktopr"
+          exit 1
+        }
+
+    - name: Configure Windows signing
+      id: windows_signing
+      if: runner.os == 'Windows'
+      shell: pwsh
+      env:
+        WINDOWS_CERTIFICATE: ${{ inputs.windows_certificate }}
+        WINDOWS_CERTIFICATE_PASSWORD: ${{ inputs.windows_certificate_password }}
+        RUNTIME: ${{ steps.context.outputs.runtime_native }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $hasCert = -not [string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE)
+        $hasPassword = -not [string]::IsNullOrEmpty($env:WINDOWS_CERTIFICATE_PASSWORD)
+
+        if (-not $hasCert -and -not $hasPassword) {
+          Write-Host "::notice::Windows signing secrets not set; building unsigned."
+          exit 0
+        }
+        if (-not ($hasCert -and $hasPassword)) {
+          throw "Windows signing requires both windows_certificate and windows_certificate_password."
+        }
+
+        $pfxPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+        try {
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $password
+        } finally {
+          Remove-Item -Force $pfxPath -ErrorAction SilentlyContinue
+        }
+
+        $configPath = Join-Path $env:RUNTIME "src-tauri/tauri.conf.json"
+        $config = Get-Content $configPath -Raw | ConvertFrom-Json
+        if ($null -eq $config.bundle.windows) {
+          $config.bundle | Add-Member -NotePropertyName windows -NotePropertyValue ([pscustomobject]@{})
+        }
+        $config.bundle.windows | Add-Member -Force -NotePropertyName certificateThumbprint -NotePropertyValue $cert.Thumbprint
+        $config.bundle.windows | Add-Member -Force -NotePropertyName digestAlgorithm -NotePropertyValue "sha256"
+        $config.bundle.windows | Add-Member -Force -NotePropertyName timestampUrl -NotePropertyValue "http://timestamp.digicert.com"
+        $config | ConvertTo-Json -Depth 32 | Set-Content -Path $configPath -Encoding utf8
+
+        "thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        Write-Host "Windows signing enabled for certificate $($cert.Thumbprint)"
+
+    - name: Configure macOS signing
+      if: runner.os == 'macOS'
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      env:
+        APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
+        APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
+        APPLE_ID: ${{ inputs.apple_id }}
+        APPLE_PASSWORD: ${{ inputs.apple_password }}
+        APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
+      run: |
+        set -euo pipefail
+
+        count_set() { local n=0; for v in "$@"; do [ -n "${!v:-}" ] && n=$((n + 1)); done; echo "$n"; }
+
+        signing="$(count_set APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY)"
+        notarization="$(count_set APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID)"
+
+        if [ "$signing" -ne 0 ] && [ "$signing" -ne 3 ]; then
+          echo "::error::macOS signing requires apple_certificate, apple_certificate_password and apple_signing_identity"
+          exit 1
+        fi
+        if [ "$notarization" -ne 0 ] && [ "$notarization" -ne 3 ]; then
+          echo "::error::Notarization requires apple_id, apple_password and apple_team_id"
+          exit 1
+        fi
+        if [ "$notarization" -eq 3 ] && [ "$signing" -eq 0 ]; then
+          echo "::error::Notarization requires the macOS signing inputs"
+          exit 1
+        fi
+
+        if [ "$signing" -eq 0 ]; then
+          echo "::notice::macOS signing inputs not set; building with an ad-hoc signature (not notarized)."
+          jq '.bundle.macOS = ((.bundle.macOS // {}) + {signingIdentity: "-"})' \
+            src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+        elif [ "$notarization" -eq 0 ]; then
+          echo "::warning::macOS build will be signed but not notarized."
+        fi
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}/src-tauri
+      env:
+        UPDATER: ${{ steps.context.outputs.updater }}
+        APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
+        APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
+        APPLE_ID: ${{ inputs.apple_id }}
+        APPLE_PASSWORD: ${{ inputs.apple_password }}
+        APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
+        TAURI_SIGNING_PRIVATE_KEY: ${{ inputs.tauri_signing_private_key }}
+        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ inputs.tauri_signing_private_key_password }}
+      run: |
+        set -euo pipefail
+
+        # Tauri treats a present-but-empty variable as configured; drop unset secrets.
+        for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+                 APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID \
+                 TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
+          [ -n "${!v:-}" ] || unset "$v"
+        done
+        if [ "$UPDATER" != "true" ]; then
+          unset TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+        fi
+
+        # The target cache must not leak bundles from previous runs into the artifacts.
+        rm -rf target/release/bundle
+
+        if [ "$UPDATER" = "true" ]; then
+          cargo tauri build --ci --features updater -- --locked
+        else
+          cargo tauri build --ci -- --locked
+        fi
+
+    # A successful build does not prove the app starts (e.g. macOS kills apps
+    # with entitlements their signature cannot back). Launch it briefly.
+    - name: Launch smoke test
+      if: steps.context.outputs.smoke == 'true'
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      env:
+        SMOKE_SECONDS: "15"
+        RUST_BACKTRACE: "1"
+      run: |
+        set -euo pipefail
+
+        alive() {
+          local pattern="$1"
+          pgrep -f "$pattern" >/dev/null 2>&1
+        }
+
+        case "$RUNNER_OS" in
+          macOS)
+            app="$(find src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' | head -n 1)"
+            test -n "$app" || { echo "::error::No .app bundle to launch"; exit 1; }
+            pattern="$(basename "$app")/Contents/MacOS/"
+            open -n "$app"
+            ;;
+          Linux)
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb dbus >/dev/null
+            pattern="target/release/$CARGO_PACKAGE_NAME"
+            # -ac: WebKit's sandboxed web process cannot read xvfb-run's Xauthority file.
+            Xvfb :99 -screen 0 1280x1024x24 -ac -nolisten tcp >/dev/null 2>&1 &
+            export DISPLAY=:99
+            sleep 2
+            dbus-run-session -- "src-tauri/target/release/$CARGO_PACKAGE_NAME" > "$RUNNER_TEMP/smoke.log" 2>&1 &
+            launcher_pid=$!
+            ;;
+          Windows)
+            pattern="$CARGO_PACKAGE_NAME.exe"
+            "src-tauri/target/release/$CARGO_PACKAGE_NAME.exe" > "$RUNNER_TEMP/smoke.log" 2>&1 &
+            launcher_pid=$!
+            ;;
+        esac
+
+        sleep "$SMOKE_SECONDS"
+
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          running="$(tasklist //FI "IMAGENAME eq $CARGO_PACKAGE_NAME.exe" //NH | grep -ci "$CARGO_PACKAGE_NAME" || true)"
+        else
+          running="$(alive "$pattern" && echo 1 || echo 0)"
+        fi
+
+        if [ "$running" = "0" ]; then
+          echo "::error::The app exited within ${SMOKE_SECONDS}s of launch"
+          if [ -n "${launcher_pid:-}" ]; then
+            status=0
+            wait "$launcher_pid" || status=$?
+            echo "Exit status: $status"
+          fi
+          cat "$RUNNER_TEMP/smoke.log" 2>/dev/null || true
+          exit 1
+        fi
+        echo "App still running after ${SMOKE_SECONDS}s"
+
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          taskkill //F //IM "$CARGO_PACKAGE_NAME.exe" >/dev/null
+        else
+          pkill -f "$pattern" || true
+        fi
+
+    - name: Build MSIX package
+      if: runner.os == 'Windows' && steps.context.outputs.msix == 'true'
+      shell: pwsh
+      env:
+        MSIX_IDENTITY_NAME: ${{ inputs.msix_identity_name }}
+        MSIX_IDENTITY_PUBLISHER: ${{ inputs.msix_identity_publisher }}
+        MSIX_PUBLISHER_DISPLAY_NAME: ${{ inputs.msix_publisher_display_name }}
+        MSIX_DISPLAY_NAME: ${{ inputs.msix_display_name }}
+        MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color }}
+        MSIX_SHORT_NAME: ${{ inputs.msix_short_name }}
+        SIGNING_THUMBPRINT: ${{ steps.windows_signing.outputs.thumbprint }}
+        RUNTIME: ${{ steps.context.outputs.runtime_native }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Add-Type -AssemblyName System.Drawing
+
+        function Get-SdkTool([string]$Name) {
+          $tool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter $Name -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\x64\\' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if ($null -eq $tool) { throw "$Name not found in the Windows SDK" }
+          return $tool.FullName
+        }
+
+        # Draws the icon centered on a transparent canvas, keeping its aspect ratio.
+        function New-Asset([string]$Source, [string]$Destination, [int]$Width, [int]$Height) {
+          $src = [System.Drawing.Image]::FromFile($Source)
+          $bmp = New-Object System.Drawing.Bitmap($Width, $Height)
+          $gfx = [System.Drawing.Graphics]::FromImage($bmp)
+          try {
+            $gfx.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+            $gfx.Clear([System.Drawing.Color]::Transparent)
+            $side = [Math]::Min($Width, $Height)
+            $gfx.DrawImage($src, [int](($Width - $side) / 2), [int](($Height - $side) / 2), $side, $side)
+            $bmp.Save($Destination, [System.Drawing.Imaging.ImageFormat]::Png)
+          } finally {
+            $gfx.Dispose(); $bmp.Dispose(); $src.Dispose()
+          }
+        }
+
+        function Escape-Xml([string]$Value) { [System.Security.SecurityElement]::Escape($Value) }
+
+        $config = Get-Content (Join-Path $env:RUNTIME "src-tauri/tauri.conf.json") -Raw | ConvertFrom-Json
+        if ($config.version -notmatch '^\d+\.\d+\.\d+$') {
+          throw "MSIX requires a numeric X.Y.Z version; got '$($config.version)'"
+        }
+        $version = "$($config.version).0"
+
+        $releaseDir = Join-Path $env:RUNTIME "src-tauri/target/release"
+        $exeName = "$env:CARGO_PACKAGE_NAME.exe"
+        if (-not (Test-Path (Join-Path $releaseDir $exeName))) { throw "Main executable not found: $exeName" }
+
+        $root = Join-Path $env:RUNNER_TEMP "msix-root"
+        Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Force -Path "$root/app", "$root/Assets" | Out-Null
+
+        Copy-Item (Join-Path $releaseDir $exeName) "$root/app/"
+        Get-ChildItem $releaseDir -File -Filter *.dll | Copy-Item -Destination "$root/app/"
+
+        $icon = Join-Path $env:RUNNER_TEMP "icons/icon.png"
+        New-Asset $icon "$root/Assets/Square44x44Logo.png" 44 44
+        New-Asset $icon "$root/Assets/StoreLogo.png" 50 50
+        New-Asset $icon "$root/Assets/SmallTile.png" 71 71
+        New-Asset $icon "$root/Assets/Square150x150Logo.png" 150 150
+        New-Asset $icon "$root/Assets/Wide310x150Logo.png" 310 150
+        New-Asset $icon "$root/Assets/LargeTile.png" 310 310
+        New-Asset $icon "$root/Assets/SplashScreen.png" 620 300
+
+        $shortName = ""
+        if (-not [string]::IsNullOrWhiteSpace($env:MSIX_SHORT_NAME)) {
+          $shortName = " ShortName=`"$(Escape-Xml $env:MSIX_SHORT_NAME)`""
+        }
+        $displayName = Escape-Xml $env:MSIX_DISPLAY_NAME
+
+        @"
+        <?xml version="1.0" encoding="utf-8"?>
+        <Package
+          xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+          xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+          IgnorableNamespaces="uap10 rescap">
+          <Identity Name="$(Escape-Xml $env:MSIX_IDENTITY_NAME)" Publisher="$(Escape-Xml $env:MSIX_IDENTITY_PUBLISHER)" Version="$version" ProcessorArchitecture="x64" />
+          <Properties>
+            <DisplayName>$displayName</DisplayName>
+            <PublisherDisplayName>$(Escape-Xml $env:MSIX_PUBLISHER_DISPLAY_NAME)</PublisherDisplayName>
+            <Logo>Assets\StoreLogo.png</Logo>
+          </Properties>
+          <Resources>
+            <Resource Language="en-us" />
+          </Resources>
+          <Dependencies>
+            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.19041.0" />
+          </Dependencies>
+          <Capabilities>
+            <rescap:Capability Name="runFullTrust" />
+          </Capabilities>
+          <Applications>
+            <Application Id="App" Executable="app\$exeName" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL">
+              <uap:VisualElements DisplayName="$displayName" Description="$displayName" BackgroundColor="$(Escape-Xml $env:MSIX_BACKGROUND_COLOR)" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
+                <uap:DefaultTile$shortName Square71x71Logo="Assets\SmallTile.png" Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\LargeTile.png" />
+                <uap:SplashScreen Image="Assets\SplashScreen.png" />
+              </uap:VisualElements>
+            </Application>
+          </Applications>
+        </Package>
+        "@ | Set-Content -Path "$root/AppxManifest.xml" -Encoding utf8
+
+        $makepri = Get-SdkTool "makepri.exe"
+        $makeappx = Get-SdkTool "makeappx.exe"
+
+        Push-Location $root
+        try {
+          & $makepri createconfig /cf priconfig.xml /dq en-US /o
+          if ($LASTEXITCODE -ne 0) { throw "MakePri createconfig failed ($LASTEXITCODE)" }
+          & $makepri new /pr $root /cf (Join-Path $root "priconfig.xml") /o
+          if ($LASTEXITCODE -ne 0) { throw "MakePri new failed ($LASTEXITCODE)" }
+          Remove-Item priconfig.xml
+        } finally {
+          Pop-Location
+        }
+
+        $outDir = Join-Path $env:RUNTIME "src-tauri/target/release/bundle/msix"
+        New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+        $safeName = ($config.productName -replace '[^A-Za-z0-9._-]', '_')
+        $msix = Join-Path $outDir "${safeName}_$($config.version)_x64.msix"
+
+        & $makeappx pack /d $root /p $msix /o
+        if ($LASTEXITCODE -ne 0) { throw "MakeAppx pack failed ($LASTEXITCODE)" }
+
+        if ([string]::IsNullOrEmpty($env:SIGNING_THUMBPRINT)) {
+          Write-Host "::notice::MSIX built unsigned. The Microsoft Store signs submitted packages; sideloading requires a signature."
+        } else {
+          $cert = Get-Item "Cert:\CurrentUser\My\$env:SIGNING_THUMBPRINT"
+          if ($cert.Subject -ne $env:MSIX_IDENTITY_PUBLISHER) {
+            Write-Host "::notice::MSIX left unsigned: certificate subject does not match msix_identity_publisher."
+          } else {
+            $signtool = Get-SdkTool "signtool.exe"
+            & $signtool sign /sha1 $env:SIGNING_THUMBPRINT /fd SHA256 /tr "http://timestamp.digicert.com" /td SHA256 $msix
+            if ($LASTEXITCODE -ne 0) { throw "MSIX signing failed ($LASTEXITCODE)" }
+            Write-Host "MSIX signed with certificate $env:SIGNING_THUMBPRINT"
+          }
+        }
+
+        Get-Item $msix | Format-List Name, Length
+
+    - name: Collect artifacts
+      id: collect
+      shell: bash
+      working-directory: ${{ steps.context.outputs.runtime_native }}
+      env:
+        PLATFORM: ${{ steps.context.outputs.platform }}
+      run: |
+        set -euo pipefail
+
+        bundle=src-tauri/target/release/bundle
+        out="$RUNNER_TEMP/dist"
+        rm -rf "$out"
+        mkdir -p "$out"
+
+        find "$bundle" -type f \( \
+          -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' \
+          -o -name '*.exe' -o -name '*.msi' -o -name '*.msix' \
+          -o -name '*.dmg' -o -name '*.app.tar.gz' \
+          -o -name '*.sig' \
+        \) -exec cp {} "$out/" \;
+
+        if [ -z "$(ls -A "$out")" ]; then
+          echo "::error::No distributable artifacts found in $bundle"
+          find "$bundle" -maxdepth 2
+          exit 1
+        fi
+
+        # Written outside $out first so the list does not include itself.
+        sums="$RUNNER_TEMP/SHA256SUMS-$PLATFORM.txt"
+        (cd "$out" && for f in *; do
+          if command -v sha256sum >/dev/null; then sha256sum "$f"; else shasum -a 256 "$f"; fi
+        done > "$sums")
+        mv "$sums" "$out/"
+
+        ls -la "$out"
+        echo "DIST_DIR=$out" >> "$GITHUB_ENV"
+        echo "dist_dir=$out" >> "$GITHUB_OUTPUT"
+
+    - name: Upload artifacts
+      if: inputs.upload_artifact == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ steps.context.outputs.artifact_name }}
+        path: ${{ steps.collect.outputs.dist_dir }}
+        if-no-files-found: error
+
+    # Bundles are removed before the cache is saved so they cannot leak into a
+    # later run's artifacts.
+    - name: Drop bundles from the target cache
+      if: always() && steps.context.outputs.runtime != ''
+      shell: bash
+      run: rm -rf "${{ steps.context.outputs.runtime }}/src-tauri/target/release/bundle"

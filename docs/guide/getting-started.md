@@ -95,6 +95,19 @@ jobs:
 
 Set `release: true` (with `app_version`) to also create a draft GitHub Release. Nothing is uploaded anywhere else.
 
+If your web app lives in its own repository, use the **build action** instead: build your app as usual, then hand its output directory to Desktopr in the same job.
+
+```yaml
+      - run: npm run build
+      - uses: suffro/desktopr/.github/actions/build@main
+        with:
+          app_name: Example
+          app_identifier: com.example.app
+          frontend_dist: dist
+```
+
+See [Building with GitHub Actions](/guide/configuration/github-actions) for both approaches.
+
 Signing is optional and uses only your own repository secrets; without them the build is unsigned. See [Signing](/guide/signing/what).
 
 ## Building for Platforms

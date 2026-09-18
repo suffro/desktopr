@@ -14,6 +14,11 @@
 3. `release`: only when `release` is true, creates a (draft by default) GitHub
    Release from the artifacts. Only this job has `contents: write`.
 
+The steps of the `build` job were later moved into the composite action
+`.github/actions/build`, which the job now calls; see
+`external-build-action.md`. Everything below still describes what that action
+does, and the workflow remains the entry point for this repository.
+
 Signing is performed during `tauri build` with Tauri's native mechanisms instead
 of a separate unzip/re-sign workflow:
 

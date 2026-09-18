@@ -41,11 +41,39 @@ fi
 : "${MAIN_WINDOW_RESIZABLE:=true}"
 : "${MAIN_WINDOW_OPEN_FULLSCREEN:=false}"
 : "${COMPANION_MODE:=false}"
-# standalone: bundled fallback page (or APP_URL). companion: bundled Desktopr Companion app.
+# standalone: bundled fallback page (or APP_URL). bundled: the developer's own
+# built web application. companion: bundled Desktopr Companion app.
 : "${APP_FRONTEND:=standalone}"
+# Repository-relative directory holding the built web application, for bundled.
+: "${APP_FRONTEND_DIST:=}"
 
 case "$APP_FRONTEND" in
   standalone) ;;
+  bundled)
+    if [ -n "$APP_URL" ]; then
+      echo "APP_FRONTEND=bundled serves its own files and cannot be combined with APP_URL"
+      exit 1
+    fi
+    if [ -z "$APP_FRONTEND_DIST" ]; then
+      echo "APP_FRONTEND=bundled requires APP_FRONTEND_DIST"
+      exit 1
+    fi
+    case "$APP_FRONTEND_DIST" in
+      /* | *..*)
+        echo "APP_FRONTEND_DIST must be a relative path without '..'"
+        exit 1
+        ;;
+    esac
+    if [ ! -d "$APP_FRONTEND_DIST" ]; then
+      echo "APP_FRONTEND_DIST is not a directory: $APP_FRONTEND_DIST"
+      exit 1
+    fi
+    # Tauri serves the directory root; without an entry point the window is blank.
+    if [ ! -s "$APP_FRONTEND_DIST/index.html" ]; then
+      echo "APP_FRONTEND_DIST must contain a non-empty index.html: $APP_FRONTEND_DIST/index.html"
+      exit 1
+    fi
+    ;;
   companion)
     if [ -n "$APP_URL" ]; then
       echo "APP_FRONTEND=companion bundles its own UI and cannot be combined with APP_URL"
@@ -55,7 +83,7 @@ case "$APP_FRONTEND" in
     COMPANION_MODE=true
     ;;
   *)
-    echo "APP_FRONTEND must be standalone or companion"
+    echo "APP_FRONTEND must be standalone, bundled or companion"
     exit 1
     ;;
 esac
@@ -96,7 +124,11 @@ if [ -n "$APP_URL" ]; then
 
   echo "Resolved external application origin=$APP_URL_ORIGIN"
 else
-  echo "Application source=bundled standalone page"
+  case "$APP_FRONTEND" in
+    bundled) echo "Application source=bundled files from $APP_FRONTEND_DIST" ;;
+    companion) echo "Application source=bundled companion app" ;;
+    *) echo "Application source=bundled standalone page" ;;
+  esac
 fi
 
 if [ "$COMPANION_MODE" = "true" ]; then
@@ -168,6 +200,10 @@ cp "${TAURI_TEMPLATE}" src-tauri/tauri.conf.json
 if [ "$APP_FRONTEND" = "companion" ]; then
   jq '.build.frontendDist = "../apps/companion/dist"' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
   echo "  frontend                -> apps/companion/dist"
+elif [ "$APP_FRONTEND" = "bundled" ]; then
+  # frontendDist is resolved from the directory holding tauri.conf.json.
+  jq --arg dist "../$APP_FRONTEND_DIST" '.build.frontendDist = $dist' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+  echo "  frontend                -> $APP_FRONTEND_DIST"
 fi
 
 # -----------------------------

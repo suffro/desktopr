@@ -38,9 +38,14 @@ workspace root (`desktopr-monorepo`).
 - `src-tauri/standalone/`: bundled local fallback UI used when a developer does
   not configure an external application URL.
 - `conf-templates/` and `scripts/`: runtime configuration generation.
+- `.github/actions/build/`: composite action holding every per-platform build
+  step. It carries the runtime with it, so a workflow in another repository can
+  build a desktop app from its own web application (`frontend_dist`) or from a
+  URL (`app_url`); see `decisions/external-build-action.md`.
 - `.github/workflows/build.yml`: cross-platform build, optional signing,
-  GitHub Actions artifacts and optional GitHub Release. It builds this checkout
-  directly; see `decisions/github-actions-build.md`.
+  GitHub Actions artifacts and optional GitHub Release. It validates inputs,
+  resolves the platform matrix and calls `.github/actions/build` once per
+  runner; see `decisions/github-actions-build.md`.
 - `.github/workflows/ci.yml`: checks and tests on every push to `main` and pull
   request. Repository checks, TypeScript, bridge/SDK tests
   (`scripts/test-bridge.mjs`, which loads the bundled bridge in a VM with a
@@ -82,6 +87,9 @@ directory plus dedicated persistent plugin storage.
 - The default runtime loads bundled local content and grants no remote origin.
 - The runtime can load a developer-provided web application URL; configuration
   generation grants only that origin and its subdomains.
+- The runtime can instead embed a developer-provided web application build
+  (`APP_FRONTEND=bundled`, `APP_FRONTEND_DIST`), which grants no remote origin
+  and keeps the `'self'` CSP.
 - The updater is excluded from default Cargo features. A developer can opt in
   with the `updater` feature and must supply both their own HTTPS endpoint and
   signing public key.
