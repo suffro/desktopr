@@ -16,7 +16,7 @@ only: no Git history and no lockfile.
   PostYourStartup badges were removed.
 - The four configuration pages were empty placeholders and are now written
   (project structure, app settings, Tauri config, distribution).
-- Kept and de-commercialised: the FAQ (`support.md`, with support pointing at
+- Kept and de-commercialised: the FAQ (`docs/support.md`, with support pointing at
   GitHub issues), the comparison page and table, branding and the Bubble.io
   plugin page.
 - `npm run docs:build` runs in CI; VitePress fails the build on dead links.
