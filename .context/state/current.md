@@ -284,8 +284,10 @@ still unverified.
   self-signed certificate including the MSIX publisher rule. A real Windows
   certificate has still never been exercised.
 - The cross-repository path is verified: `suffro/desktopr-action-example` (a
-  public repository created for this) builds with `suffro/desktopr@<ref>` and
-  the runtime resolves under `_actions/suffro/desktopr/<ref>`.
+  public repository created for this) builds with `suffro/desktopr@v1` and the
+  runtime resolves under `_actions/suffro/desktopr/v1`. Run 35419717604 built
+  both ways from there — a Vite app handed over as `frontend_dist`, and an
+  `app_url` — and produced an AppImage each.
 - That first external run exposed a regression from the same day: the `sign`
   switch exported `SIGN` into the Build step, which
   `linuxdeploy-plugin-appimage` reads as "GPG-sign the AppImage", so every
