@@ -19,7 +19,7 @@ You can load your web app inside a real Desktopr-powered desktop environment, or
 <br>
 
 
-<VPButton text="Download Companion →" href="https://github.com/suffro/desktopr/releases"/>
+<VPButton text="Download Companion →" href="https://github.com/suffro/desktopr/releases#release-companion-v3.0.0"/>
 
 Windows users can also install it from the [Microsoft Store](https://apps.microsoft.com/detail/9mtpbs9343t4).
 
@@ -147,4 +147,4 @@ If you want to test right away, without having load your app and integrate the b
 
 <br>
 
-<VPButton text="Download Companion →" href="https://github.com/suffro/desktopr/releases"/>
+<VPButton text="Download Companion →" href="https://github.com/suffro/desktopr/releases#release-companion-v3.0.0"/>
