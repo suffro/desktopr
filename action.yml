@@ -167,7 +167,7 @@ runs:
         MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color }}
         ARTIFACT_NAME: ${{ inputs.artifact_name }}
         SMOKE_TEST: ${{ inputs.smoke_test }}
-        SIGN: ${{ inputs.sign }}
+        DESKTOPR_SIGN: ${{ inputs.sign }}
         ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
@@ -310,11 +310,11 @@ runs:
         smoke=false
         if [ "$SMOKE_TEST" = "true" ]; then smoke=true; fi
 
-        case "$SIGN" in
+        case "$DESKTOPR_SIGN" in
           true | false) ;;
           *) echo "::error::sign must be true or false"; exit 1 ;;
         esac
-        if [ "$SIGN" = "false" ]; then
+        if [ "$DESKTOPR_SIGN" = "false" ]; then
           echo "::notice::sign=false: this build will not be signed."
         fi
 
@@ -326,7 +326,7 @@ runs:
           echo "updater=$updater"
           echo "msix=$msix"
           echo "smoke=$smoke"
-          echo "sign=$SIGN"
+          echo "sign=$DESKTOPR_SIGN"
           echo "icon=$icon"
           echo "artifact_name=$artifact"
           echo "path_key=$path_key"
@@ -608,13 +608,13 @@ runs:
         APPLE_ID: ${{ inputs.apple_id }}
         APPLE_PASSWORD: ${{ inputs.apple_password }}
         APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
-        SIGN: ${{ steps.context.outputs.sign }}
+        DESKTOPR_SIGN: ${{ steps.context.outputs.sign }}
       run: |
         set -euo pipefail
 
         # An unsigned macOS app is killed at launch, so "not signed" still means
         # an ad-hoc signature here.
-        if [ "$SIGN" != "true" ]; then
+        if [ "$DESKTOPR_SIGN" != "true" ]; then
           echo "::notice::sign=false: building with an ad-hoc signature (not notarized)."
           jq '.bundle.macOS = ((.bundle.macOS // {}) + {signingIdentity: "-"})' \
             src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
@@ -653,14 +653,12 @@ runs:
       shell: bash
       working-directory: ${{ steps.context.outputs.runtime_native }}/src-tauri
       env:
-        # The AppImage tools are themselves AppImages, and mounting one needs
-        # libfuse2, which the Linux runners do not have: the tool exits with
-        # "dlopen(): error loading libfuse.so.2" and the bundler then replaces
-        # the pinned copy with one it downloads itself. Extracting instead of
-        # mounting removes the dependency and keeps the pinned tools in place.
-        APPIMAGE_EXTRACT_AND_RUN: "1"
+        # Every variable here lands in the environment of the bundler and of the
+        # tools it runs. linuxdeploy-plugin-appimage reads SIGN as "GPG-sign the
+        # AppImage", so a variable by that name aborts the Linux build with
+        # "Signing failed"; anything of ours is prefixed to stay out of its way.
         UPDATER: ${{ steps.context.outputs.updater }}
-        SIGN: ${{ steps.context.outputs.sign }}
+        DESKTOPR_SIGN: ${{ steps.context.outputs.sign }}
         APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
         APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
         APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
@@ -679,7 +677,7 @@ runs:
           [ -n "${!v:-}" ] || unset "$v"
         done
         # sign=false must win over credentials the caller inherited.
-        if [ "$SIGN" != "true" ]; then
+        if [ "$DESKTOPR_SIGN" != "true" ]; then
           unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
                 APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
         fi
@@ -690,13 +688,10 @@ runs:
         # The target cache must not leak bundles from previous runs into the artifacts.
         rm -rf target/release/bundle
 
-        echo "TEMPORARY DIAGNOSTIC: tool checksums before the build"
-        sha256sum "${XDG_CACHE_HOME:-$HOME/.cache}/tauri/"* || true
-
         if [ "$UPDATER" = "true" ]; then
-          cargo tauri build --ci --verbose --features updater -- --locked
+          cargo tauri build --ci --features updater -- --locked
         else
-          cargo tauri build --ci --verbose -- --locked
+          cargo tauri build --ci -- --locked
         fi
 
     - name: Check the AppImage tools were not replaced
