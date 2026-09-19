@@ -690,10 +690,13 @@ runs:
         # The target cache must not leak bundles from previous runs into the artifacts.
         rm -rf target/release/bundle
 
+        echo "TEMPORARY DIAGNOSTIC: tool checksums before the build"
+        sha256sum "${XDG_CACHE_HOME:-$HOME/.cache}/tauri/"* || true
+
         if [ "$UPDATER" = "true" ]; then
-          cargo tauri build --ci --features updater -- --locked
+          cargo tauri build --ci --verbose --features updater -- --locked
         else
-          cargo tauri build --ci -- --locked
+          cargo tauri build --ci --verbose -- --locked
         fi
 
     - name: Check the AppImage tools were not replaced
