@@ -131,6 +131,160 @@ jobs:
             || { echo "::error::expected an ad-hoc signature"; exit 1; }
           echo "OK: ad-hoc signed, as sign: false requires"
 
+  sign-on-windows:
+    name: sign with a self-signed certificate
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      # A throwaway certificate, trusted on this runner only, so the signature
+      # and its chain can be verified the same way a real one would be.
+      - name: Create a self-signed certificate
+        id: certificate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $subject = "CN=Desktopr Sign Test"
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $subject `
+            -CertStoreLocation Cert:\CurrentUser\My -KeyExportPolicy Exportable `
+            -KeyUsage DigitalSignature -NotAfter (Get-Date).AddDays(2)
+
+          $pfx = Join-Path $env:RUNNER_TEMP "test.pfx"
+          $cer = Join-Path $env:RUNNER_TEMP "test.cer"
+          $password = ConvertTo-SecureString -String "desktopr-test" -AsPlainText -Force
+          Export-PfxCertificate -Cert $cert -FilePath $pfx -Password $password | Out-Null
+          Export-Certificate -Cert $cert -FilePath $cer | Out-Null
+          Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+          Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)"
+
+          $base64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($pfx))
+          "certificate=$base64" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "subject=$subject" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Test certificate: $subject"
+
+      - name: Build the fixtures
+        shell: pwsh
+        env:
+          SUBJECT: ${{ steps.certificate.outputs.subject }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.Drawing
+
+          function Get-SdkTool([string]$Name) {
+            $tool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter $Name -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1
+            if ($null -eq $tool) { throw "$Name not found" }
+            return $tool.FullName
+          }
+
+          New-Item -ItemType Directory -Force -Path fixture | Out-Null
+
+          # A small unsigned executable, built with the compiler that ships with
+          # the .NET Framework so nothing has to be installed.
+          "class P { static void Main() { } }" | Set-Content -Path "$env:RUNNER_TEMP\p.cs" -Encoding utf8
+          & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /target:exe `
+            /out:fixture\example.exe "$env:RUNNER_TEMP\p.cs"
+          if ($LASTEXITCODE -ne 0) { throw "csc failed ($LASTEXITCODE)" }
+
+          # Two packages: one whose publisher matches the certificate and one
+          # whose publisher does not, to prove the action signs only the first.
+          function New-Msix([string]$Publisher, [string]$Output) {
+            $root = Join-Path $env:RUNNER_TEMP ("msix-" + [IO.Path]::GetFileNameWithoutExtension($Output))
+            Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path "$root/app", "$root/Assets" | Out-Null
+            Copy-Item fixture\example.exe "$root/app/"
+
+            foreach ($asset in @(@("StoreLogo.png", 50), @("Square150x150Logo.png", 150), @("Square44x44Logo.png", 44))) {
+              $bmp = New-Object System.Drawing.Bitmap($asset[1], $asset[1])
+              $bmp.Save("$root/Assets/$($asset[0])", [System.Drawing.Imaging.ImageFormat]::Png)
+              $bmp.Dispose()
+            }
+
+            @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+            xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+            xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+            xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+            IgnorableNamespaces="uap10 rescap">
+            <Identity Name="Desktopr.SignTest" Publisher="$Publisher" Version="1.0.0.0" ProcessorArchitecture="x64" />
+            <Properties>
+              <DisplayName>Sign Test</DisplayName>
+              <PublisherDisplayName>Desktopr</PublisherDisplayName>
+              <Logo>Assets\StoreLogo.png</Logo>
+            </Properties>
+            <Resources><Resource Language="en-us" /></Resources>
+            <Dependencies>
+              <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.19041.0" />
+            </Dependencies>
+            <Capabilities><rescap:Capability Name="runFullTrust" /></Capabilities>
+            <Applications>
+              <Application Id="App" Executable="app\example.exe" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL">
+                <uap:VisualElements DisplayName="Sign Test" Description="Sign Test" BackgroundColor="#ffffff"
+                  Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" />
+              </Application>
+            </Applications>
+          </Package>
+          "@ | Set-Content -Path "$root/AppxManifest.xml" -Encoding utf8
+
+            $makepri = Get-SdkTool "makepri.exe"
+            Push-Location $root
+            try {
+              & $makepri createconfig /cf priconfig.xml /dq en-US /o | Out-Null
+              & $makepri new /pr $root /cf (Join-Path $root "priconfig.xml") /o | Out-Null
+              Remove-Item priconfig.xml
+            } finally { Pop-Location }
+
+            $makeappx = Get-SdkTool "makeappx.exe"
+            & $makeappx pack /d $root /p $Output /o | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "makeappx failed for $Output ($LASTEXITCODE)" }
+          }
+
+          New-Msix -Publisher $env:SUBJECT -Output "fixture\matching.msix"
+          New-Msix -Publisher "CN=Somebody Else" -Output "fixture\mismatching.msix"
+          Get-ChildItem fixture | Format-Table Name, Length
+
+      - name: Sign the fixtures
+        id: sign
+        uses: ./.github/actions/sign
+        with:
+          artifacts: fixture
+          windows_certificate: ${{ steps.certificate.outputs.certificate }}
+          windows_certificate_password: desktopr-test
+
+      - name: Check the result
+        shell: pwsh
+        env:
+          SUBJECT: ${{ steps.certificate.outputs.subject }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Assert-Signed([string]$Path, [bool]$Expected) {
+            $signature = Get-AuthenticodeSignature $Path
+            $isSigned = $signature.Status -eq 'Valid'
+            Write-Host "$([IO.Path]::GetFileName($Path)): status=$($signature.Status) signer=$($signature.SignerCertificate.Subject)"
+            if ($isSigned -ne $Expected) {
+              throw "$Path : expected signed=$Expected, got status $($signature.Status)"
+            }
+            if ($isSigned -and $signature.SignerCertificate.Subject -ne $env:SUBJECT) {
+              throw "$Path : signed by the wrong certificate"
+            }
+          }
+
+          Assert-Signed "fixture\example.exe" $true
+          Assert-Signed "fixture\matching.msix" $true
+          # Windows refuses a package signed by anyone but its own publisher, so
+          # the action must leave this one alone instead of producing a bad file.
+          Assert-Signed "fixture\mismatching.msix" $false
+
+          if ("${{ steps.sign.outputs.signed }}" -ne "2") {
+            throw "expected the action to report 2 signed artifacts, got '${{ steps.sign.outputs.signed }}'"
+          }
+          Write-Host "OK: executable and matching package signed, mismatching package skipped"
+
   nothing-to-sign-on-linux:
     name: no-op on Linux
     runs-on: ubuntu-22.04
