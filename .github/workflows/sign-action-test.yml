@@ -3,7 +3,11 @@
 
 name: sign-action-test
 
-on: workflow_dispatch
+# A push trigger, because workflow_dispatch only works for workflows that are
+# already on the default branch.
+on:
+  push:
+    branches: [sign-action]
 
 permissions:
   contents: read
