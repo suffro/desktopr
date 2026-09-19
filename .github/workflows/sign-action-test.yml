@@ -1,13 +1,14 @@
-# Temporary verification of the sign action and of the build action's
-# sign: false switch. Not meant to stay on main.
+# Verifies the sign action and the build action's sign: false switch against
+# real signing tools. Run it by hand after changing either of them.
+#
+# macOS uses this repository's own Apple credentials, so the notarization jobs
+# only work here. Windows needs no secret: it generates a throwaway certificate
+# on the runner and trusts it for the length of the job, which is enough to
+# prove signtool ran, the signature is valid and the MSIX publisher rule holds.
 
 name: sign-action-test
 
-# A push trigger, because workflow_dispatch only works for workflows that are
-# already on the default branch.
-on:
-  push:
-    branches: [sign-action]
+on: workflow_dispatch
 
 permissions:
   contents: read

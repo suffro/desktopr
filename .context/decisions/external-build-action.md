@@ -128,3 +128,14 @@ remote origin.
 
 Not yet verified: a real cross-repository run. Both runs used the local `./`
 path; the `_actions/<owner>/<repo>/<ref>` layout was only simulated locally.
+
+`.github/workflows/sign-action-test.yml` verifies the signing work on demand
+and passed on runs 35412477195 and 35412958040: a fixture `.app` came out
+Developer ID signed, wrapped in a DMG, notarized (`accepted`) and stapled; a
+build given every Apple credential but `sign: false` produced an app that is
+ad-hoc signed, checked by mounting the DMG; the action reports and skips on
+Linux. Windows needs no secret, since the job generates a self-signed
+certificate, trusts it on the runner and checks that an executable and a
+package whose publisher matches are signed by it while a package with another
+publisher is left `NotSigned`. Signing with a real Windows certificate remains
+unverified, because the repository has none.

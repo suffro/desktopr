@@ -277,7 +277,12 @@ still unverified.
   `frontend=bundled` app on Linux. The `v1` tag now points at that commit.
 - Added `sign: false` to the build action and the standalone
   `.github/actions/sign` action for artifacts built elsewhere. Signing stays per
-  platform and driven by which credentials the caller passes.
+  platform and driven by which credentials the caller passes. Runs 35412477195
+  and 35412958040 verified both through `sign-action-test.yml`: real Developer
+  ID signing and notarization on macOS, an ad-hoc signature when `sign: false`
+  overrides available credentials, the Linux no-op, and Windows signing with a
+  self-signed certificate including the MSIX publisher rule. A real Windows
+  certificate has still never been exercised.
 - Still unverified: the cross-repository path, where another repository uses
   `suffro/desktopr@v1`. Every run so far used the local `./` path; the
   `_actions/<owner>/<repo>/<ref>` layout was checked by simulating the path,
