@@ -294,14 +294,15 @@ still unverified.
   Linux build aborted in the AppImage stage. Renamed to `DESKTOPR_SIGN`; see
   `decisions/external-build-action.md` for what else in that environment looks
   broken but is not.
+- The action is listed in GitHub Marketplace, from the `v1` release with the
+  Marketplace box ticked. The listing's title, description, icon and colour come
+  from `action.yml`, and its public URL is the slug of `name:`, so renaming the
+  action moves the listing's address. It was published as "Build a Desktopr app"
+  and renamed to "Desktopr Builder" the same day.
 
 ## Next
 
-Run a `frontend_dist` build from a separate repository to exercise the
-cross-repository action path. Publishing the action in GitHub Marketplace is
-then a manual step in the GitHub UI (a release with the Marketplace box ticked,
-plus 2FA and the Marketplace Developer Agreement); it is optional, since a
-public repository's action already works for everyone. Then cut the first OSS release of the runtime
+Cut the first OSS release of the runtime
 itself (tag `v<version>` through `build.yml` with
 `release: true`), and decide whether to archive the source `docs` and
 `companion` repositories. Phase 13 (secret scan) comes

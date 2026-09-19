@@ -20,8 +20,8 @@
 # A platform whose signing inputs are absent is built unsigned; macOS builds are
 # then ad-hoc signed. Partial sets fail early.
 
-name: Build a Desktopr app
-description: Build a Desktopr desktop app from a web app URL or a locally built web app.
+name: Desktopr Builder
+description: Build and sign desktop apps using web stacks or just a simple web app URL, for macOS, Windows and Linux.
 branding:
   icon: package
   color: blue
