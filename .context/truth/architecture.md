@@ -43,6 +43,10 @@ workspace root (`desktopr-monorepo`).
   another repository can build a desktop app (`uses: suffro/desktopr@v1`) from
   its own web application (`frontend_dist`) or from a URL (`app_url`); see
   `decisions/external-build-action.md`.
+- `.github/actions/sign/`: standalone action that signs and notarizes artifacts
+  built elsewhere (macOS `.app`/`.dmg`, Windows `.exe`/`.msi`/`.msix`). It
+  shares no implementation with the build path, where Tauri signs while
+  packaging; see `decisions/external-build-action.md`.
 - `.github/workflows/build.yml`: cross-platform build, optional signing,
   GitHub Actions artifacts and optional GitHub Release. It validates inputs,
   resolves the platform matrix and calls the action at the repository root once per

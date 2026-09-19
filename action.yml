@@ -90,29 +90,39 @@ inputs:
   tauri_cli_version:
     description: "Tauri CLI version"
     default: "2.11.1"
+  # Signing is per platform and independent: give the Apple credentials and
+  # macOS is signed, give the Windows certificate and Windows is signed, give
+  # both and both are. Whatever you leave out is simply not signed — except a
+  # macOS app without a certificate, which still gets an ad-hoc signature
+  # because macOS refuses to launch an app that has none. Half a set (two of
+  # the three Apple values) fails the build instead of quietly shipping an
+  # unsigned app.
+  sign:
+    description: "Set to false to build without signing even when credentials are present"
+    default: "true"
   windows_certificate:
-    description: "Base64 .pfx for Windows signing"
+    description: "Windows: base64 .pfx certificate. Without it, Windows builds are not signed."
     default: ""
   windows_certificate_password:
-    description: "Password of the Windows .pfx"
+    description: "Windows: password of the .pfx"
     default: ""
   apple_certificate:
-    description: "Base64 .p12 for macOS signing"
+    description: "macOS: base64 .p12 certificate. Without it, macOS builds get an ad-hoc signature."
     default: ""
   apple_certificate_password:
-    description: "Password of the macOS .p12"
+    description: "macOS: password of the .p12"
     default: ""
   apple_signing_identity:
-    description: "macOS signing identity (Developer ID Application: ...)"
+    description: "macOS: signing identity, e.g. 'Developer ID Application: Name (TEAMID)'"
     default: ""
   apple_id:
-    description: "Apple ID used for notarization"
+    description: "macOS notarization: Apple ID. All three notarization values are needed, or none."
     default: ""
   apple_password:
-    description: "App-specific password used for notarization"
+    description: "macOS notarization: app-specific password for that Apple ID"
     default: ""
   apple_team_id:
-    description: "Apple team ID used for notarization"
+    description: "macOS notarization: Apple team ID"
     default: ""
   tauri_signing_private_key:
     description: "Updater signing private key"
@@ -157,6 +167,7 @@ runs:
         MSIX_BACKGROUND_COLOR: ${{ inputs.msix_background_color }}
         ARTIFACT_NAME: ${{ inputs.artifact_name }}
         SMOKE_TEST: ${{ inputs.smoke_test }}
+        SIGN: ${{ inputs.sign }}
         ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
@@ -299,6 +310,14 @@ runs:
         smoke=false
         if [ "$SMOKE_TEST" = "true" ]; then smoke=true; fi
 
+        case "$SIGN" in
+          true | false) ;;
+          *) echo "::error::sign must be true or false"; exit 1 ;;
+        esac
+        if [ "$SIGN" = "false" ]; then
+          echo "::notice::sign=false: this build will not be signed."
+        fi
+
         {
           echo "runtime=$runtime"
           echo "runtime_native=$runtime_native"
@@ -307,6 +326,7 @@ runs:
           echo "updater=$updater"
           echo "msix=$msix"
           echo "smoke=$smoke"
+          echo "sign=$SIGN"
           echo "icon=$icon"
           echo "artifact_name=$artifact"
           echo "path_key=$path_key"
@@ -529,7 +549,7 @@ runs:
 
     - name: Configure Windows signing
       id: windows_signing
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && steps.context.outputs.sign == 'true'
       shell: pwsh
       env:
         WINDOWS_CERTIFICATE: ${{ inputs.windows_certificate }}
@@ -582,8 +602,19 @@ runs:
         APPLE_ID: ${{ inputs.apple_id }}
         APPLE_PASSWORD: ${{ inputs.apple_password }}
         APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
+        SIGN: ${{ steps.context.outputs.sign }}
       run: |
         set -euo pipefail
+
+        # An unsigned macOS app is killed at launch, so "not signed" still means
+        # an ad-hoc signature here.
+        if [ "$SIGN" != "true" ]; then
+          echo "::notice::sign=false: building with an ad-hoc signature (not notarized)."
+          jq '.bundle.macOS = ((.bundle.macOS // {}) + {signingIdentity: "-"})' \
+            src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          exit 0
+        fi
 
         count_set() { local n=0; for v in "$@"; do [ -n "${!v:-}" ] && n=$((n + 1)); done; echo "$n"; }
 
@@ -617,6 +648,7 @@ runs:
       working-directory: ${{ steps.context.outputs.runtime_native }}/src-tauri
       env:
         UPDATER: ${{ steps.context.outputs.updater }}
+        SIGN: ${{ steps.context.outputs.sign }}
         APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
         APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
         APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
@@ -634,6 +666,11 @@ runs:
                  TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
           [ -n "${!v:-}" ] || unset "$v"
         done
+        # sign=false must win over credentials the caller inherited.
+        if [ "$SIGN" != "true" ]; then
+          unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+                APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
+        fi
         if [ "$UPDATER" != "true" ]; then
           unset TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD
         fi

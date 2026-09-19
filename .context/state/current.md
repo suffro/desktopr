@@ -275,6 +275,9 @@ still unverified.
 - Run 35386270081 (commit `0e454b7`) confirmed the move to the repository root:
   the action resolved its runtime to the workspace and built and launched a
   `frontend=bundled` app on Linux. The `v1` tag now points at that commit.
+- Added `sign: false` to the build action and the standalone
+  `.github/actions/sign` action for artifacts built elsewhere. Signing stays per
+  platform and driven by which credentials the caller passes.
 - Still unverified: the cross-repository path, where another repository uses
   `suffro/desktopr@v1`. Every run so far used the local `./` path; the
   `_actions/<owner>/<repo>/<ref>` layout was checked by simulating the path,

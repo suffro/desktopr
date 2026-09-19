@@ -42,6 +42,36 @@ under it.
 own files through the asset protocol. `bundled` and `app_url` are mutually
 exclusive, and the directory must contain a non-empty `index.html`.
 
+## Signing is split in two, along the line the tools impose
+
+The build action signs while it packages, because that is the only correct
+order: an NSIS installer embeds the executable, and a DMG must be built from an
+already-signed `.app`. Signing is per platform and driven only by which
+credentials the caller passes; `sign: false` overrides them, for callers that
+hand over every secret with `secrets: inherit`. A macOS build without a
+certificate still gets an ad-hoc signature, since an unsigned app is killed at
+launch.
+
+`.github/actions/sign/` is a second, standalone action for artifacts that were
+built elsewhere. It shares no implementation with the build path: there Tauri
+performs the signing from environment variables, while here the action imports
+the certificate into a throwaway keychain and drives `codesign`, `hdiutil`,
+`notarytool`, `stapler` and `signtool` itself. Given a `.app` it signs the
+nested binaries before the bundle, wraps it in a DMG and notarizes that;
+given a finished `.dmg`, `.exe`, `.msi` or `.msix` it signs it in place. With
+only the three notarization values and no certificate it notarizes an artifact
+that is already signed. An MSIX is signed only when the certificate subject
+equals the publisher inside the package.
+
+It is a separate action, not a `mode` input on the build action, because the two
+paths share no code: one file would hold two disjoint halves plus a condition on
+every build step. A composite action can call a sibling action in its own
+repository at the same commit with `uses: $/...`, but that does not help here —
+build-and-sign cannot be composed, since Tauri signs during bundling.
+
+Only the root action can be listed in GitHub Marketplace; the sign action stays
+usable by path.
+
 ## Rationale
 
 - A reusable workflow cannot do this. In a `workflow_call` the default

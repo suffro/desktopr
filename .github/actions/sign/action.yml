@@ -1,0 +1,387 @@
+# Signs and notarizes desktop apps that have already been built.
+#
+# Use this when the build happened somewhere else — a previous job, another
+# machine, a release you are re-publishing. To build and sign in one go, use
+# the Desktopr build action instead (suffro/desktopr@v1), which signs while it
+# packages.
+#
+#   - uses: suffro/desktopr/.github/actions/sign@v1
+#     with:
+#       artifacts: out/Example.app
+#       apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
+#       apple_certificate_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+#       apple_signing_identity: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+#       apple_id: ${{ secrets.APPLE_ID }}
+#       apple_password: ${{ secrets.APPLE_PASSWORD }}
+#       apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+#
+# It signs what the runner it is on can sign: macOS artifacts on a macOS
+# runner, Windows artifacts on a Windows runner. On Linux it does nothing,
+# so it is safe to leave in a three-platform matrix.
+#
+# Leaving the certificate out and passing only the three notarization values
+# notarizes an artifact that is already signed.
+
+name: Sign a Desktopr app
+description: Sign and notarize desktop apps that were built earlier, on macOS and Windows.
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  artifacts:
+    description: "What to sign: a file or a folder, relative to your checkout. macOS: .app or .dmg. Windows: .exe, .msi or .msix."
+    required: true
+  # macOS. The three certificate values go together, and so do the three
+  # notarization ones. Certificate only: the app is signed but not notarized,
+  # and macOS will still warn on first launch. Notarization only: the artifact
+  # must already be signed.
+  apple_certificate:
+    description: "macOS: base64 .p12 certificate. Leave out to only notarize."
+    default: ""
+  apple_certificate_password:
+    description: "macOS: password of the .p12"
+    default: ""
+  apple_signing_identity:
+    description: "macOS: signing identity, e.g. 'Developer ID Application: Name (TEAMID)'"
+    default: ""
+  apple_id:
+    description: "macOS notarization: Apple ID. All three notarization values are needed, or none."
+    default: ""
+  apple_password:
+    description: "macOS notarization: app-specific password for that Apple ID"
+    default: ""
+  apple_team_id:
+    description: "macOS notarization: Apple team ID"
+    default: ""
+  macos_entitlements:
+    description: "macOS: optional entitlements .plist to sign the app with"
+    default: ""
+  # Windows. An MSIX is signed only when the certificate matches the publisher
+  # recorded inside it, because Windows rejects any other signature.
+  windows_certificate:
+    description: "Windows: base64 .pfx certificate"
+    default: ""
+  windows_certificate_password:
+    description: "Windows: password of the .pfx"
+    default: ""
+  timestamp_url:
+    description: "Timestamp server used when signing, so signatures outlive the certificate"
+    default: "http://timestamp.digicert.com"
+
+outputs:
+  signed:
+    description: "Number of artifacts that were signed"
+    value: ${{ steps.macos.outputs.signed || steps.windows.outputs.signed || '0' }}
+  dmg:
+    description: "Disk image created from a macOS .app, when one was created"
+    value: ${{ steps.macos.outputs.dmg }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve what to sign
+      id: context
+      shell: bash
+      env:
+        ARTIFACTS: ${{ inputs.artifacts }}
+        APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
+        APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
+        APPLE_ID: ${{ inputs.apple_id }}
+        APPLE_PASSWORD: ${{ inputs.apple_password }}
+        APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
+        MACOS_ENTITLEMENTS: ${{ inputs.macos_entitlements }}
+        WINDOWS_CERTIFICATE: ${{ inputs.windows_certificate }}
+        WINDOWS_CERTIFICATE_PASSWORD: ${{ inputs.windows_certificate_password }}
+      run: |
+        set -euo pipefail
+
+        count_set() { local n=0; for v in "$@"; do [ -n "${!v:-}" ] && n=$((n + 1)); done; echo "$n"; }
+
+        signing="$(count_set APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY)"
+        notarization="$(count_set APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID)"
+        windows="$(count_set WINDOWS_CERTIFICATE WINDOWS_CERTIFICATE_PASSWORD)"
+
+        if [ "$signing" -ne 0 ] && [ "$signing" -ne 3 ]; then
+          echo "::error::macOS signing needs apple_certificate, apple_certificate_password and apple_signing_identity together"
+          exit 1
+        fi
+        if [ "$notarization" -ne 0 ] && [ "$notarization" -ne 3 ]; then
+          echo "::error::Notarization needs apple_id, apple_password and apple_team_id together"
+          exit 1
+        fi
+        if [ "$windows" -ne 0 ] && [ "$windows" -ne 2 ]; then
+          echo "::error::Windows signing needs windows_certificate and windows_certificate_password together"
+          exit 1
+        fi
+
+        case "$RUNNER_OS" in
+          macOS)
+            if [ "$signing" -eq 0 ] && [ "$notarization" -eq 0 ]; then
+              echo "::error::Nothing to do on macOS: pass the certificate values, the notarization values, or both"
+              exit 1
+            fi
+            ;;
+          Windows)
+            if [ "$windows" -eq 0 ]; then
+              echo "::error::Nothing to do on Windows: pass windows_certificate and windows_certificate_password"
+              exit 1
+            fi
+            ;;
+          Linux)
+            echo "::notice::Linux packages are not signed; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+            ;;
+          *)
+            echo "::error::Unsupported runner: $RUNNER_OS"
+            exit 1
+            ;;
+        esac
+
+        # Caller-supplied paths are relative to the caller's checkout.
+        case "$ARTIFACTS" in
+          /*) target="$ARTIFACTS" ;;
+          *) target="$GITHUB_WORKSPACE/$ARTIFACTS" ;;
+        esac
+        if [ ! -e "$target" ]; then
+          echo "::error::artifacts not found: $target"
+          echo "Did the build step that produces them run before this action?"
+          exit 1
+        fi
+
+        if [ -n "$MACOS_ENTITLEMENTS" ]; then
+          case "$MACOS_ENTITLEMENTS" in
+            /*) entitlements="$MACOS_ENTITLEMENTS" ;;
+            *) entitlements="$GITHUB_WORKSPACE/$MACOS_ENTITLEMENTS" ;;
+          esac
+          if [ ! -s "$entitlements" ]; then
+            echo "::error::macos_entitlements not found: $entitlements"
+            exit 1
+          fi
+        else
+          entitlements=""
+        fi
+
+        {
+          echo "skip=false"
+          echo "target=$target"
+          echo "entitlements=$entitlements"
+          echo "signing=$signing"
+          echo "notarization=$notarization"
+        } >> "$GITHUB_OUTPUT"
+
+        echo "Runner:  $RUNNER_OS"
+        echo "Target:  $target"
+
+    - name: Sign and notarize on macOS
+      id: macos
+      if: runner.os == 'macOS' && steps.context.outputs.skip == 'false'
+      shell: bash
+      env:
+        TARGET: ${{ steps.context.outputs.target }}
+        ENTITLEMENTS: ${{ steps.context.outputs.entitlements }}
+        DO_SIGN: ${{ steps.context.outputs.signing }}
+        DO_NOTARIZE: ${{ steps.context.outputs.notarization }}
+        APPLE_CERTIFICATE: ${{ inputs.apple_certificate }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ inputs.apple_certificate_password }}
+        APPLE_SIGNING_IDENTITY: ${{ inputs.apple_signing_identity }}
+        APPLE_ID: ${{ inputs.apple_id }}
+        APPLE_PASSWORD: ${{ inputs.apple_password }}
+        APPLE_TEAM_ID: ${{ inputs.apple_team_id }}
+      run: |
+        set -euo pipefail
+
+        apps=()
+        images=()
+        if [ -d "$TARGET" ] && [ "${TARGET##*.}" = "app" ]; then
+          apps+=("$TARGET")
+        elif [ -d "$TARGET" ]; then
+          while IFS= read -r path; do apps+=("$path"); done < <(find "$TARGET" -maxdepth 2 -name '*.app' -type d)
+          while IFS= read -r path; do images+=("$path"); done < <(find "$TARGET" -maxdepth 2 -name '*.dmg' -type f)
+        else
+          case "$TARGET" in
+            *.dmg) images+=("$TARGET") ;;
+            *) echo "::error::Not a macOS artifact: $TARGET (expected a .app or a .dmg)"; exit 1 ;;
+          esac
+        fi
+
+        if [ "${#apps[@]}" -eq 0 ] && [ "${#images[@]}" -eq 0 ]; then
+          echo "::error::No .app or .dmg found in $TARGET"
+          exit 1
+        fi
+
+        if [ "$DO_SIGN" = "3" ]; then
+          # A throwaway keychain keeps the certificate out of the login keychain
+          # and lets the cleanup step delete it whatever happens.
+          keychain="$RUNNER_TEMP/desktopr-signing.keychain-db"
+          password="$(head -c 16 /dev/urandom | xxd -p)"
+          echo "::add-mask::$password"
+          echo "KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+          certificate="$RUNNER_TEMP/certificate.p12"
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate"
+
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$certificate" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain" >/dev/null
+
+          # Put the new keychain in the search list without dropping the ones
+          # already there, which other tools on the runner rely on.
+          existing=()
+          while IFS= read -r line; do
+            line="$(printf '%s' "$line" | tr -d ' "')"
+            [ -n "$line" ] && existing+=("$line")
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$keychain" "${existing[@]}"
+          rm -f "$certificate"
+
+          sign_one() {
+            local path="$1"
+            if [ -n "$ENTITLEMENTS" ]; then
+              codesign --force --timestamp --options runtime --entitlements "$ENTITLEMENTS" \
+                --sign "$APPLE_SIGNING_IDENTITY" "$path"
+            else
+              codesign --force --timestamp --options runtime --sign "$APPLE_SIGNING_IDENTITY" "$path"
+            fi
+          }
+
+          for app in "${apps[@]}"; do
+            echo "Signing $app"
+            # Inner code first, then the bundle: a bundle signature only stays
+            # valid if what it contains was signed before it.
+            while IFS= read -r nested; do
+              sign_one "$nested"
+            done < <(find "$app/Contents/Frameworks" "$app/Contents/MacOS" -type f 2>/dev/null || true)
+            sign_one "$app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+          done
+        fi
+
+        # A .app is not a deliverable and notarization does not accept one, so
+        # wrap it in a disk image, which is what people download.
+        created_dmg=""
+        for app in "${apps[@]}"; do
+          name="$(basename "$app" .app)"
+          dmg="$(dirname "$app")/$name.dmg"
+          echo "Creating $dmg"
+          rm -f "$dmg"
+          hdiutil create -volname "$name" -srcfolder "$app" -ov -format UDZO "$dmg" >/dev/null
+          if [ "$DO_SIGN" = "3" ]; then
+            codesign --force --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$dmg"
+          fi
+          images+=("$dmg")
+          created_dmg="$dmg"
+        done
+
+        if [ "$DO_NOTARIZE" = "3" ]; then
+          for image in "${images[@]}"; do
+            echo "Notarizing $image"
+            xcrun notarytool submit "$image" \
+              --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" \
+              --wait --timeout 30m
+            xcrun stapler staple "$image"
+            spctl --assess --type open --context context:primary-signature -v "$image" || true
+          done
+        else
+          echo "::warning::Not notarized: macOS will warn the first time the app is opened."
+        fi
+
+        {
+          echo "signed=${#images[@]}"
+          echo "dmg=$created_dmg"
+        } >> "$GITHUB_OUTPUT"
+
+        echo "Done: ${#images[@]} artifact(s)"
+
+    - name: Remove the temporary keychain
+      if: always() && runner.os == 'macOS'
+      shell: bash
+      run: |
+        if [ -n "${KEYCHAIN:-}" ] && [ -e "$KEYCHAIN" ]; then
+          security delete-keychain "$KEYCHAIN" || true
+        fi
+        rm -f "$RUNNER_TEMP/certificate.p12"
+
+    - name: Sign on Windows
+      id: windows
+      if: runner.os == 'Windows' && steps.context.outputs.skip == 'false'
+      shell: pwsh
+      env:
+        TARGET: ${{ steps.context.outputs.target }}
+        WINDOWS_CERTIFICATE: ${{ inputs.windows_certificate }}
+        WINDOWS_CERTIFICATE_PASSWORD: ${{ inputs.windows_certificate_password }}
+        TIMESTAMP_URL: ${{ inputs.timestamp_url }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        function Get-SdkTool([string]$Name) {
+          $tool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter $Name -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\x64\\' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if ($null -eq $tool) { throw "$Name not found in the Windows SDK" }
+          return $tool.FullName
+        }
+
+        # Reads the publisher recorded inside an MSIX. Windows only accepts a
+        # signature whose certificate subject is exactly that publisher.
+        function Get-MsixPublisher([string]$Path) {
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
+          try {
+            $entry = $zip.Entries | Where-Object { $_.FullName -eq 'AppxManifest.xml' }
+            if ($null -eq $entry) { throw "AppxManifest.xml not found in $Path" }
+            $reader = New-Object System.IO.StreamReader($entry.Open())
+            try { $xml = [xml]$reader.ReadToEnd() } finally { $reader.Dispose() }
+          } finally {
+            $zip.Dispose()
+          }
+          return $xml.Package.Identity.Publisher
+        }
+
+        $target = $env:TARGET
+        if (Test-Path $target -PathType Container) {
+          $files = Get-ChildItem $target -Recurse -Depth 2 -File |
+            Where-Object { $_.Extension -in '.exe', '.msi', '.msix' }
+        } else {
+          $files = @(Get-Item $target)
+        }
+        if ($files.Count -eq 0) { throw "No .exe, .msi or .msix found in $target" }
+
+        $pfx = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+        try {
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+        } finally {
+          Remove-Item -Force $pfx -ErrorAction SilentlyContinue
+        }
+
+        $signtool = Get-SdkTool "signtool.exe"
+        $signed = 0
+
+        foreach ($file in $files) {
+          if ($file.Extension -eq '.msix') {
+            $publisher = Get-MsixPublisher $file.FullName
+            if ($publisher -ne $cert.Subject) {
+              Write-Host "::notice::$($file.Name) left unsigned: its publisher ($publisher) does not match the certificate ($($cert.Subject))."
+              continue
+            }
+          }
+          & $signtool sign /sha1 $cert.Thumbprint /fd SHA256 /tr $env:TIMESTAMP_URL /td SHA256 $file.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Signing failed for $($file.Name) ($LASTEXITCODE)" }
+          & $signtool verify /pa $file.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Verification failed for $($file.Name) ($LASTEXITCODE)" }
+          Write-Host "Signed $($file.Name)"
+          $signed += 1
+        }
+
+        if ($signed -eq 0) {
+          Write-Host "::warning::Nothing was signed."
+        }
+        "signed=$signed" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
