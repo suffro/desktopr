@@ -6,11 +6,11 @@
       <div class="hero-glow"></div>
       
       <h1 class="hero-title">
-        Build <span class="text-gradient">desktop</span> apps <br> with <span class="text-gradient">web</span> stacks.
+        Build <span class="text-gradient">desktop</span> apps <br> using <span class="text-gradient">web</span> stacks.
       </h1>
       
       <p class="hero-tagline">
-        Easily build and sign lightweight desktop applications using web stacks,<br class="hidden-mobile" />
+        Easily build and sign lightweight desktop apps using web stacks or a web app URL,
         with Desktopr GitHub actions and a straightforward Node API.
       </p>
       
