@@ -283,10 +283,15 @@ still unverified.
   overrides available credentials, the Linux no-op, and Windows signing with a
   self-signed certificate including the MSIX publisher rule. A real Windows
   certificate has still never been exercised.
-- Still unverified: the cross-repository path, where another repository uses
-  `suffro/desktopr@v1`. Every run so far used the local `./` path; the
-  `_actions/<owner>/<repo>/<ref>` layout was checked by simulating the path,
-  not by a real run.
+- The cross-repository path is verified: `suffro/desktopr-action-example` (a
+  public repository created for this) builds with `suffro/desktopr@<ref>` and
+  the runtime resolves under `_actions/suffro/desktopr/<ref>`.
+- That first external run exposed a regression from the same day: the `sign`
+  switch exported `SIGN` into the Build step, which
+  `linuxdeploy-plugin-appimage` reads as "GPG-sign the AppImage", so every
+  Linux build aborted in the AppImage stage. Renamed to `DESKTOPR_SIGN`; see
+  `decisions/external-build-action.md` for what else in that environment looks
+  broken but is not.
 
 ## Next
 

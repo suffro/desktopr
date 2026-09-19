@@ -99,6 +99,24 @@ usable by path.
   absolute paths in its build artifacts, and a cache saved from a different
   checkout path breaks the build.
 
+## The build step's environment belongs to the bundler
+
+Everything the action puts in the Build step's `env` reaches the bundler and
+every tool it runs, and those tools have their own variable names.
+`linuxdeploy-plugin-appimage` reads `SIGN` as "GPG-sign the AppImage": a `SIGN`
+variable of our own aborted every Linux build with a `gpgme` error that Tauri
+reported only as `failed to bundle project 'failed to run linuxdeploy'`. Our
+variables in that step are therefore prefixed (`DESKTOPR_SIGN`).
+
+Two things that look wrong there are not, and should not be "fixed":
+
+- Tauri zeroes three bytes of `linuxdeploy-x86_64.AppImage` after using it, so
+  the tool's checksum differs from the pinned one once a build has run. The
+  pinning still holds: Tauri downloads a tool only when the file is absent
+  (`if !linuxdeploy.exists()`), from the same URL the action pins.
+- Tauri already passes `--appimage-extract-and-run` to the tool, so the runners
+  not having `libfuse2` does not matter.
+
 ## Rejected
 
 - **Downloading the caller's build from a URL or artifact.** It needs either a
