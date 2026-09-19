@@ -71,6 +71,9 @@ scenario("production defaults are standalone", "prod-conf.sh", {}, (run) => {
   assert.ok(!capability.permissions.includes("desktopr-bridge-debug"));
   assert.ok(tauri.app.security.capabilities.includes("remote"));
   assert.match(tauri.app.security.csp, /^default-src 'self';/u);
+  // A nonce or hash in script-src makes WKWebView drop 'unsafe-inline' and with
+  // it the initialization scripts that carry the bridge.
+  assert.deepEqual(tauri.app.security.dangerousDisableAssetCspModification, ["script-src"]);
   assert.equal(tauri.plugins?.updater, undefined);
   assert.equal(tauri.bundle.createUpdaterArtifacts, false);
   assert.equal(run.constants().appUrl, "");
@@ -96,6 +99,8 @@ scenario(
     ]);
     assert.equal(run.constants().appUrl, "https://app.example.com:8443");
     assert.match(run.tauri().app.security.csp, /default-src 'self' https:\/\/app\.example\.com:8443;/u);
+    // The window never shows a bundled asset, so Tauri keeps rewriting them.
+    assert.equal(run.tauri().app.security.dangerousDisableAssetCspModification, undefined);
   },
 );
 
@@ -120,6 +125,10 @@ scenario("companion frontend bundles the companion app", "prod-conf.sh", { APP_F
   assert.ok(capability.remote.urls.includes("https://*/*"), "companion must allow any HTTPS web app");
   assert.equal(run.constants().appUrl, "");
   assert.match(run.windowEnv(), /^MAIN_WINDOW_URL=$/mu);
+  // The companion index.html carries an inline script: without this the nonce
+  // Tauri adds to script-src blocks its own initialization scripts on macOS and
+  // the companion opens without a bridge.
+  assert.deepEqual(tauri.app.security.dangerousDisableAssetCspModification, ["script-src"]);
 });
 
 scenario(

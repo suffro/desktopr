@@ -10,6 +10,17 @@ still unverified.
 
 ## Recent relevant changes
 
+- The published companion 3.0.0 opens without a bridge on macOS: its window
+  shows "The Desktopr bridge is not available". Reproduced locally from
+  `APP_FRONTEND=companion`, isolated to the generated CSP and fixed in
+  `prod-conf.sh` with `dangerousDisableAssetCspModification: ["script-src"]`
+  (see `truth/architecture.md`). Evidence: the same debug build fails with the
+  generated CSP, works with `csp: null`, and works again with the CSP plus the
+  flag. Two `test:config` assertions cover it, both observed failing without the
+  fix. Every released companion artifact predating this fix is broken and needs
+  a new release; the `standalone` and `APP_URL` builds were never affected,
+  because their bundled page has no inline script and remote pages get no
+  Tauri-generated CSP.
 - Inventoried `tauri-skeleton`, `github-actions`, `project-globals`,
   `wasm-module-template` and `wasm-modules`; `docs` and `companion` were not
   inspected or changed.

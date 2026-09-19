@@ -281,6 +281,26 @@ jq '
   )
 ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
 
+# When the window loads the bundled frontend, Tauri rewrites the CSP of every
+# HTML asset it serves: it adds a nonce for each inline <script> and the hashes
+# it computed at build time to `script-src`. A `script-src` that carries a nonce
+# or a hash makes the browser ignore `'unsafe-inline'`, and on macOS WKWebView
+# applies that policy to the initialization scripts too, which run as user
+# scripts in the page world. Those scripts are the Tauri IPC and the Desktopr
+# bridge, so a bundled frontend with a single inline script loses
+# `window.Desktopr` and `window.__TAURI_INTERNALS__` entirely. Keeping the
+# policy but telling Tauri not to touch `script-src` leaves `'unsafe-inline'`
+# effective and the bridge injected. Builds that load a remote APP_URL never
+# show those assets, so they keep the untouched behaviour.
+if [ -z "$APP_URL" ]; then
+  echo "5.2. Keeping script-src intact so the bridge is injected in the bundled frontend"
+  jq '
+    .app = (.app // {}) |
+    .app.security = (.app.security // {}) |
+    .app.security.dangerousDisableAssetCspModification = ["script-src"]
+  ' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp && mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+fi
+
 # Updater config
 if [ "$UPDATER_ENABLED" = "true" ]; then
   echo "6. Enabling developer-configured updater"

@@ -117,3 +117,11 @@ directory plus dedicated persistent plugin storage.
 - The documentation must describe the open build workflow only: no dashboard,
   build credits, Desktopr Edge, hosted distribution, trackers or share widgets.
 - The updater must remain disabled unless explicitly configured by a developer.
+- Builds that show the bundled frontend must keep
+  `dangerousDisableAssetCspModification: ["script-src"]`. Tauri otherwise adds a
+  nonce and its build-time hashes to `script-src` of every HTML asset it serves,
+  and a `script-src` carrying a nonce or hash makes the webview ignore
+  `'unsafe-inline'`. On macOS WKWebView applies that to the initialization
+  scripts, which run as user scripts in the page world: the Tauri IPC and the
+  Desktopr bridge disappear from a frontend whose HTML contains a single inline
+  script. `prod-conf.sh` sets the flag whenever `APP_URL` is empty.

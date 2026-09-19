@@ -21,6 +21,8 @@ Desktopr apps are configured with environment variables read by `scripts/prod-co
 
 Only the origin of `APP_URL` and its subdomains are granted access to the native bridge. Do not point `APP_URL` at a domain whose subdomains third parties control.
 
+A build that shows a bundled frontend keeps `'unsafe-inline'` in `script-src` and tells Tauri not to rewrite that directive. Nonces and hashes there would also apply to the scripts that inject the bridge, and the app would start without `window.Desktopr`.
+
 ## Main window
 
 | Variable | Default | Description |
