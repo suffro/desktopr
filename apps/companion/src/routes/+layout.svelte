@@ -8,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { dev } from '$app/environment';
+	import { DESKTOPR_DOCS } from '$lib';
 
 	let { children } = $props();
 	let isBridgeAvailable: boolean = $state(false);
@@ -69,7 +70,7 @@
 		class="h-20 w-full border-t border-neutral-800 flex items-center justify-center text-xs text-neutral-400"
 	>
 		<div class="opacity-60 w-full flex items-center justify-center px-8">
-			Desktopr Companion · Apache-2.0
+			Desktopr Companion · Apache-2.0 · <a href="{DESKTOPR_DOCS}">Documentation</a>
 		</div>
 	</footer>
 {/if}
